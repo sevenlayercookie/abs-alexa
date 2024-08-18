@@ -54,6 +54,8 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
   - Playing a book by title (e.g., "Play *A Game of Thrones*")
 - If book is not initially found using ABS API search function, the skill then pulls all books in user's library and performs a fuzzy search
   - on large libraries, this may take a long time (I have tested it on 1000 book library and it completes search in 1-3 seconds)
+- This skill is set to only search libraries that are set as "audiobook only" -- if you have audiobooks in any other kind of library, they will not be searched
+- This skill has only been tested in very simple library configurations so far and may have issues with complex library set ups
 
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
