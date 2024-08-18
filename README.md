@@ -18,8 +18,11 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Installation:
 1) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
-2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL**
-3) Use the skill!
+2) Set your skill invocation name
+3) Build your skill
+4) Edit the config.js file to include your **Audiobookshelf API key** and **server URL**
+5) Save and deploy the skill
+6) Use the skill!
 
 ## Usage:
 - Though there are some useful intents, I find that the most reliable way of using the skill is to just say "Play" to resume last listened to audiobook
