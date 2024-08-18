@@ -1,0 +1,166 @@
+{
+  "interactionModel": {
+    "dialog": {
+      "intents": [
+        {
+          "slots": [
+            {
+              "name": "time",
+              "elicitationRequired": true,
+              "type": "AMAZON.DURATION",
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.454140924019.1491668277531"
+              }
+            }
+          ],
+          "name": "GoBackXTimeIntent",
+          "confirmationRequired": false,
+          "prompts": {}
+        },
+        {
+          "slots": [
+            {
+              "name": "time",
+              "elicitationRequired": true,
+              "type": "AMAZON.DURATION",
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.1425758106737.86337652976"
+              }
+            }
+          ],
+          "name": "GoForwardXTimeIntent",
+          "confirmationRequired": false,
+          "prompts": {}
+        }
+      ],
+      "delegationStrategy": "ALWAYS"
+    },
+    "languageModel": {
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "slots": [],
+          "name": "HelloWorldIntent",
+          "samples": [
+            "hello",
+            "how are you",
+            "say hi world",
+            "say hi",
+            "hi",
+            "say hello world",
+            "say hello"
+          ]
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "slots": [],
+          "name": "PlayLastIntent",
+          "samples": [
+            "continue playing",
+            "play last book",
+            "play last playing book",
+            "play last playing audiobook",
+            "play"
+          ]
+        },
+        {
+          "name": "AMAZON.PauseIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ResumeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "slots": [
+            {
+              "name": "time",
+              "type": "AMAZON.DURATION",
+              "samples": [
+                "Reverse {time}",
+                "Rewind {time}",
+                "Go back {time}"
+              ]
+            }
+          ],
+          "name": "GoBackXTimeIntent",
+          "samples": [
+            "skip back {time}",
+            "rewind {time}",
+            "reverse {time}",
+            "go back {time} "
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "time",
+              "type": "AMAZON.DURATION",
+              "samples": [
+                "Skip forward {time} "
+              ]
+            }
+          ],
+          "name": "GoForwardXTimeIntent",
+          "samples": [
+            "skip {time}",
+            "jump forward {time}",
+            "fast forward {time}",
+            "Skip forward {time}",
+            "Go forward {time}"
+          ]
+        },
+        {
+          "name": "AMAZON.PlaybackAction<object@Book>",
+          "samples": []
+        }
+      ],
+      "types": [],
+      "invocationName": "harrison bookshelf"
+    },
+    "prompts": [
+      {
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "For example, you can say go back fifteen seconds."
+          }
+        ],
+        "id": "Elicit.Slot.454140924019.1491668277531"
+      },
+      {
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "For example, you can say skip forward fifteen seconds"
+          }
+        ],
+        "id": "Elicit.Slot.1425758106737.86337652976"
+      }
+    ]
+  }
+}

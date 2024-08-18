@@ -1,0 +1,54 @@
+{
+  "manifest": {
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:us-east-1:000000000000:function:YOUR_FUNCTION_ID:Release_0"
+        },
+        "interfaces": [
+          {
+            "type": "AUDIO_PLAYER"
+          }
+        ],
+        "locales": {},
+        "regions": {
+          "NA": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-east-1:000000000000:function:YOUR_FUNCTION_ID:Release_0"
+            }
+          },
+          "EU": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:eu-west-1:000000000000:function:YOUR_FUNCTION_ID:Release_0"
+            }
+          },
+          "FE": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-west-2:000000000000:function:YOUR_FUNCTION_ID:Release_0"
+            }
+          }
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "distributionCountries": [],
+      "isAvailableWorldwide": true,
+      "locales": {
+        "en-US": {
+          "description": "Sample Full Description",
+          "examplePhrases": [
+            "Play",
+            "Play last audiobook",
+            "Play The Fellowship of the Ring by J.R.R. Tolkien",
+            "Skip forward 30 seconds"
+          ],
+          "keywords": [],
+          "name": "Audiobookshelf (personal)",
+          "summary": "Play audiobooks from self-hosted Audiobookshelf server"
+        }
+      },
+      "testingInstructions": "Sample Testing Instructions."
+    }
+  }
+}
