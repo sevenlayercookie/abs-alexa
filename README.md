@@ -15,25 +15,36 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Seek within a book (e.g., "Alexa, skip forward 2 minutes")
 - Skip to the next/previous chapter (e.g., "Alexa, go back a chapter")
 - Progress tracking (listening sessions will be saved on the Audiobookshelf server)
+- attempts to resolve the book and author name requested using Amazon resolution services
+- performs an an API "search" that is built-in to ABS
+- if this fails, pulls all books from library and then performs a fuzzy search (may be resource intensive on large libraries)
 
 ## Installation:
 1) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 2) Set your skill invocation name
-3) Build your skill
-4) Edit the config.js file to include your **Audiobookshelf API key** and **server URL**
-5) Save and deploy the skill
-6) Use the skill!
+4) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** 
+5) Build the skill
+6) Save and deploy the skill
 
 ## Usage:
+- Once installed, call the skill using the invocation name you chose (e.g. "Alexa, Audiobook shelf"
+- Then:
+  - "Play": either resumes currently playing book, or plays your last listened to audiobook
+  - "Pause": pauses audio and updates ABS server on progress
+  - "Stop/close/cancel": closes the ABS listening session and closes the Alexa skill session
+  - "Play A Game Of Thrones" - attempts to find any book matching this title and plays it
+  - "Play A Game Of Thrones by George R.R. Martin" - plays the matching book written by the stated author
+  - "Next/Previous": Goes to next/previous chapter
+  - "Go forward/back X minutes/seconds/hours": Goes forward or back X number of seconds, minutes, or hours
 - Though there are some useful intents, I find that the most reliable way of using the skill is to just say "Play" to resume last listened to audiobook
   - "Play" is a built-in intent, which Alexa tends to execute more reliably
 
 ## Background:
 - Alexa requires any audio track to be publicly accessible and does not support passing cookies or authorization headers.
 - Audiobookshelf currently does not support publicly accessible URLs, with one exception:
-  - **RSS Feeds:** These allow a publicly accessible URL without a cookie or header needed.
+  - **RSS Feeds:** This function allows user to create a publicly accessible URL without a cookie or header needed.
 - **ABS-Alexa** uses this as a workaround by creating an RSS feed when a user requests to listen to a book.
-  - Until Audiobookshelf provides another method for creating publicly accessible URLs, this workaround is the best option.
+  - Until Audiobookshelf provides another method for creating publicly accessible URLs, I believe this workaround is the best option.
 
 ## Known Issues:
 - Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
@@ -41,6 +52,8 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - This is particularly true with certain custom intents, such as:
   - Seeking intents (e.g., "Go backwards 5 minutes")
   - Playing a book by title (e.g., "Play *A Game of Thrones*")
+- If book is not initially found using ABS API search function, the skill then pulls all books in user's library and performs a fuzzy search
+  - on large libraries, this may take a long time (I have tested it on 1000 book library and it completes search in 1-3 seconds)
 
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
