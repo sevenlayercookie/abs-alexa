@@ -59,7 +59,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
-- [ ] Consider implementing persistent attributes to give Alexa a longer "memory"
+- [ ] Consider implementing persistent attributes to give Alexa a longer "memory" (store play sessions in a local database)
 - [ ] Add other intents, such as:
   - [ ] "Start the book over"
   - [ ] "Go to chapter 12"
