@@ -44,7 +44,7 @@
             "Skip forward 30 seconds"
           ],
           "keywords": [],
-          "name": "Audiobookshelf (personal)",
+          "name": "Audiobookshelf",
           "summary": "Play audiobooks from self-hosted Audiobookshelf server"
         }
       },
