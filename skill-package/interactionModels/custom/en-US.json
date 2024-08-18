@@ -33,6 +33,43 @@
           "name": "GoForwardXTimeIntent",
           "confirmationRequired": false,
           "prompts": {}
+        },
+        {
+          "slots": [
+            {
+              "name": "title",
+              "elicitationRequired": false,
+              "type": "AMAZON.Book",
+              "confirmationRequired": false,
+              "prompts": {}
+            },
+            {
+              "name": "author",
+              "elicitationRequired": false,
+              "type": "AMAZON.Author",
+              "confirmationRequired": false,
+              "prompts": {}
+            }
+          ],
+          "name": "PlayBookIntent",
+          "confirmationRequired": false,
+          "prompts": {}
+        },
+        {
+          "slots": [
+            {
+              "name": "chapterNumber",
+              "elicitationRequired": true,
+              "type": "AMAZON.NUMBER",
+              "confirmationRequired": false,
+              "prompts": {
+                "elicitation": "Elicit.Slot.464967230894.1040650485539"
+              }
+            }
+          ],
+          "name": "GoToChapterX",
+          "confirmationRequired": false,
+          "prompts": {}
         }
       ],
       "delegationStrategy": "ALWAYS"
@@ -41,7 +78,9 @@
       "intents": [
         {
           "name": "AMAZON.CancelIntent",
-          "samples": []
+          "samples": [
+            "Exit"
+          ]
         },
         {
           "name": "AMAZON.HelpIntent",
@@ -76,11 +115,9 @@
           "slots": [],
           "name": "PlayLastIntent",
           "samples": [
-            "continue playing",
             "play last book",
             "play last playing book",
-            "play last playing audiobook",
-            "play"
+            "play last playing audiobook"
           ]
         },
         {
@@ -135,12 +172,42 @@
           ]
         },
         {
-          "name": "AMAZON.PlaybackAction<object@Book>",
+          "slots": [
+            {
+              "name": "title",
+              "type": "AMAZON.Book"
+            },
+            {
+              "name": "author",
+              "type": "AMAZON.Author"
+            }
+          ],
+          "name": "PlayBookIntent",
+          "samples": [
+            "play {title} by {author}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "chapterNumber",
+              "type": "AMAZON.NUMBER"
+            }
+          ],
+          "name": "GoToChapterX",
+          "samples": [
+            "Skip to chapter {chapterNumber}",
+            "Go back to chapter {chapterNumber}",
+            "Go to chapter {chapterNumber}"
+          ]
+        },
+        {
+          "name": "AMAZON.NextIntent",
           "samples": []
         }
       ],
       "types": [],
-      "invocationName": "harrison bookshelf"
+      "invocationName": "audio bookshelf"
     },
     "prompts": [
       {
@@ -160,6 +227,15 @@
           }
         ],
         "id": "Elicit.Slot.1425758106737.86337652976"
+      },
+      {
+        "variations": [
+          {
+            "type": "PlainText",
+            "value": "For example, you can say 'Go to chapter twelve'"
+          }
+        ],
+        "id": "Elicit.Slot.464967230894.1040650485539"
       }
     ]
   }
