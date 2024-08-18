@@ -21,10 +21,9 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Installation:
 1) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
-2) Set your skill invocation name
-4) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** 
-5) Build the skill
-6) Save and deploy the skill
+2) Set your skill invocation name and build the skill
+3) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** 
+4) Save and deploy the skill
 
 ## Usage:
 - Once installed, call the skill using the invocation name you chose (e.g. "Alexa, Audiobook shelf"
