@@ -46,7 +46,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Audiobookshelf supports publicly accessible URLs (share API), but this requires passing a cookie. RSS feeds are a workaround.
   - **RSS Feeds:** This function allows user to create a publicly accessible URL without a cookie or header needed.
 - **ABS-Alexa** uses this as a workaround by creating an RSS feed when a user requests to listen to a book.
-  - Until Audiobookshelf provides another method for creating publicly accessible URLs, I believe this workaround is the best option.
+  - Until Audiobookshelf provides another method for creating publicly accessible URLs that do not require a cookie or header to be passed, I believe this workaround is the best option.
 
 ## Known Issues:
 - Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
