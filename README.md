@@ -20,6 +20,8 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - if this fails, pulls all books from library and then performs a fuzzy search (may be resource intensive on large libraries)
 
 ## Installation:
+1) Fork this repo
+2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this in the 'Code' tab of Developer Console if using Alexa-hosted)
 1) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 2) Set your skill invocation name and build the skill
 3) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this in the 'Code' tab of Developer Console if using Alexa-hosted)
@@ -41,7 +43,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Background:
 - Alexa requires any audio track to be publicly accessible and does not support passing cookies or authorization headers.
-- Audiobookshelf currently does not support publicly accessible URLs, with one exception:
+- Audiobookshelf supports publicly accessible URLs (share API), but this requires passing a cookie. RSS feeds are a workaround.
   - **RSS Feeds:** This function allows user to create a publicly accessible URL without a cookie or header needed.
 - **ABS-Alexa** uses this as a workaround by creating an RSS feed when a user requests to listen to a book.
   - Until Audiobookshelf provides another method for creating publicly accessible URLs, I believe this workaround is the best option.
