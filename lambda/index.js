@@ -15,7 +15,7 @@ let localSessionAttributes = {
   offsetInMilliseconds: null,
   amazonToken: null,
   playUrl : null,
-  currentBookTime : null,
+  currentBookTime : 0,
   nextStreamEnqueued : true
 }
 
@@ -171,11 +171,18 @@ function getExistingUserPlaySession(sessionID) {
   }
 }
 
-function calculateCurrentTime (playSession, currentTrackOffset, currentToken) {
-  let currentIndex = currentToken
+function calculateCurrentTime(playSession, currentTrackOffset, currentToken) {
+  let currentIndex = currentToken;
   let currentTrack = playSession.audioTracks.filter(track => track.index == currentIndex)[0];
-  let currentTime = currentTrack.startOffset + currentTrackOffset/1000
-  return currentTime
+  
+  if (!currentTrack) {
+    return 0.0; // Return a default value if no track is found
+  }
+
+  let currentTime = currentTrack.startOffset + currentTrackOffset / 1000;
+
+  // Ensure the result is a non-null float
+  return (typeof currentTime === 'number' && !isNaN(currentTime)) ? parseFloat(currentTime) : 0.0;
 }
 
 function updateUserPlaySession(playSession, currentBookTime) {
@@ -194,12 +201,13 @@ function updateUserPlaySession(playSession, currentBookTime) {
           console.log("updateUserPlaySession: Invalid userPlaySessionID")
           return 1
         }
-        if (!currentBookTime)
-          {
-            console.log("updateUserPlaySession: Invalid currentBookTime")
-            return 2
-          }
-      
+           // Ensure currentBookTime is a float and not null
+           if (currentBookTime == null || isNaN(currentBookTime)) {
+            console.log("updateUserPlaySession: Invalid currentBookTime");
+            return 2;
+        }
+
+        currentBookTime = parseFloat(currentBookTime);      
         const timeListened = (Date.now() - playSession.updatedAt) / 1000
 
       const body = JSON.stringify({
@@ -265,11 +273,14 @@ function closeUserPlaySession(userPlaySession, currentBookTime) {
         console.log("closeUserPlaySession: Invalid userPlaySessionID")
         return 1
       }
-      if (!currentBookTime)
-        {
-          console.log("closeUserPlaySession: Invalid currentBookTime")
-          return 2
+ 
+              // Ensure currentBookTime is a float and not null
+        if (currentBookTime == null || isNaN(currentBookTime)) {
+            console.log("closeUserPlaySession: Invalid currentBookTime");
+            return 2;
         }
+        
+        currentBookTime = parseFloat(currentBookTime);
 
         const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
         
@@ -2890,6 +2901,11 @@ const SessionEndedRequestHandler = {
     },
     handle(handlerInput) {
       try {
+        const request = handlerInput.requestEnvelope.request;
+        console.log('SessionEndedRequest reason:', request.reason);
+        if (request.error) {
+          console.error('SessionEndedRequest error:', request.error);
+        }
       let sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
       const userPlaySessionID = sessionAttributes.userPlaySessionID
    //   const sharePlaySession = sessionAttributes.sharePlaySession
