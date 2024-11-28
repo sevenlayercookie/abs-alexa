@@ -701,9 +701,10 @@ const PlayAudioIntentHandler = {
         rssFeedID = rssFeed.id
         rssResult = parseRSSFeed(rssFeedUrl)
 
-        if (rssResult == null) { // if null, try again (might need to close RSS feed first?)
+        if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
+          closeRSSFeed(rssFeedID)
           rssFeed = createRSSFeed(lastPlayedID).feed
-          let rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
+          rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
           rssFeedUrl = rssFeed.feedUrl
           rssFeedID = rssFeed.id
           rssResult = parseRSSFeed(rssFeedUrl)
@@ -1077,6 +1078,21 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
       rssFeedUrl = rssFeed.feedUrl
       rssFeedID = rssFeed.id
       let rssResult = parseRSSFeed(rssFeedUrl)
+
+      if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
+        closeRSSFeed(rssFeedID)
+        rssFeed = createRSSFeed(lastPlayedID).feed
+        rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
+        rssFeedUrl = rssFeed.feedUrl
+        rssFeedID = rssFeed.id
+        rssResult = parseRSSFeed(rssFeedUrl)
+      }
+
+      if (rssResult == null) { // if null, give up
+        return handlerInput.responseBuilder
+        .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
+        .getResponse();
+      }
 
 
       let mediaItemShare
@@ -1702,6 +1718,21 @@ const PlayBookIntentHandler = {
         rssFeedUrl = rssFeed.feedUrl
         rssFeedID = rssFeed.id
         let rssResult = parseRSSFeed(rssFeedUrl)
+
+        if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
+          closeRSSFeed(rssFeedID)
+          rssFeed = createRSSFeed(lastPlayedID).feed
+          rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
+          rssFeedUrl = rssFeed.feedUrl
+          rssFeedID = rssFeed.id
+          rssResult = parseRSSFeed(rssFeedUrl)
+        }
+  
+        if (rssResult == null) { // if null, give up
+          return handlerInput.responseBuilder
+          .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
+          .getResponse();
+        }
       
       
       // *** this intent presumed to always start a new play session ***
