@@ -606,6 +606,14 @@ function parseRSSFeed(rssFeedUrl) {
     // Extract coverUrl from the feed
     const coverUrl = result.rss.channel[0]['itunes:image'][0]['$'].href;
 
+    // NEED TO HANDLE IF NO ITEM IN RSS FEED! sometimes, ABS will create an empty RSS feed.
+    // probably can fix that by recreating the RSS feed.
+
+    if (!result.rss.channel[0].item || result.rss.channel[0].item.length === 0) {
+        console.error("No items found in the RSS feed.");
+      return null;
+    }
+
     // Extract audio track details from each item
     const audioTracks = result.rss.channel[0].item.map(item => ({
       url: item.enclosure[0]['$'].url,
@@ -692,6 +700,20 @@ const PlayAudioIntentHandler = {
         rssFeedUrl = rssFeed.feedUrl
         rssFeedID = rssFeed.id
         rssResult = parseRSSFeed(rssFeedUrl)
+
+        if (rssResult == null) { // if null, try again (might need to close RSS feed first?)
+          rssFeed = createRSSFeed(lastPlayedID).feed
+          let rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
+          rssFeedUrl = rssFeed.feedUrl
+          rssFeedID = rssFeed.id
+          rssResult = parseRSSFeed(rssFeedUrl)
+        }
+
+        if (rssResult == null) { // if null, give up
+          return handlerInput.responseBuilder
+          .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
+          .getResponse();
+        }
 
       }
         if (!userPlaySession) { // open new playsession if needed
@@ -1019,7 +1041,11 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
         }
 
         const bookResults = results[0].book
-        const firstMatchingBook = bookResults.find(book => book.matchKey === "title");
+        const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
+        // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
+        console.log("Matched a book using ABS search API!")
+        //absSearchResults[0].book[0].libraryItem.media.metadata.title
+
         libraryItem = firstMatchingBook.libraryItem
 
         console.log("Found a book in the library!")
@@ -1333,8 +1359,10 @@ function searchByTitleOnly(
     const absSearchResults = searchBookWithAbsAPI(bookTitle)
     if (absSearchResults[0].book.length > 0) {
       const bookResults = absSearchResults[0].book
-      const firstMatchingBook = bookResults.find(book => book.matchKey === "title");
+      const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
+      // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
       console.log("Matched a book using ABS search API!")
+      //absSearchResults[0].book[0].libraryItem.media.metadata.title
       return firstMatchingBook.libraryItem
     }
     else {
@@ -2836,8 +2864,17 @@ const SessionEndedRequestHandler = {
    //   const sharePlaySession = sessionAttributes.sharePlaySession
       const userPlaySession = sessionAttributes.userPlaySession
       //const slug = sessionAttributes.mediaItemShare.slug
-      const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-      const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+      const offsetInMilliseconds = 
+      handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds || // Try AudioPlayer first
+      handlerInput.requestEnvelope.session?.attributes?.offsetInMilliseconds || // Fallback to session attributes
+      sessionAttributes.offsetInMilliseconds || // Fallback to previously stored sessionAttributes
+      0; // Default to 0 if all else fails
+
+      const amazonToken = 
+      handlerInput.requestEnvelope.context?.AudioPlayer?.token || // Primary source
+      handlerInput.requestEnvelope.session?.attributes?.amazonToken || // Secondary source (session attributes)
+      sessionAttributes.amazonToken || // Fallback to sessionAttributes
+      0; // Default to 0 if all else fails
 
       const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
       if (handlerInput.requestEnvelope.request.reason = 'USER_INITIATED')
