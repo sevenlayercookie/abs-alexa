@@ -2019,6 +2019,10 @@ const AudioPlayerEventHandler = {
 
       // this offset isn't always being set; is offsetInMilliseconds passed in different
       // parts of handlerInput sometimes?
+
+      const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
+      console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
+
       let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds;
       if (offset == undefined) {
         offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
@@ -2038,8 +2042,7 @@ const AudioPlayerEventHandler = {
       else {
         currentBookTime = calculateCurrentTime(userPlaySession, offset, amazonToken);
       }
-      const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
-      console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
+      
       let returnResponseFlag = false;
       let offsetInMilliseconds
       switch (audioPlayerEventName) {
@@ -2408,8 +2411,10 @@ const FallbackIntentHandler = {
  * A SessionEndedRequest is an object that represents a request made to an Alexa skill to notify that a session was ended. Your service receives a SessionEndedRequest when a currently open session is closed for one of the following reasons:
  *
  * 1. The user says "exit" or "quit".
- * 2.The user does not respond or says something that does not match an intent defined in your voice interface while the device is listening for the user's response.
+ * 2. The user does not respond or says something that does not match an intent defined in your voice interface while the device is listening for the user's response.
  * 3. An error occurs.
+ * 
+ * Kind of a last chance to save any data and clean up because Alexa has decided to end everything.
  * 
  */
 const SessionEndedRequestHandler = {
@@ -2428,18 +2433,21 @@ const SessionEndedRequestHandler = {
       const offsetInMilliseconds =
         handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds || // Try AudioPlayer first
         handlerInput.requestEnvelope.session?.attributes?.offsetInMilliseconds || // Fallback to session attributes
-        sessionAttributes.offsetInMilliseconds || // Fallback to sessionAttributes
+        localSessionAttributes.offsetInMilliseconds || // Fallback to localsessionAttributes
         null; // Default to null if all else fails
 
       const amazonToken =
         handlerInput.requestEnvelope.context?.AudioPlayer?.token || // Try AudioPlayer first
         handlerInput.requestEnvelope.session?.attributes?.amazonToken || // Fallback to session attributes
-        sessionAttributes.amazonToken || // Fallback to sessionAttributes
+        localSessionAttributes.amazonToken || // Fallback to local sessionAttributes
         null; // Default to null if all else fails
 
       if (amazonToken !== null && offsetInMilliseconds !== null && userPlaySession) {
         const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
-        closeUserPlaySession(userPlaySession, currentBookTime)
+        if (closeUserPlaySession(userPlaySession, currentBookTime) == 0) { // if session closed successfully
+          closedPlaySession = true
+          console.log("SessionEndedRequest: successfully closed ABS session")
+        }
       }
       if (handlerInput.requestEnvelope.request.reason == 'USER_INITIATED') {
         sessionAttributes = {}
