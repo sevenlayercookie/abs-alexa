@@ -3,15 +3,13 @@ const Alexa = require('ask-sdk-core');
 //const AWS = require('aws-sdk');
 const request = require('sync-request');
 const fs = require('fs');
-const { SsmlUtils } = require('ask-sdk-core');
-const xml2js = require('xml2js');
+//const { SsmlUtils } = require('ask-sdk-core');
+// const xml2js = require('xml2js');
 
 
 let localSessionAttributes = {
   userPlaySessionID: null,
   userPlaySession: null,
-  sharePlaySession: null,
-  // mediaItemShare: null,
   offsetInMilliseconds: null,
   amazonToken: null,
   playUrl : null,
@@ -20,10 +18,11 @@ let localSessionAttributes = {
 }
 
 //const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
-const Util = require('./util.js');
+// const Util = require('./util.js');
 
 const { ABS_API_KEY, SERVER_URL, CFAccessClientId, CFAccessClientSecret } = require('./config.js');
-const { off, title } = require('process');
+// const { off, title } = require('process');
+
 const baseheaders = {
     "Content-Type": 'application/json',
     "Authorization": 'Bearer ' + ABS_API_KEY,
@@ -32,17 +31,6 @@ const baseheaders = {
     "CF-Access-Client-Secret": CFAccessClientSecret,
     "User-Agent": "AlexaSkill"
 }
-
-const basebody = {
-  deviceInfo: {
-      clientName: "Alexa Echo",
-      deviceId: "Alexa Device",
-      osName: "Alexa Echo",
-      osVersion: "1.0",
-      browserName: "Alexa Echo",
-      model: "Alexa Echo"
-  }
-};
 
 // GLOBAL VARIABLES
 //let playSession = null;
@@ -60,8 +48,7 @@ let timers = {
   preparePlay: null,
   totalIntentTime: null
 }
-let currentTrackIndex = null
-let currentTime = null
+
 let backgroundUrl = "https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"
   
 // AUDIOBOOKSHELF API CALL FUNCTIONS
@@ -221,7 +208,19 @@ function updateUserPlaySession(playSession, currentBookTime) {
 
       // update user play session
       let res = request('POST', SERVER_URL + `/api/session/${playSessionID}/sync`, { headers: baseheaders, body: body });
-      console.log(res)      
+      console.log("updateUserPlaySession: ")
+      console.log(res)     
+      if (res.statusCode == 200) {
+         console.log("updateUserPlaySession - Successfully synced play session with ABS");
+      }
+      if (res.statusCode == 404) {
+        console.log("updateUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
+        throw new Error(`Failed to sync play session: ${res.statusCode} ${res.body.toString()}`);
+      }
+      if (res.statusCode == 500) {
+        console.log("updateUserPlaySession - ABS: Internal Server Error:There was an error syncing the session.");
+        throw new Error(`updateUserPlaySession - Failed to sync play session: ${res.statusCode} ${res.body.toString()}`);
+      }
       return // docs say this returns playSession, but not in my experience
 
       //let playSession = JSON.parse(res.getBody('utf8')); this doesn't seem to return the session...
@@ -230,28 +229,8 @@ function updateUserPlaySession(playSession, currentBookTime) {
       //return playSession;
       
   } catch (error) {
-      console.error('Error updating play session:', error);
-      throw error;
-  }
-}
-
-function updateMediaItemShareProgress(slug, currentBookTime) {
-  try {
-      //currentBookTime = calculateCurrentTime(mediaItemShare, currentTrackOffsetMS, currentToken)
-      const body = JSON.stringify({
-        currentTime: currentBookTime,
-        // duration:
-        // timeListened:ss
-      });
-      const apiUrl = SERVER_URL + `/public/share/` + slug + "/progress"
-      // update user play session
-      let res = request('PATCH', apiUrl, { headers: baseheaders, body: body });
-      console.log(res)      
-
-      //return 0;
-  } catch (error) {
-      console.error('Error updating mediaShareItem:', error);
-      throw error;
+      console.error('updateUserPlaySession - Error updating play session:', error);
+      return
   }
 }
 
@@ -297,56 +276,22 @@ function closeUserPlaySession(userPlaySession, currentBookTime) {
       const apiUrl = SERVER_URL + `/api/session/${userPlaySessionID}/close`
 
       let res = request('POST', apiUrl, { headers: baseheaders, body: body });
-      console.log(res)
-      // let data = JSON.parse(res.getBody('utf8'));
-      // let playbackURL = data.audioTracks[0].contentUrl
+      console.log("closeUserPlaySession: ")
       
-      //return 0;
+      if (res.statusCode == 200) {
+        console.log("closeUserPlaySession - Successfully synced and closed play session with ABS");
+     }
+     if (res.statusCode == 404) {
+       console.log("closeUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
+       throw new Error(`closeUserPlaySession - Failed to close play session: ${res.statusCode} ${res.body.toString()}`);
+     }
+     if (res.statusCode !== 200) {
+       throw new Error(`closeUserPlaySession - Failed to close play session: ${res.statusCode} ${res.body.toString()}`);
+     }
   } catch (error) {
-      console.error('Error closing play session:', error);
-      throw error;
+      console.error('closeUserPlaySession - Error closing play session:', error);
+      return
   }
-}
-
-function closeSharePlaySession(playSession, currentTrackOffsetMS, currentToken) {
-  try {
-      //const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-      currentTime = calculateCurrentTime(playSession, currentTrackOffsetMS, currentToken)
-      const body = JSON.stringify({
-        currentTime: currentTime,
-        // duration:
-        // timeListened:
-      });
-
-      let res = request('POST', SERVER_URL + `/api/session/${playSession.id}/close`, { headers: baseheaders, body: body });
-      console.log(res)
-      // let data = JSON.parse(res.getBody('utf8'));
-      // let playbackURL = data.audioTracks[0].contentUrl
-      
-      return 0;
-  } catch (error) {
-      console.error('Error closing play session:', error);
-      throw error;
-  }
-}
-
-function getMediaProgress(lastPlayedLibraryItem) {
-  try {
-      
-      let res = request('GET', SERVER_URL + `/api/me/progress/${lastPlayedLibraryItem.id}`, { headers: baseheaders });
-      console.log(res)
-      let mediaProgress = JSON.parse(res.getBody('utf8'));
-      // let playbackURL = data.audioTracks[0].contentUrl
-      
-      return mediaProgress;
-  } catch (error) {
-      console.error('Error retrieving media progress:', error);
-      throw error;
-  }
-}
-
-function getQueue(currentTime, audioTracks) {
-  return audioTracks.filter(track => track.startOffset > currentTime);
 }
 
 function getCurrentTrack(currentTime, audioTracks) {
@@ -359,188 +304,8 @@ function getCurrentTrackIndex(currentTime, audioTracks) {
 }
 
 function getCoverUrl(libraryItemId) {
+  // as of 11/28/24, retrieving cover does not require authentication
   return SERVER_URL + `/api/items/${libraryItemId}/cover` 
-}
-
-function getCoverUrlFromShare(slug) {
-  return SERVER_URL + `/public/share/${slug}/cover`
-}
-
-
-/**
- * Function to create a new media item share
- * 
- * @param {string} url - The API endpoint
- * @param {Object} data - The data to be sent in the request body
- * @param {string} data.slug - The unique identifier for the media item share
- * @param {number} data.expiresAt - The expiration time of the share in milliseconds since epoch, or null if it never expires
- * @param {string} data.mediaItemType - The type of media item (e.g., 'book', 'podcastEpisode')
- * @param {string} data.mediaItemId - The ID of the media item to be shared
- * @param {string} token - The authorization token
- * @returns {Object} - The response from the API
- */
-function createMediaItemShare(url = null, data, token = null) {
-  try {
-    if (!url) {
-      url = SERVER_URL
-    }
-    url = url + "/api/share/mediaitem"
-    if (!token) {
-      token = ABS_API_KEY
-    }
-    
-    const res = request('POST', url, {
-      json: data,
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    const responseData = JSON.parse(res.getBody('utf8'));
-    
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      return responseData;
-    } else {
-      return {
-        status: res.statusCode,
-        data: responseData
-      };
-    }
-  } catch (error) {
-    console.error('Error:', error.message);
-    return {
-      status: 500,
-      data: 'Internal server error'
-    };
-  }
-}
-
-
-/**
- * Function to generate a random 8-character alphabetic string
- * 
- * @returns {string} - The generated string
- */
-function generateRandomString(num = null) {
-  if (!num) {
-    num = 8 // default 8 characters
-  }
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-  let result = '';
-  for (let i = 0; i < num; i++) {
-    result += characters.charAt(Math.floor(Math.random() * characters.length));
-  }
-  return result;
-}
-
-
-/**
- * Function to get media item share by slug
- * GET /public/share/:slug
- * @param {string} url - The API endpoint
- * @param {string} slug - The unique identifier for the media item share
- * @returns {Object} - The response from the API
- */
-function getMediaItemShareBySlug(url, slug) {
-  if (!url) {
-  url = SERVER_URL
-  }
-
-  try {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...baseheaders
-    };
-
-    const res = request('GET', `${url}/public/share/${slug}`, {
-      headers: headers
-    });
-
-    const responseData = JSON.parse(res.getBody('utf8'));
-
-    if (res.statusCode >= 200 && res.statusCode < 300) {
-      return responseData;
-    } else {
-      return {
-        status: res.statusCode,
-        data: responseData
-      };
-    }
-  } catch (error) {
-    console.error('Error:', error.message);
-    return {
-      status: 500,
-      data: 'Internal server error'
-    };
-  }
-}
-
-function getMediaItemShareCoverImage(slug) {
-  const cookie = 'share_session_id=your_session_id'; // Replace 'your_session_id' with the actual session id
-
-  try {
-    const res = syncRequest('GET', `/public/share/${slug}/cover`, {
-      headers: {
-        'Cookie': cookie
-      }
-    });
-
-    if (res.statusCode === 200) {
-      return res.getBody('utf8');
-    } else {
-      console.error(`Error: ${res.statusCode} - ${res.getBody('utf8')}`);
-      return null;
-    }
-  } catch (error) {
-    console.error('Request failed', error);
-    return null;
-  }
-}
-
-function getMediaItemShareAudioTrack(slug, index, shareSessionId) {
-  const apiUrl = SERVER_URL + `/pulbic/share/${slug}/track/${index}`;
-  
-  // Ensure the share session ID is provided
-  if (!shareSessionId) {
-    throw new Error('Share session not set');
-  }
-  
-  try {
-    const res = request('GET', apiUrl, {
-      headers: {
-        'Cookie': `share_session_id=${shareSessionId}`
-      }
-    });
-
-    if (res.statusCode === 404) {
-      throw new Error('Resource not found');
-    }
-    
-    // Handle different responses and content
-    const contentType = res.headers['content-type'];
-    if (contentType.includes('application/json')) {
-      return JSON.parse(res.getBody('utf8'));
-    } else {
-      return res.getBody();
-    }
-
-  } catch (error) {
-    console.error(`Error fetching media item share audio track: ${error.message}`);
-    throw error;
-  }
-}
-
-function setProxyCookie(share_session_id) {
-    const url = SERVER_URL + `/public/setCookie?share_session_id=${share_session_id}`;
-    let res = request('GET', url, { headers: baseheaders });
-    //const res = syncRequest('GET', url);
-
-    if (res.statusCode === 200) {
-        console.log('Cookie set successfully! ' + 'share_session_id=' + share_session_id);
-    } else {
-        console.error('Failed to set cookie:', res.body.toString());
-    }
 }
 
 // INTENT HANDLERS
@@ -571,79 +336,6 @@ function getCurrentChapter(currentBookTime,playSession) {
   return null; // Return null if no chapter is found
 }
 
-function createRSSFeed(libraryID) {
-  try {
-    const body = JSON.stringify({
-      slug: libraryID,
-      serverAddress: SERVER_URL
-      // duration:
-      // timeListened:ss
-    });
-    let res = request('POST', `${SERVER_URL}/api/feeds/item/${libraryID}/open`, { body: body, headers: baseheaders });
-    let data = JSON.parse(res.getBody('utf8'));
-  return data;
-  } catch (error) {
-      console.error('Error during getLibraryFilterData:', error);
-      throw error;
-  }
-}
-
-function closeRSSFeed(libraryID) {
-  try {
-    let res = request('POST', `${SERVER_URL}/api/feeds/${libraryID}/close`, { headers: baseheaders });
-    //let data = JSON.parse(res.getBody('utf8'));
-  return ;
-  } catch (error) {
-      console.error('Error during getLibraryFilterData:', error);
-      throw error;
-  }
-}
-
-function parseRSSFeed(rssFeedUrl) {
-  try {
-    // Fetch the RSS feed using sync-request
-    const response = request('GET', rssFeedUrl);
-    const rssFeedXml = response.getBody('utf8');
-
-    // Parse the XML synchronously
-    let result;
-    xml2js.parseString(rssFeedXml, (err, parsedResult) => {
-      if (err) {
-        throw new Error("Error parsing XML: " + err.message);
-      }
-      result = parsedResult;
-    });
-
-    // Extract coverUrl from the feed
-    const coverUrl = result.rss.channel[0]['itunes:image'][0]['$'].href;
-
-    // NEED TO HANDLE IF NO ITEM IN RSS FEED! sometimes, ABS will create an empty RSS feed.
-    // probably can fix that by recreating the RSS feed.
-
-    if (!result.rss.channel[0].item || result.rss.channel[0].item.length === 0) {
-        console.error("No items found in the RSS feed.");
-      return null;
-    }
-
-    // Extract audio track details from each item
-    const audioTracks = result.rss.channel[0].item.map(item => ({
-      url: item.enclosure[0]['$'].url,
-      title: item.title[0].trim(),
-      author: item['itunes:author'][0].trim(),
-      duration: item['itunes:duration'][0].trim(),
-      length: item.enclosure[0]['$'].length
-    }));
-
-    // Return an object with coverUrl and audioTracks
-    return {
-      coverUrl,
-      audioTracks
-    };
-  } catch (err) {
-    console.error("Error fetching or parsing RSS feed:", err);
-    throw err;
-  }
-}
 
 /**
  * Intent handler to start playing an audio file.
@@ -653,26 +345,20 @@ const PlayAudioIntentHandler = {
     canHandle(handlerInput) {
         return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
             && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'PlayAudioIntent'
-                || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.ResumeIntent'
+                 || Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.ResumeIntent'
                   || Alexa.getIntentName(handlerInput.requestEnvelope) === 'PlayLastIntent');
     },
     async handle(handlerInput) {
 
         try {
+          let timeStart = new Date();
          let userPlaySession
          let lastPlayedLibraryItem
          let expandedItem
          let lastPlayedID
-         
-
-         let rssFeed
-         let rssFeedUrl
-         let rssFeedID
-         let rssResult
-
+      
          let mediaProgress
          let currentTime
-         //let sharePlaySession
         
         const playBehavior = 'REPLACE_ALL';
         
@@ -695,46 +381,19 @@ const PlayAudioIntentHandler = {
           }
         // if no session already in progress, find last played audiobook
         else {  
-        lastPlayedLibraryItem = getLastPlayedLibraryItem()
-        lastPlayedID = lastPlayedLibraryItem.id
+          lastPlayedLibraryItem = getLastPlayedLibraryItem()
+          lastPlayedID = lastPlayedLibraryItem.id
 
-        expandedItem = getItemById(lastPlayedID, { include: ['progress', 'rssfeed'], expanded: 1 });
-        
-        
-        if (expandedItem.rssFeed) {
-          rssFeed = expandedItem.rssFeed // use existing RSS feed url
-        }
-        else { // create a new RSS feed
-          rssFeed = createRSSFeed(lastPlayedID).feed
-        }
-        let rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
-        rssFeedUrl = rssFeed.feedUrl
-        rssFeedID = rssFeed.id
-        rssResult = parseRSSFeed(rssFeedUrl)
+          expandedItem = getItemById(lastPlayedID, { include: ['progress'], expanded: 1 });
 
-        if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
-          closeRSSFeed(rssFeedID)
-          rssFeed = createRSSFeed(lastPlayedID).feed
-          rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
-          rssFeedUrl = rssFeed.feedUrl
-          rssFeedID = rssFeed.id
-          rssResult = parseRSSFeed(rssFeedUrl)
         }
 
-        if (rssResult == null) { // if null, give up
-          return handlerInput.responseBuilder
-          .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
-          .getResponse();
-        }
 
-      }
         if (!userPlaySession) { // open new playsession if needed
           userPlaySession = startUserPlaySession(lastPlayedID, handlerInput)
         }
         delete userPlaySession.libraryItem // this property is very large and not useful
         playSession = userPlaySession
-        // sharePlaySession = mediaItemShare.playbackSession
-        // const share_session_id = sessionAttributes.share_session_id = localSessionAttributes.share_session_id = sharePlaySession.id
         if (!existingSession)
         {
           mediaProgress = expandedItem.userMediaProgress
@@ -742,32 +401,21 @@ const PlayAudioIntentHandler = {
         }
         else {
           currentTime = existingSession.currentTime
-          rssResult = existingAttributes.rssResult
-          rssFeed = existingAttributes.rssFeed
+
         }
         sessionAttributes.userPlaySession = userPlaySession
-        // sessionAttributes.sharePlaySession = playSession
         
 
         sessionAttributes.userPlaySessionID = userPlaySession.id // can call API to pull the whole playSession again if needed
-        //sessionAttributes.mediaItemShare = mediaItemShare
-        if (rssFeed)
-        {
-        sessionAttributes.rssFeed = rssFeed
-        }
-        if (rssResult)
-        {
-          sessionAttributes.rssResult = rssResult
-        }
-        
-        let currentTrack = sessionAttributes.currentTrack = getCurrentTrack(currentTime, playSession.audioTracks)
-        let currentTrackIndex = sessionAttributes.amazonToken = getCurrentTrackIndex(currentTime, playSession.audioTracks) // should start at 1
+
+        let currentTrack = sessionAttributes.currentTrack = getCurrentTrack(currentTime, userPlaySession.audioTracks)
+        let currentTrackIndex = sessionAttributes.amazonToken = getCurrentTrackIndex(currentTime, userPlaySession.audioTracks) // should start at 1
        
         sessionAttributes.currentTrackIndex = currentTrackIndex;
         let trackStartOffset = currentTrack.startOffset
         const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = (currentTime - trackStartOffset) * 1000
 
-        if (playSession.audioTracks[currentTrackIndex]) { // if there is another track that exists after the current track
+        if (userPlaySession.audioTracks[currentTrackIndex]) { // if there is another track that exists after the current track
           sessionAttributes.nextStreamEnqueued = true
           localSessionAttributes.nextStreamEnqueued = true
         }
@@ -775,16 +423,20 @@ const PlayAudioIntentHandler = {
           sessionAttributes.nextStreamEnqueued = false
           localSessionAttributes.nextStreamEnqueued = false
         }
+        const coverUrl = sessionAttributes.coverUrl = getCoverUrl(userPlaySession.libraryItemId)
 
-      const coverUrl = sessionAttributes.coverUrl = rssResult.coverUrl
-      const chapterTitle = getCurrentChapter(currentTime,playSession).title
-      const author = playSession.displayAuthor
-      const bookTitle =  playSession.displayTitle
-      const playUrl = sessionAttributes.playUrl = rssResult.audioTracks[currentTrackIndex - 1].url
-
+      
+      const chapterTitle = getCurrentChapter(currentTime,userPlaySession).title
+      const author = userPlaySession.displayAuthor
+      const bookTitle =  userPlaySession.displayTitle
+      const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+      // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY
       handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
       updateLocalSessionAttributes(sessionAttributes)
 
+      let timeEnd = new Date();
+      let totalIntentTime = timeEnd - timeStart
+      console.log("TIMER: Total Intent Time (PlayAudioIntent): " + totalIntentTime + " ms");
 
         const metadata = {
           title: chapterTitle,
@@ -969,7 +621,7 @@ function searchFor (query, libraryID) {
 }
 
 const Fuse = require('fuse.js');
-const { match } = require('assert');
+// const { match } = require('assert');
 
 const PlaybackBookHandler = { // this handler is not currently used (has limitations)
   canHandle(handlerInput) {
@@ -981,6 +633,7 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
     // actually useful if I were to upload the catalogue for Alexa to analyze.....
     // it doesn't do any entity resolution, which is stupid
     // created a custom handler that does entity resolution through amazon
+    console.log("Intent: PlaybackBookHandler Triggered")
       const bookTitle = handlerInput.requestEnvelope.request.intent.slots["object.name"].value
       const author = handlerInput.requestEnvelope.request.intent.slots["object.author.name"].value
 
@@ -1052,7 +705,6 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
             .getResponse();
         }
 
-        const bookResults = results[0].book
         const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
         // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
         console.log("Matched a book using ABS search API!")
@@ -1066,81 +718,17 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
       }
 
       let userPlaySession
-      //let sharePlaySession
 
       const playBehavior = 'REPLACE_ALL';
       
       const libraryItemID = libraryItem.id
-      //let expandedItem = getLibraryItem(lastPlayedID, 1, "share,progress");
-      //
-      let expandedItem = getItemById(lastPlayedID, { include: ['progress', 'share', 'rssfeed'], expanded: 1 });
-      let rssFeed
-      let rssFeedUrl
-      
-      let rssFeedID
-      // start work on RSS stuff
-      if (expandedItem.rssFeed) {
-        rssFeed = expandedItem.rssFeed // use existing RSS feed url
-      }
-      else { // create a new RSS feed
-        rssFeed = createRSSFeed(lastPlayedID).feed
-      }
-      let rssFeedSlug = rssFeed.entityId
-      rssFeedUrl = rssFeed.feedUrl
-      rssFeedID = rssFeed.id
-      let rssResult = parseRSSFeed(rssFeedUrl)
 
-      if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
-        closeRSSFeed(rssFeedID)
-        rssFeed = createRSSFeed(lastPlayedID).feed
-        rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
-        rssFeedUrl = rssFeed.feedUrl
-        rssFeedID = rssFeed.id
-        rssResult = parseRSSFeed(rssFeedUrl)
-      }
+    
+      let expandedItem = getItemById(lastPlayedID, { include: ['progress'], expanded: 1 });
 
-      if (rssResult == null) { // if null, give up
-        return handlerInput.responseBuilder
-        .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
-        .getResponse();
-      }
-
-
-      let mediaItemShare
-      if (!expandedItem.mediaItemShare) {
-        // if no share already exists, create a new one
-          const body = {
-            slug: generateRandomString(8),
-            expiresAt: Date.now() + 3600 * 1000 * 24, // 24 hours from now
-            mediaItemType: 'book',
-            mediaItemId: libraryItem.media.id
-          };
-        mediaItemShare = createMediaItemShare(SERVER_URL,body,ABS_API_KEY)
-        // may need to fetch this share in order to get the cookie; or can I pull it from the share itself?
-      }
-      else {
-        // get existing share
-        try {
-          mediaItemShare = getMediaItemShareBySlug(SERVER_URL, expandedItem.mediaItemShare.slug);
-          
-        } catch (error) {
-          console.error('Error:', error);
-        }
-      }
-      if (!mediaItemShare) {
-        speakOutput = "Could not find or create media item share"
-        return handlerInput.responseBuilder
-          .speak(speakOutput)
-      }
-      let slug = mediaItemShare.slug
-      if (!mediaItemShare.playbackSession) {
-        // if newly created share, will need to open the sharePlaySession by getting the slug
-        mediaItemShare = getMediaItemShareBySlug(SERVER_URL, slug);
-      }
       userPlaySession = startUserPlaySession(libraryItemID, handlerInput)
       delete userPlaySession.libraryItem // this property very large and nothing useful
       playSession = userPlaySession
-      //playSession = sharePlaySession = mediaItemShare.playbackSession
 
       const sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); // cannot set sessionAttriubtes and localAttributes equal
       localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
@@ -1149,7 +737,6 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
       
 
       sessionAttributes.userPlaySessionID = userPlaySession.id // can call API to pull the whole playSession again if needed
-      sessionAttributes.mediaItemShare = mediaItemShare
 
       let currentTime = mediaProgress.currentTime
       let currentTrack = sessionAttributes.currentTrack = getCurrentTrack(currentTime, playSession.audioTracks)
@@ -1165,9 +752,11 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
         localSessionAttributes.nextStreamEnqueued = false
       }
 
-      const playUrl = sessionAttributes.playUrl = rssResult.audioTracks[currentTrackIndex - 1].url
-        
-      const coverUrl = rssResult.coverUrl
+      const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+
+      // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY 
+
+      const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
 
       handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
       // sync localSessionAttributes to sessionAttributes
@@ -1385,7 +974,6 @@ function searchByTitleOnly(
     console.log("Performing ABS API search for '" + bookTitle + "'")
     const absSearchResults = searchBookWithAbsAPI(bookTitle)
     if (absSearchResults[0].book.length > 0) {
-      const bookResults = absSearchResults[0].book
       const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
       // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
       console.log("Matched a book using ABS search API!")
@@ -1477,15 +1065,10 @@ const PlayBookIntentHandler = {
         amazonAuthor = null // clear amazon's guess
         //amazonResolutionFailed = true
       }
-      
-      let absMatchFailed = false
-      let callFailed = false
+
       // VALIDATION CROSS MATCH FUNCTION HERE (check Amazon returned title vs returned author)
       // should loop through all matched authors and compare against all matched books (by polling the Amazon API)
       // exit the loop as soon as a match is made
-      let amazonCrossmatchFailed = false
-      
-      
 
       // cross match function is working, but is it necessary? how should I use the result?
       // if it fails, should I throw out any title and author amazon resolved?
@@ -1705,47 +1288,17 @@ const PlayBookIntentHandler = {
         const ABSsearchTime = ABSsearchEnd - ABSsearchStart
         console.log("TIMER: ABS search time: " + ABSsearchTime + " ms")
         timers.totalABSsearch = ABSsearchTime
-      // moving on to play whatever libraryItem is set to
+
+
+        // START PLAYING THE BOOK
       let userPlaySession
-      let sharePlaySession
 
       const playBehavior = 'REPLACE_ALL';
       
       const libraryItemID = libraryItem.id
 
-      let expandedItem = getItemById(libraryItemID, { include: ['progress', 'rssfeed'], expanded: 1 });
-        let rssFeed
-        let rssFeedUrl
+      let expandedItem = getItemById(libraryItemID, { include: ['progress'], expanded: 1 });
         
-        let rssFeedID
-        // start work on RSS stuff
-        if (expandedItem.rssFeed) {
-          rssFeed = expandedItem.rssFeed // use existing RSS feed url
-        }
-        else { // create a new RSS feed
-          rssFeed = createRSSFeed(libraryItemID).feed
-        }
-        let rssFeedSlug = rssFeed.entityId
-        rssFeedUrl = rssFeed.feedUrl
-        rssFeedID = rssFeed.id
-        let rssResult = parseRSSFeed(rssFeedUrl)
-
-        if (rssResult == null) { // if feed is empty, try closing RSS feed and restarting
-          closeRSSFeed(rssFeedID)
-          rssFeed = createRSSFeed(lastPlayedID).feed
-          rssFeedSlug = rssFeed.entityId // needed only if planning to close RSS feed at any point (maybe at session end?)
-          rssFeedUrl = rssFeed.feedUrl
-          rssFeedID = rssFeed.id
-          rssResult = parseRSSFeed(rssFeedUrl)
-        }
-  
-        if (rssResult == null) { // if null, give up
-          return handlerInput.responseBuilder
-          .speak(sanitizeForSSML("RSS feed is empty. Please try again."))
-          .getResponse();
-        }
-      
-      
       // *** this intent presumed to always start a new play session ***
       // *** OR: if I start using persistent attributes, I can keep track of all
       // prior play sessions and resume them over time
@@ -1761,9 +1314,6 @@ const PlayBookIntentHandler = {
       sessionAttributes.userPlaySession = userPlaySession
       sessionAttributes.userPlaySessionID = userPlaySession.id // can call API to pull the whole playSession again if needed
 
-      
-      sessionAttributes.rssFeed = rssFeed
-      sessionAttributes.rssResult = rssResult
 
       let currentTime = mediaProgress?.currentTime ?? 0;
       let currentTrack = sessionAttributes.currentTrack = getCurrentTrack(currentTime, playSession.audioTracks)
@@ -1778,9 +1328,10 @@ const PlayBookIntentHandler = {
       else {
         localSessionAttributes.nextStreamEnqueued = false
       }
-      const playUrl = sessionAttributes.playUrl = rssResult.audioTracks[currentTrackIndex - 1].url
-        
-      const coverUrl = rssResult.coverUrl
+
+      const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+
+      const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
       handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
       // sync localSessionAttributes to sessionAttributes
       updateLocalSessionAttributes(sessionAttributes)
@@ -1791,7 +1342,8 @@ const PlayBookIntentHandler = {
 
       let chapterTitle = getCurrentChapter(currentTime,playSession).title
 
-      chapterTitle = chapterTitle // remove any invalid characters
+      // chapterTitle = chapterTitle // remove any invalid characters
+
       const subtitle = playSession.displayTitle
 
       const metadata = {
@@ -1822,7 +1374,7 @@ const PlayBookIntentHandler = {
       const timeUntilResponse = timeBeforeResponse - ABSsearchEnd
       const totalIntentTime = timeBeforeResponse - amazonStuffStart
       console.log("TIMER: Time after ABS search until skill response: " + timeUntilResponse + " ms")
-      console.log("TIMER: Total intent time: " + totalIntentTime + " ms")
+      console.log("TIMER: Total intent time (PlayBookIntent): " + totalIntentTime + " ms")
       timers.totalIntentTime = totalIntentTime
       timers.preparePlay = timeUntilResponse
       // log timers to file
@@ -1856,27 +1408,6 @@ const PlayBookIntentHandler = {
     }
 };
 
-// DEBUG FUNCTION. why is my response size so big??
-
-function getObjectSizeInBytes(obj) {
-  const jsonString = JSON.stringify(obj);
-  const byteSize = new TextEncoder().encode(jsonString).length;
-  return byteSize;
-}
-
-function getSizeBreakdown(obj) {
-  let breakdown = {};
-  let totalSize = getObjectSizeInBytes(obj);
-
-  for (let key in obj) {
-      if (obj.hasOwnProperty(key)) {
-          breakdown[key] = getObjectSizeInBytes({ [key]: obj[key] });
-      }
-  }
-
-  return { totalSize, breakdown };
-}
-
 function clearTimers () {
   timers = {
     context : { 
@@ -1893,25 +1424,6 @@ function clearTimers () {
     totalIntentTime: null
   }
 }
-
-
-/**
- * Intent handler to start playing an audio file.
- * By default, it will play a specific audio stream.
- * */
-
-/**
- * Returns session information for a specified bot, alias, and user.
-
-For example, you can use this operation to retrieve session information for a user that has left a long-running session in use.
-
-If the bot, alias, or session identifier doesn't exist, Amazon Lex V2 returns a BadRequestException. If the locale doesn't exist or is not enabled for the alias, you receive a BadRequestException.
-
-Request Syntax
-
-GET /bots/botId/botAliases/botAliasId/botLocales/localeId/sessions/sessionId HTTP/1.1
- */
-
 
 const PauseAudioIntentHandler = {
     canHandle(handlerInput) {
@@ -1930,7 +1442,6 @@ const PauseAudioIntentHandler = {
         
         if (handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds != undefined && sessionAttributes.offsetInMilliseconds != undefined) {
           
-          const userPlaySessionID = sessionAttributes.userPlaySessionID
           const userPlaySession = sessionAttributes.userPlaySession
 
           const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
@@ -1979,7 +1490,6 @@ const PreviousIntentHandler = {
     sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
     sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
     localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
-    const userPlaySessionID = sessionAttributes.userPlaySessionID
     let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
     let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
     const userPlaySession = sessionAttributes.userPlaySession
@@ -1996,7 +1506,6 @@ const PreviousIntentHandler = {
       newBookTime = currentChapter.start
       const result = getTrackAndOffsetFromBookTime(newBookTime,userPlaySession.audioTracks).currentTrack
       
-      const track = result.currentTrack
       const offset = result.goalOffset
 
       offsetInMilliseconds = offset
@@ -2005,7 +1514,6 @@ const PreviousIntentHandler = {
       
       newBookTime = previousChapter.start
       const result = getTrackAndOffsetFromBookTime(newBookTime,userPlaySession.audioTracks)
-      const track = result.currentTrack
       const offset = result.goalOffset
 
       currentChapter = previousChapter
@@ -2015,9 +1523,11 @@ const PreviousIntentHandler = {
     
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndex(newBookTime,userPlaySession.audioTracks)
     
-    playUrl = localSessionAttributes.playUrl = localSessionAttributes.rssResult.audioTracks[amazonToken - 1].url
+     playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+
     let newChapterTitle = currentChapter.title
-    let coverUrl = localSessionAttributes.rssResult.coverUrl
+    let coverUrl = getCoverUrl(userPlaySession.libraryItemId)
+
     updateUserPlaySession(userPlaySession, newBookTime)
     // manually set the new currentBookTime and updatedAt to local attributes
     sessionAttributes.userPlaySession.updatedAt = localSessionAttributes.userPlaySession.updatedAt = Date.now()
@@ -2077,7 +1587,7 @@ const NextIntentHandler = {
     sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
     localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
     const chapters = sessionAttributes.userPlaySession.chapters
-    const userPlaySessionID = sessionAttributes.userPlaySessionID
+
     let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
     let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
    
@@ -2104,9 +1614,12 @@ const NextIntentHandler = {
     
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndex(newBookTime,userPlaySession.audioTracks)
     
-    playUrl = localSessionAttributes.playUrl = localSessionAttributes.rssResult.audioTracks[amazonToken - 1].url
+    playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+
     let newChapterTitle = nextChapter.title
-    let coverUrl = localSessionAttributes.rssResult.coverUrl
+    
+    let coverUrl = getCoverUrl(userPlaySession.libraryItemId)
+    
     updateUserPlaySession(userPlaySession, newBookTime)
     // manually set the new currentBookTime and updatedAt to local attributes
     sessionAttributes.userPlaySession.updatedAt = localSessionAttributes.userPlaySession.updatedAt = Date.now()
@@ -2206,7 +1719,6 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
     let newOffsetInMilliseconds = currentOffsetInMilliseconds
     let newUrl = currentUrl
     let newToken = currentToken
-    let newTrackArrayIndex = currentTrackArrayIndex
     let newTrack = currentTrack
 
     const timeCode = handlerInput.requestEnvelope.request.intent.slots.time.value
@@ -2229,7 +1741,6 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
         {
           if (tickerArrayIndex == 0 ) // if attempting to go before first track, then..
           {
-            newTrackArrayIndex = 0
             newToken = 1
             newOffsetInMilliseconds = 0 // go to beginning of the first track
             newTrack = userPlaySession.audioTracks[0]
@@ -2247,11 +1758,10 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
         if (goToBeginning) {}
         else {
           newTrack = checkTrack
-          newTrackArrayIndex = tickerArrayIndex
           newOffsetInMilliseconds = newTrack.duration * 1000 - tickerMilliseconds
         }
+        newUrl = SERVER_URL + sessionAttributes.userPlaySession.audioTracks[newTrack.index - 1].contentUrl + "?token=" + ABS_API_KEY
 
-        newUrl = sessionAttributes.rssResult.audioTracks[newTrack.index - 1].url
         newToken = newTrack.index
         
       }
@@ -2272,7 +1782,8 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
     updateLocalSessionAttributes(sessionAttributes)
 
-    const coverUrl = sessionAttributes.coverUrl
+    const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
+    // const coverUrl = sessionAttributes.coverUrl
 
     const chapterTitle = getCurrentChapter(afterBookTime,userPlaySession).title
     const metadata = {
@@ -2326,7 +1837,7 @@ const GoForwardXTimeIntentHandler = {
     const currentUrl = sessionAttributes.playUrl
     const currentTrack = sessionAttributes.currentTrack
     const currentTrackDurationInMS = currentTrack.duration * 1000
-    const currentTrackIndex = currentTrack.index
+
     const currentTrackArrayIndex = currentTrack.index - 1 // the tracks array index (such as audioTracks[arrayIndex] is one less than its index property)
 
     let newOffsetInMilliseconds = currentOffsetInMilliseconds
@@ -2357,7 +1868,7 @@ const GoForwardXTimeIntentHandler = {
 
         while (tickerMilliseconds > remainingDurationInMS && !atTheEnd)
           {
-            //if (!sharePlaySession.audioTracks[tickerArrayIndex]) // if attempting to go past last track, then..
+             // if attempting to go past last track, then..
             if (milliseconds > (userPlaySession.duration - beforeBookTime)*1000)
             {
               newTrackArrayIndex = userPlaySession.audioTracks.length - 1
@@ -2382,7 +1893,8 @@ const GoForwardXTimeIntentHandler = {
             newOffsetInMilliseconds = tickerMilliseconds
           }
   
-          newUrl = sessionAttributes.rssResult.audioTracks[newTrack.index - 1].url
+          newUrl = SERVER_URL + sessionAttributes.userPlaySession.audioTracks[newTrack.index - 1].contentUrl + "?token=" + ABS_API_KEY
+
           newToken = newTrack.index
           
       }
@@ -2403,7 +1915,9 @@ const GoForwardXTimeIntentHandler = {
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
     updateLocalSessionAttributes(sessionAttributes)
 
-    const coverUrl = sessionAttributes.coverUrl
+    const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
+    // const coverUrl = sessionAttributes.coverUrl
+    
     const chapterTitle = getCurrentChapter(afterBookTime,userPlaySession).title
     const metadata = {
       title: chapterTitle,
@@ -2484,6 +1998,7 @@ const HelpIntentHandler = {
 
 /**
  * Handles "Cancel" and "Stop", but notably not "Exit" or "Quit", which are handled by SessionEndedHandler
+ * This should end the skill completely
  */
 const CancelAndStopIntentHandler = {
     canHandle(handlerInput) {
@@ -2495,19 +2010,21 @@ const CancelAndStopIntentHandler = {
         const speakOutput = 'Goodbye!';
         
         const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
-        const userPlaySessionID = sessionAttributes.userPlaySessionID
-       //  const sharePlaySession = sessionAttributes.sharePlaySession
         const userPlaySession = sessionAttributes.userPlaySession
-        //const slug = sessionAttributes.mediaItemShare.slug
         const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
         const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
-  
-        const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
-        const testTime = Date.now()
-        const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
-        // timeListened = the time (in seconds) since session last updated (or created)
-        closeUserPlaySession(userPlaySession,currentBookTime)
-        //updateMediaItemShareProgress(slug,currentBookTime)
+        if (userPlaySession && offsetInMilliseconds !== null && amazonToken !== null)
+        {
+          const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
+          //const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
+          // timeListened = the time (in seconds) since session last updated (or created)
+          closeUserPlaySession(userPlaySession,currentBookTime)
+        }
+        else
+        {
+          console.log("CancelAndStopIntentHandler: userPlaySession or offsetInMilliseconds or amazonToken is null; could not close ABS play session")
+        }
+        console.log("CancelAndStopIntentHandler: closing Alexa skill")
         return handlerInput.responseBuilder
             .speak(sanitizeForSSML(speakOutput))
             .addAudioPlayerStopDirective()
@@ -2526,140 +2043,148 @@ const AudioPlayerEventHandler = {
     return handlerInput.requestEnvelope.request.type.startsWith('AudioPlayer.');
   },
   async handle(handlerInput) {
-    // *** AudioPlayerEventHandler can NOT access sessionAttributes
-    // need another way of communicating; localSessionAttributes? persistent attributes?
-    
-    // must use localSessionAttributes, and then update sessionAttributes when available
-
-    const userPlaySessionID = localSessionAttributes.userPlaySessionID
-    
-    // this offset isn't always being set; is offsetInMilliseconds passed in different
-    // parts of handlerInput sometimes?
-    let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds
-    if (offset == undefined)
-    {
-      offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
+    try {
+      // *** AudioPlayerEventHandler can NOT access sessionAttributes
+      // need another way of communicating; localSessionAttributes? persistent attributes?
       
-    }
-    if (offset == undefined)
-    {
-      console.log("offsetInMilliseconds wasn't pulled from handlerInput correctly")
-    }
-    const amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.request.token
-    if (amazonToken == undefined)
-      {
-        console.log("amazonToken wasn't pulled from handlerInput correctly")
+      // must use localSessionAttributes, and then update sessionAttributes when available
+
+      // this offset isn't always being set; is offsetInMilliseconds passed in different
+      // parts of handlerInput sometimes?
+      let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds;
+      if (offset == undefined) {
+        offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
       }
+      if (offset == undefined) {
+        console.log("offsetInMilliseconds wasn't pulled from handlerInput correctly");
+      }
+      const amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.request.token;
+      if (amazonToken == undefined) {
+        console.log("amazonToken wasn't pulled from handlerInput correctly");
+      }
+      let currentBookTime
+      const userPlaySession = localSessionAttributes.userPlaySession;
+      if (!userPlaySession || offset == undefined || amazonToken == undefined) {
+        console.log("userPlaySession, offset, or amazonToken was undefined; cannot sync progress");
+      }
+      else {
+        currentBookTime = calculateCurrentTime(userPlaySession, offset, amazonToken);
+      }
+      const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
+      console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
+      let returnResponseFlag = false;
+      switch (audioPlayerEventName) {
+        case 'PlaybackStarted':
+          if (!userPlaySession || currentBookTime === undefined) {
+          }
+          else {
+            updateUserPlaySession(userPlaySession, currentBookTime);
+            localSessionAttributes.userPlaySession.updatedAt = Date.now();
+            localSessionAttributes.userPlaySession.currentTime = currentBookTime;
+          }
 
-    const userPlaySession = localSessionAttributes.userPlaySession
-    const currentBookTime = calculateCurrentTime(userPlaySession, offset, amazonToken)
 
-    const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
-    console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
-    let returnResponseFlag = false;
-    switch (audioPlayerEventName) {
-      case 'PlaybackStarted':
-        // lets me verify that playback actually initiated after giving the play directive
-        updateUserPlaySession(userPlaySession,currentBookTime)
-            // manually set the new currentBookTime and updatedAt to local attributes
-        localSessionAttributes.userPlaySession.updatedAt = Date.now()
-        localSessionAttributes.userPlaySession.currentTime = currentBookTime
-        
-
-        returnResponseFlag = true;
-        break;
-      case 'PlaybackFinished':
-
-        // THIS IS SENT WHEN each track finishes as well
-        // should only close the session if there is no nextStreamEnqueued
-        if (localSessionAttributes.nextStreamEnqueued)
-        {
-          updateUserPlaySession(userPlaySession,currentBookTime)
-          // manually set the new currentBookTime and updatedAt to local attributes
-          localSessionAttributes.userPlaySession.updatedAt = Date.now()
-          localSessionAttributes.userPlaySession.currentTime = currentBookTime
-  
-        }
-        else {
-          const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
-          closeUserPlaySession(userPlaySession, currentBookTime)
+          returnResponseFlag = true;
           break;
-        }
 
-        break;
-      case 'PlaybackStopped': // can not return a response
-
-        //closeUserPlaySession(userPlaySessionID, currentBookTime, amazonToken)
-        
-        updateUserPlaySession(userPlaySession,currentBookTime)
-            // manually set the new currentBookTime and updatedAt to local attributes
-        localSessionAttributes.userPlaySession.updatedAt = Date.now()
-        localSessionAttributes.userPlaySession.currentTime = currentBookTime
-    
-        break;
-      case 'PlaybackNearlyFinished':
-        updateUserPlaySession(userPlaySession,currentBookTime)
-        // manually set the new currentBookTime and updatedAt to local attributes
-        localSessionAttributes.userPlaySession.updatedAt = Date.now()
-        localSessionAttributes.userPlaySession.currentTime = currentBookTime
-    
-        let currentToken = amazonToken
-        let nextToken = (parseInt(currentToken) + 1).toString()
-        const nextAudioTrack = localSessionAttributes.rssResult.audioTracks[nextToken-1]
-        if (nextAudioTrack) // if another track is available, enqueue
-        {
-          localSessionAttributes.nextStreamEnqueued = true
-          let nextUrl = localSessionAttributes.rssResult.audioTracks[nextToken-1].url
-          const currentChapterID = getCurrentChapter(currentBookTime,userPlaySession).id
-          const coverUrl = localSessionAttributes.rssResult.coverUrl
-          const nextChapterTitle = userPlaySession.chapters[currentChapterID+1].title
-          const metadata = {
-            title: nextChapterTitle,
-            subtitle: userPlaySession.displayTitle,
-            art: {
-                sources: [
-                    {
-                        url: coverUrl,
-                        widthPixels: 512, // these seem to be necessary even though docs say it's not
-                        heightPixels: 512
-                      }
-                ]
-            },
-            backgroundImage: {
-                sources: [
-                    {
-                        url: backgroundUrl,
-                        widthPixels: 1600,
-                        heightPixels: 900
-                    }
-                ]
+        case 'PlaybackFinished':
+          if (localSessionAttributes.nextStreamEnqueued) {
+            if (!userPlaySession || currentBookTime === undefined) {
             }
-        };
-          response = handlerInput.responseBuilder 
-              .addAudioPlayerPlayDirective(
+            else {
+            updateUserPlaySession(userPlaySession, currentBookTime);
+            localSessionAttributes.userPlaySession.updatedAt = Date.now();
+            localSessionAttributes.userPlaySession.currentTime = currentBookTime;
+            }
+          } else {
+            //const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000;
+            if (!userPlaySession || currentBookTime === undefined) {
+            }
+            else {
+              closeUserPlaySession(userPlaySession, currentBookTime);
+            }
+            break;
+          }
+          break;
+
+        case 'PlaybackStopped':
+          if (!userPlaySession || currentBookTime === undefined) {
+          }
+          else {
+          updateUserPlaySession(userPlaySession, currentBookTime);
+          localSessionAttributes.userPlaySession.updatedAt = Date.now();
+          localSessionAttributes.userPlaySession.currentTime = currentBookTime;
+          }
+          break;
+
+        case 'PlaybackNearlyFinished':
+          if (!userPlaySession || currentBookTime === undefined) {
+            console.log("PlaybackNearlyFinished, but userPlaySession or currentBookTime was undefined");
+          }
+          else {
+            updateUserPlaySession(userPlaySession, currentBookTime);
+            localSessionAttributes.userPlaySession.updatedAt = Date.now();
+            localSessionAttributes.userPlaySession.currentTime = currentBookTime;
+
+
+            let currentToken = amazonToken;
+            let nextToken = (parseInt(currentToken) + 1).toString();
+            const nextAudioTrack = localSessionAttributes.userPlaySession.audioTracks[nextToken - 1];
+            if (nextAudioTrack) {
+              localSessionAttributes.nextStreamEnqueued = true;
+              let nextUrl = nextAudioTrack.contentUrl;
+              const currentChapterID = getCurrentChapter(currentBookTime, userPlaySession).id;
+
+              const coverUrl = getCoverUrl(userPlaySession.libraryItemId);
+              const nextChapterTitle = userPlaySession.chapters[currentChapterID + 1].title;
+              const metadata = {
+                title: nextChapterTitle,
+                subtitle: userPlaySession.displayTitle,
+                art: {
+                  sources: [{ url: coverUrl, widthPixels: 512, heightPixels: 512 }],
+                },
+                backgroundImage: {
+                  sources: [{ url: backgroundUrl, widthPixels: 1600, heightPixels: 900 }],
+                },
+              };
+              response = handlerInput.responseBuilder
+                .addAudioPlayerPlayDirective(
                   "ENQUEUE",
                   nextUrl,
                   nextToken,
                   0,
                   currentToken,
                   metadata
-                  )
-              .getResponse();
+                )
+                .getResponse();
               break;
-        }
-        else
-        {
-          localSessionAttributes.nextStreamEnqueued = false
+            } else {
+              localSessionAttributes.nextStreamEnqueued = false;
+              break;
+            }
+          }
+          localSessionAttributes.nextStreamEnqueued = false;
           break;
-        }
-      case 'PlaybackFailed':
-        console.log('Playback Failed : %j', handlerInput.requestEnvelope.request.error);
-        closeUserPlaySession(userPlaySession, currentBookTime)
-        break;
-      default:
-        break;
+
+        case 'PlaybackFailed':
+          console.log('Playback Failed : %j', handlerInput.requestEnvelope.request.error);
+          if (!userPlaySession || currentBookTime === undefined) {
+            console.log("PlaybackFailed, but userPlaySession or currentBookTime was undefined, so could not sync or close ABS play session.");
+          }
+          else
+          {
+          closeUserPlaySession(userPlaySession, currentBookTime);
+          }
+          break;
+
+        default:
+          break;
+      }
+      return handlerInput.responseBuilder.getResponse();
+    } catch (error) {
+        console.error("Error handling AudioPlayer event:", error);
+        return handlerInput.responseBuilder.getResponse();
     }
-    return handlerInput.responseBuilder.getResponse(); // this is an allowed response to all
   },
 };
 
@@ -2689,23 +2214,6 @@ function updateLocalSessionAttributes(sessionAttributes)
   return localSessionAttributes
 }
 
-function updateSessionAttributes(sessionAttributes)
-{
-  // Delete all keys in localSessionAttributes
-  for (let key in sessionAttributes) {
-    if (sessionAttributes.hasOwnProperty(key)) {
-        delete sessionAttributes[key];
-    }
-  }
-
-  // Assign new keys from sessionAttributes
-  for (let key in localSessionAttributes) {
-      if (localSessionAttributes.hasOwnProperty(key)) {
-          sessionAttributes[key] = localSessionAttributes[key];
-      }
-  }
-  return sessionAttributes
-}
 // This is for devices with external play controls -- probably need to test this more
 const PlaybackControllerHandler = {
   canHandle(handlerInput) {
@@ -2715,13 +2223,9 @@ const PlaybackControllerHandler = {
     const playbackControllerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
 
     // can NOT use sessionAttributes here; need to use local
-    const userPlaySessionID = localSessionAttributes.userPlaySessionID
-   // const sharePlaySession = localSessionAttributes.sharePlaySession
     const userPlaySession = localSessionAttributes.userPlaySession
-    //const mediaItemShare = localSessionAttributes.mediaItemShare
     let offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds
     let amazonToken = localSessionAttributes.amazonToken
-    //const slug = mediaItemShare.slug
     let metadata
 
     if (handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds != undefined) {
@@ -2740,9 +2244,9 @@ const PlaybackControllerHandler = {
         localSessionAttributes.userPlaySession.updatedAt = Date.now()
         localSessionAttributes.userPlaySession.currentTime = currentBookTime
     
+        const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
+        // const coverUrl = localSessionAttributes.coverUrl
 
-        // const coverUrl = SERVER_URL + `/public/share/${slug}/cover`
-        const coverUrl = localSessionAttributes.coverUrl
         const chapterTitle = getCurrentChapter(currentBookTime,userPlaySession).title
         metadata = {
           title: chapterTitle,
@@ -2782,7 +2286,6 @@ const PlaybackControllerHandler = {
         localSessionAttributes.userPlaySession.updatedAt = Date.now()
         localSessionAttributes.userPlaySession.currentTime = currentBookTime
     
-        //updateMediaItemShareProgress(slug,currentBookTime)
         response = handlerInput.responseBuilder
             .addAudioPlayerStopDirective()
             .getResponse();
@@ -2807,7 +2310,8 @@ const PlaybackControllerHandler = {
         
         amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndex(newBookTime,userPlaySession.audioTracks)
         
-        playUrl = localSessionAttributes.playUrl = localSessionAttributes.rssResult.audioTracks[amazonToken - 1].url
+        playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributesuserPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+        
         let newChapterTitle = currentChapter.title
 
         updateUserPlaySession(userPlaySession, newBookTime)
@@ -2907,28 +2411,26 @@ const SessionEndedRequestHandler = {
           console.error('SessionEndedRequest error:', request.error);
         }
       let sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
-      const userPlaySessionID = sessionAttributes.userPlaySessionID
-   //   const sharePlaySession = sessionAttributes.sharePlaySession
       const userPlaySession = sessionAttributes.userPlaySession
-      //const slug = sessionAttributes.mediaItemShare.slug
       const offsetInMilliseconds = 
       handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds || // Try AudioPlayer first
       handlerInput.requestEnvelope.session?.attributes?.offsetInMilliseconds || // Fallback to session attributes
-      sessionAttributes.offsetInMilliseconds || // Fallback to previously stored sessionAttributes
-      0; // Default to 0 if all else fails
+      sessionAttributes.offsetInMilliseconds || // Fallback to sessionAttributes
+      null; // Default to null if all else fails
 
       const amazonToken = 
-      handlerInput.requestEnvelope.context?.AudioPlayer?.token || // Primary source
-      handlerInput.requestEnvelope.session?.attributes?.amazonToken || // Secondary source (session attributes)
+      handlerInput.requestEnvelope.context?.AudioPlayer?.token || // Try AudioPlayer first
+      handlerInput.requestEnvelope.session?.attributes?.amazonToken || // Fallback to session attributes
       sessionAttributes.amazonToken || // Fallback to sessionAttributes
-      0; // Default to 0 if all else fails
+      null; // Default to null if all else fails
 
-      const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
-      if (handlerInput.requestEnvelope.request.reason = 'USER_INITIATED')
+      if (amazonToken !== null && offsetInMilliseconds !== null && userPlaySession)
       {
+        const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
         closeUserPlaySession(userPlaySession,currentBookTime)
-        //updateMediaItemShareProgress(slug,currentBookTime)
-        closeRSSFeed(sessionAttributes.rssFeed.id)
+      }
+      if (handlerInput.requestEnvelope.request.reason == 'USER_INITIATED')
+      {
         sessionAttributes = {}
         localSessionAttributes = {}
         handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
@@ -2989,96 +2491,42 @@ const ErrorHandler = {
 /* HELPER FUNCTIONS */
 
 function sanitizeForSSML(input) {
-  if (input)
-  {
-  // Remove characters that are not allowed in XML/SSML
-  const disallowedRegex = /[\u0000-\u001F\u007F-\u009F]/g;
-  let sanitizedInput = input.replace(disallowedRegex, '');
+  if (input) {
+    // Remove characters that are not allowed in XML/SSML
+    const disallowedRegex = /[\u0000-\u001F\u007F-\u009F]/g;
+    let sanitizedInput = input.replace(disallowedRegex, '');
 
-  // Escape special characters for XML
-  const escapeXml = (str) => {
+    // Escape special characters for XML
+    const escapeXml = (str) => {
       return str.replace(/[<>&'"]/g, (char) => {
-          switch (char) {
-              case '<':
-                  return '&lt;';
-              case '>':
-                  return '&gt;';
-              case '&':
-                  return '&amp;';
-              case '\'':
-                  return '&apos;';
-              case '"':
-                  return '&quot;';
-              default:
-                  return char;
-          }
+        switch (char) {
+          case '<':
+            return '&lt;';
+          case '>':
+            return '&gt;';
+          case '&':
+            return '&amp;';
+          case '\'':
+            return '&apos;';
+          case '"':
+            return '&quot;';
+          default:
+            return char;
+        }
       });
-      
-  };
 
-  sanitizedInput = escapeXml(sanitizedInput);
+    };
 
-  // Further sanitize any remaining invalid sequences
-  // If needed, add more logic here to validate input thoroughly
+    sanitizedInput = escapeXml(sanitizedInput);
 
-  return sanitizedInput;
-}
-else
-{
-  return ""
-}
-}
+    // Further sanitize any remaining invalid sequences
+    // If needed, add more logic here to validate input thoroughly
 
-function sanitizeObjectForSSML(obj) {
-  // Helper function to escape SSML special characters in a string
-  const escapeSSMLString = (str) => {
-      return str.replace(/[<>&'"]/g, (char) => {
-          switch (char) {
-              case '<':
-                  return '&lt;';
-              case '>':
-                  return '&gt;';
-              case '&':
-                  return '&amp;';
-              case '\'':
-                  return '&apos;';
-              case '"':
-                  return '&quot;';
-              default:
-                  return char;
-          }
-      });
-  };
-
-  // Recursive function to iterate over the object
-  const recurse = (current) => {
-      // Check if the current item is an array
-      if (Array.isArray(current)) {
-          return current.map(item => recurse(item));
-      }
-      
-      // Check if the current item is an object
-      else if (current !== null && typeof current === 'object') {
-          const escapedObj = {};
-          for (const key in current) {
-              if (current.hasOwnProperty(key)) {
-                  escapedObj[key] = recurse(current[key]);
-              }
-          }
-          return escapedObj;
-      }
-      
-      // If it's a string, escape it
-      else if (typeof current === 'string') {
-          return escapeSSMLString(current);
-      }
-      
-      // Return the item unchanged if it's not a string or object
-      return current;
-  };
-
-  // Start recursion from the top-level object
-  return recurse(obj);
+    return sanitizedInput;
+  }
+  else {
+    return ""
+  }
 }
 
 /**
