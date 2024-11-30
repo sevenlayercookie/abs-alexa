@@ -42,7 +42,7 @@ const baseheaders = {
   "CF-Access-Client-Id": CFAccessClientId,
   "cf-access-client-id": CFAccessClientId,
   "CF-Access-Client-Secret": CFAccessClientSecret,
-  "User-Agent": "HarrisonAlexaSkill"
+  "User-Agent": "AlexaSkill"
 }
 
 // GLOBAL VARIABLES
@@ -2899,7 +2899,7 @@ exports.handler = Alexa.SkillBuilders.custom()
     ErrorHandler)
   //  .addRequestInterceptors(LoadPersistentAttributesRequestInterceptor)
   //  .addResponseInterceptors(SavePersistentAttributesResponseInterceptor)
-  .withCustomUserAgent('HarrisonAlexaSkill')
+  .withCustomUserAgent('AlexaSkill')
   /*
   .withPersistenceAdapter(
       new ddbAdapter.DynamoDbPersistenceAdapter({
