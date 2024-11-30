@@ -1151,7 +1151,7 @@ const PlayBookIntentHandler = {
     // but prevents the sessions from being remembered (so user will have to reinvoke the skill after this)
 
     // this will never be invoked to resume, so should start all variables from scratch
-    if (localSessionAttributes) {
+    if (localSessionAttributes.userPlaySession) {
       switchingBooks = true //flag the global variable
 
       // have to update session before opening new session, or else ABS will close it automatically without updating
