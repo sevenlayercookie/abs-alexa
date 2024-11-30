@@ -1,11 +1,3 @@
-/**
- *  NOTES
- * it seems after removing session attributes, the PlayBook Handler doesn't work anymore...
- * don't merge with master yet
- */
-
-
-
 const Alexa = require('ask-sdk-core');
 //const AWS = require('aws-sdk');
 const request = require('sync-request');
