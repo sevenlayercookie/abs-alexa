@@ -460,18 +460,20 @@ const LaunchRequestHandler = {
 
 function getCurrentChapterByBookTime(currentBookTime, playSession) {
   try {
+    let chapter = null
     const chapters = playSession.chapters
     for (let i = 0; i < chapters.length; i++) {
       if (currentBookTime >= chapters[i].start && currentBookTime <= chapters[i].end) {
-        return chapters[i];
+        chapter = chapters[i];
       }
     }
-    return null; // Return null if no chapter is found
+    if (chapter === null) { // if no chapter is found, return the last chapter
+      chapter = chapters[chapters.length - 1];
+    }
   } catch (error) {
     console.error('getCurrentChapterByBookTime - Error getting current chapter:', error);
   }
 }
-
 
 /**
  * Intent handler to start playing an audio file.
@@ -541,6 +543,11 @@ const PlayAudioIntentHandler = {
 
       }
       localSessionAttributes.userPlaySession = userPlaySession
+        if (currentTime > userPlaySession.duration) { // validation
+        console.error("currentTime is greater than book duration; check inputs");
+        console.log("setting currentTime to 0");
+        currentTime = localSessionAttributes.currentTime = localSessionAttributes.userPlaySession.currentTimeuserPlaySession.currentTime = 0.0
+      }
 
       let currentTrack = localSessionAttributes.currentTrack = getCurrentTrackByBookTime(currentTime, userPlaySession)
       let currentTrackIndex = localSessionAttributes.currentTrackIndex = getCurrentTrackIndexByBookTime(currentTime, userPlaySession) // should start at 1
@@ -558,10 +565,11 @@ const PlayAudioIntentHandler = {
       const coverUrl = localSessionAttributes.coverUrl = getCoverUrl(userPlaySession.libraryItemId)
 
 
-      const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
+      const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession)?.title
       const author = userPlaySession.displayAuthor
       const bookTitle = userPlaySession.displayTitle
       const playUrl = localSessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+      console.log("playUrl: " + playUrl)
       const amazonToken = localSessionAttributes.amazonToken = userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl
       // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY
 
@@ -883,7 +891,7 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
     }
 
     const playUrl = localSessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
-
+    console.log("playUrl: " + playUrl)
     // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY 
 
     const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
@@ -1462,7 +1470,7 @@ const PlayBookIntentHandler = {
 
     let speakOutput = 'Playing ' + userPlaySession.displayTitle + ' by ' + userPlaySession.displayAuthor;
     console.log("Playing: " + playUrl)
-
+    console.log("playUrl: " + playUrl)
 
     let chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
 
@@ -2576,7 +2584,7 @@ const PlaybackControllerHandler = {
         amazonToken = localSessionAttributes.amazonToken = localSessionAttributes.userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl
 
         playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
-
+        console.log("playUrl: " + playUrl)
         newChapterTitle = currentChapter.title
 
         // updateUserPlaySession(userPlaySession, newBookTime) // don't actually need to sync here, since AudioPlayer will handle updates
