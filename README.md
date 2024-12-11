@@ -42,11 +42,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
   - "Play" is a built-in intent, which Alexa tends to execute more reliably
 
 ## Background:
-- Alexa requires any audio track to be publicly accessible and does not support passing cookies or authorization headers.
-- Audiobookshelf supports publicly accessible URLs (share API), but this requires passing a cookie. RSS feeds are a workaround.
-  - **RSS Feeds:** This function allows user to create a publicly accessible URL without a cookie or header needed.
-- **ABS-Alexa** uses this as a workaround by creating an RSS feed when a user requests to listen to a book.
-  - Until Audiobookshelf provides another method for creating publicly accessible URLs that do not require a cookie or header to be passed, I believe this workaround is the best option.
+- ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
 ## Known Issues:
 - Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
@@ -61,6 +57,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
+    - This is easy to achieve using Express.JS, but I have not yet included this in the repository.
 - [ ] Consider implementing persistent attributes to give Alexa a longer "memory" (store play sessions in a local database)
 - [ ] Add other intents, such as:
   - [ ] "Start the book over"
