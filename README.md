@@ -17,7 +17,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Progress tracking (listening sessions will be saved on the Audiobookshelf server)
 - attempts to resolve the book and author name requested using Amazon resolution services
 - performs an an API "search" that is built-in to ABS
-- if this fails, pulls all books from library and then performs a fuzzy search (may be resource intensive on large libraries)
+- if this fails, pulls all books from library and then performs a fuzzy search (effective, but may be resource intensive on large libraries)
 
 ## Installation:
 1) Fork this repo
