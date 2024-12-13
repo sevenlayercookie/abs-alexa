@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "ask-sdk-core": "^2.14.0",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.1",
+    "fuse": "^0.12.1",
+    "fuse.js": "^7.0.0",
+    "sync-request": "^6.1.0"
+  }
+}

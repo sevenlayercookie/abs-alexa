@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug Alexa Skill Locally",
+        "program": "${workspaceFolder}/index.js",
+        "args": [],
+        "runtimeArgs": [],
+        "env": {
+          "NODE_ENV": "development",
+          "ABS_API_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJmMWQ4MDAwNy1hZDk2LTQ4OTctYmQwOC1hYzNiMTg0YjBjMzYiLCJ1c2VybmFtZSI6InNldmVubGF5ZXJjb29raWUiLCJpYXQiOjE3MDE4MDkyNDV9.rUCeZhjLBV441lpX4QmXfDQGhp33cBqUOHSEB9iZ-Jw", // Replace with your actual API key or set it in your environment variables
+          "CFAccessClientId": "your_cf_access_client_id", // Replace with your actual Client ID
+          "CFAccessClientSecret": "your_cf_access_client_secret" // Replace with your actual Client Secret
+        },
+        "cwd": "${workspaceFolder}",
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen",
+        "restart": true
+      }
+    ]
+  }

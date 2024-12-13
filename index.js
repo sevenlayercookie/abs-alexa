@@ -472,10 +472,8 @@ function getCurrentChapterByBookTime(currentBookTime, playSession) {
     if (chapter === null) { // if no chapter is found, return the last chapter
       chapter = chapters[chapters.length - 1];
     }
-    return chapter
   } catch (error) {
     console.error('getCurrentChapterByBookTime - Error getting current chapter:', error);
-    return null
   }
 }
 

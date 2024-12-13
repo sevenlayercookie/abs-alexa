@@ -1,0 +1,56 @@
+{
+  "context": {
+    "timestamp": "2024-12-02T06:49:49.737Z",
+    "absDatabaseSize": null,
+    "authorProvided": false,
+    "titleProvided": true
+  },
+  "amazonStuff": 560,
+  "ABSapi": null,
+  "fuzzySearch": null,
+  "totalABSsearch": 424,
+  "preparePlay": 17695,
+  "totalIntentTime": 18680
+}
+{
+  "context": {
+    "timestamp": "2024-12-02T06:50:35.071Z",
+    "absDatabaseSize": null,
+    "authorProvided": false,
+    "titleProvided": true
+  },
+  "amazonStuff": 215,
+  "ABSapi": null,
+  "fuzzySearch": null,
+  "totalABSsearch": 475,
+  "preparePlay": 1507,
+  "totalIntentTime": 2197
+}
+{
+  "context": {
+    "timestamp": "2024-12-02T06:51:03.804Z",
+    "absDatabaseSize": null,
+    "authorProvided": false,
+    "titleProvided": true
+  },
+  "amazonStuff": 198,
+  "ABSapi": null,
+  "fuzzySearch": null,
+  "totalABSsearch": 368,
+  "preparePlay": 291,
+  "totalIntentTime": 857
+}
+{
+  "context": {
+    "timestamp": "2024-12-02T06:51:13.124Z",
+    "absDatabaseSize": null,
+    "authorProvided": false,
+    "titleProvided": true
+  },
+  "amazonStuff": 2,
+  "ABSapi": null,
+  "fuzzySearch": null,
+  "totalABSsearch": 396,
+  "preparePlay": 342,
+  "totalIntentTime": 740
+}
