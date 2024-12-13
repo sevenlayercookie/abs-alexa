@@ -17,16 +17,15 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Progress tracking (listening sessions will be saved on the Audiobookshelf server)
 - attempts to resolve the book and author name requested using Amazon resolution services
 - performs an an API "search" that is built-in to ABS
-- if this fails, pulls all books from library and then performs a fuzzy search (may be resource intensive on large libraries)
+- if this fails, pulls all books from library and then performs a fuzzy search (effective, but may be resource intensive on large libraries)
 
 ## Installation:
 1) Fork this repo
-2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this in the 'Code' tab of Developer Console if using Alexa-hosted)
-1) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
-2) Set your skill invocation name and build the skill
-3) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this in the 'Code' tab of Developer Console if using Alexa-hosted)
-4) Save and deploy the skill
-5) If using Alexa-hosted, go to the 'Test' tab of Developer Console, and enable skill testing for 'Development'
+2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this later in the 'Code' tab of Developer Console if using Alexa-hosted)
+3) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
+4) Set your skill invocation name and build the skill
+5) Save and deploy the skill
+6) If using Alexa-hosted, go to the 'Test' tab of Developer Console, and enable skill testing for 'Development'
 
 ## Usage:
 - Once installed, call the skill using the invocation name you chose (e.g. "Alexa, Audiobook shelf"
@@ -42,11 +41,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
   - "Play" is a built-in intent, which Alexa tends to execute more reliably
 
 ## Background:
-- Alexa requires any audio track to be publicly accessible and does not support passing cookies or authorization headers.
-- Audiobookshelf supports publicly accessible URLs (share API), but this requires passing a cookie. RSS feeds are a workaround.
-  - **RSS Feeds:** This function allows user to create a publicly accessible URL without a cookie or header needed.
-- **ABS-Alexa** uses this as a workaround by creating an RSS feed when a user requests to listen to a book.
-  - Until Audiobookshelf provides another method for creating publicly accessible URLs that do not require a cookie or header to be passed, I believe this workaround is the best option.
+- ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
 ## Known Issues:
 - Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
@@ -61,6 +56,7 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
+    - This is easy to achieve using Express.JS, but I have not yet included this in the repository.
 - [ ] Consider implementing persistent attributes to give Alexa a longer "memory" (store play sessions in a local database)
 - [ ] Add other intents, such as:
   - [ ] "Start the book over"
