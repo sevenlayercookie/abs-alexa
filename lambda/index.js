@@ -1,4 +1,5 @@
 
+// index.js
 const Alexa = require('ask-sdk-core');
 //const AWS = require('aws-sdk');
 const request = require('sync-request');
@@ -153,21 +154,6 @@ function startUserPlaySession(libraryID, handlerInput) {
 
     return data;
   } catch (error) {
-    console.log(res)
-    console.error('Error retrieving play session:', error);
-    throw error;
-  }
-}
-
-function getExistingUserPlaySession(sessionID) {
-  try {
-    console.log("getExistingUserPlaySession")
-    let res = request('GET', SERVER_URL + `/api/session/${sessionID}`, { headers: baseheaders });
-    let data = JSON.parse(res.getBody('utf8'));
-
-    return data;
-  } catch (error) {
-    console.log(res)
     console.error('Error retrieving play session:', error);
     throw error;
   }
@@ -211,27 +197,6 @@ function calculateCurrentTime(playSession, currentTrackOffset, currentToken) {
  * @returns {object} - The API response.
  * @throws {Error} - Throws an error if the request fails.
  */
-function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = "", data) {
-  // Construct the URL based on the presence of episodeId
-  const url = episodeId 
-      ? `${baseUrl}/api/me/progress/${libraryItemId}/${episodeId}` 
-      : `${baseUrl}/api/me/progress/${libraryItemId}`;
-  
-  try {
-      // Make the PATCH request
-      const res = syncRequest('PATCH', url, {
-          json: data,
-          headers: {
-              'Content-Type': 'application/json',
-          },
-      });
-
-      // Parse and return the response
-      return JSON.parse(res.getBody('utf8'));
-  } catch (error) {
-      throw new Error(`Failed to update media progress: ${error.message}`);
-  }
-}
 
 function updateUserPlaySession(playSession, currentBookTime) {
   try {
@@ -289,7 +254,6 @@ function updateUserPlaySession(playSession, currentBookTime) {
     //return playSession;
 
   } catch (error) {
-    console.log(res)
     console.error('updateUserPlaySession - Error updating play session:', error);
     return
   }
@@ -356,49 +320,48 @@ function closeUserPlaySession(userPlaySession, currentBookTime) {
 
 function getCurrentTrackByBookTime(currentTime, userPlaySession) {
   try {
-  let audioTracks = userPlaySession.audioTracks
-  let currentTrack = null
-  if (currentTime > userPlaySession.duration) { // validation
-    console.error("currentTime is greater than book duration; check inputs; setting currentTrack to first track");
-    currentTrack = audioTracks[0]
-  }
-  else {
-    currentTrack = null;
-    for (const track of audioTracks) {
-      if (track.startOffset <= currentTime && (track.startOffset + track.duration) > currentTime) {
-        currentTrack = track;
-      }
+    let audioTracks = userPlaySession.audioTracks
+    let currentTrack = null
+    if (currentTime > userPlaySession.duration) { // validation
+      console.error("currentTime is greater than book duration; check inputs; setting currentTrack to first track");
+      currentTrack = audioTracks[0]
     }
+    else {
+      currentTrack = null;
+      for (const track of audioTracks) {
+        if (track.startOffset <= currentTime && (track.startOffset + track.duration) > currentTime) {
+          currentTrack = track;
+        }
+      }
 
+    }
+    return currentTrack;
+  } catch (error) {
+    console.error('getCurrentTrackByBookTime - Error retrieving current track:', error);
+    return null
   }
-  return currentTrack;
-} catch (error) {
-  console.error('getCurrentTrackByBookTime - Error retrieving current track:', error);
-  return null
-}
 }
 
 
 function getCurrentTrackIndexByBookTime(currentTime, userPlaySession) {
   try {
-  let audioTracks = userPlaySession.audioTracks
-  if (currentTime > userPlaySession.duration) { // validation
-    console.error("currentTime is greater than book duration; check inputs; setting currentTrackIndex to first track");
-    currentTrack = audioTracks[0]
-  }
-  else {
-    for (let i = 0; i < audioTracks.length; i++) {
-      const track = audioTracks[i];
-      if (track.startOffset <= currentTime && (track.startOffset + track.duration) > currentTime) {
-        return i + 1;
-      }
+    let audioTracks = userPlaySession.audioTracks
+    if (currentTime > userPlaySession.duration) { // validation
+      console.error("currentTime is greater than book duration; check inputs; setting currentTrackIndex to first track");
     }
-    return null;
+    else {
+      for (let i = 0; i < audioTracks.length; i++) {
+        const track = audioTracks[i];
+        if (track.startOffset <= currentTime && (track.startOffset + track.duration) > currentTime) {
+          return i + 1;
+        }
+      }
+      return null;
+    }
+  } catch (error) {
+    console.error('getCurrentTrackIndexByBookTime - Error retrieving current track index:', error);
+    return null
   }
-} catch (error) {
-  console.error('getCurrentTrackIndexByBookTime - Error retrieving current track index:', error);
-  return null
-}
 }
 
 function getCoverUrl(libraryItemId) {
@@ -734,179 +697,8 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
       && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.PlaybackAction<object@Book>');
   },
   async handle(handlerInput) {
-    // this function is mainly limited by the poor intent slots that are returned. May only be 
-    // actually useful if I were to upload the catalogue for Alexa to analyze.....
-    // it doesn't do any entity resolution, which is stupid
-    // created a custom handler that does entity resolution through amazon
-    console.log("Intent: PlaybackBookHandler Triggered")
-    const bookTitle = handlerInput.requestEnvelope.request.intent.slots["object.name"].value
-    const author = handlerInput.requestEnvelope.request.intent.slots["object.author.name"].value
-
-
-    let libraryItem
-    console.log("Title: " + bookTitle)
-    console.log("Author: " + author)
-    if (!bookTitle) {
-      let speakOutput = 'I did not understand the request. For example, try saying "Play audiobook title by author".';
-      console.log("Book and/or author slot undefined")
-      return handlerInput.responseBuilder
-        .speak(speakOutput)
-        .reprompt(speakOutput)
-        .getResponse();
-    }
-    else if (bookTitle && author) { // if I'm given both author and book
-      const allLibraries = getAllLibraries()
-      const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-      const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-      const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
-
-      const filterdata = getLibraryFilterData(bookLibraryIDs[0])
-      let authorEntry
-
-      // fuzzy match author
-      const optionsAuthor = {
-        keys: ['name'],
-        threshold: 0.3 // Adjust the threshold according to your needs
-      };
-
-      const fuseAuthor = new Fuse(filterdata.authors, optionsAuthor);
-      authorEntry = fuseAuthor.search(author)[0].item;
-      const authorResult = getAuthor(authorEntry.id)
-      const libraryItems = authorResult.libraryItems
-
-      // fuzzy match title
-      const optionsTitle = {
-        keys: ['media.metadata.title'],  // Specify the keys to search within the nested structure
-        includeScore: true,              // Include score in the results
-        threshold: 0.3,                  // Adjust the threshold to control the fuzzy matching sensitivity
-      };
-
-      // Create a Fuse instance
-      const fuseTitle = new Fuse(libraryItems, optionsTitle);
-
-      // Perform the search
-      libraryItem = fuseTitle.search(bookTitle)[0].item;
-
-      // Log the results
-      console.log("Found a book in the library!")
-      console.log("Title: " + libraryItem.media.metadata.title);
-      console.log("Author: " + libraryItem.media.metadata.authorName);
-    }
-    else if (bookTitle && !author) { // if only given book title
-      const allLibraries = getAllLibraries()
-      const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-      const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-      const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
-      let results = []
-      bookLibraryIDs.forEach(function (libraryID, i) {
-        results[i] = searchFor(bookTitle, libraryID)
-      });
-      if (results[0].book.length == 0) {
-        console.log("No book of title '" + bookTitle + "' found")
-        const speakOutput = "No book of title '" + bookTitle + "' found. Please try again.";
-        return handlerInput.responseBuilder
-          .speak(sanitizeForSSML(speakOutput))
-          .reprompt(sanitizeForSSML(speakOutput))
-          .getResponse();
-      }
-
-      const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
-      // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
-      console.log("Matched a book using ABS search API!")
-      //absSearchResults[0].book[0].libraryItem.media.metadata.title
-
-      libraryItem = firstMatchingBook.libraryItem
-
-      console.log("Found a book in the library!")
-      console.log("Title: " + libraryItem.media.metadata.title);
-      console.log("Author: " + libraryItem.media.metadata.authorName);
-    }
-
-    let userPlaySession
-
-    const playBehavior = 'REPLACE_ALL';
-
-    const libraryItemID = libraryItem.id
-
-
-    let expandedItem = getItemById(lastPlayedID, { include: ['progress'], expanded: 1 });
-
-    userPlaySession = startUserPlaySession(libraryItemID, handlerInput)
-    delete userPlaySession.libraryItem // this property very large and nothing useful
-    // playSession = userPlaySession
-
-    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); // cannot set sessionAttriubtes and localAttributes equal
-    localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
-
-    let mediaProgress = expandedItem.userMediaProgress
-
-
-    sessionAttributes.userPlaySessionID = userPlaySession.id // can call API to pull the whole playSession again if needed
-
-    let currentTime = mediaProgress.currentTime
-    if (currentTime > userPlaySession.duration) { // validation
-      currentTime = 0.0 // start at beginning
-    }
-    let currentTrack = sessionAttributes.currentTrack = getCurrentTrackByBookTime(currentTime, userPlaySession)
-    let currentTrackIndex = sessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(currentTime, userPlaySession) // should start at 1
-    sessionAttributes.currentTrackIndex = currentTrackIndex;
-    let trackStartOffset = currentTrack.startOffset
-    const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = (currentTime - trackStartOffset) * 1000
-
-    if (userPlaySession.audioTracks[currentTrackIndex]) {
-      localSessionAttributes.nextStreamEnqueued = true
-    }
-    else {
-      localSessionAttributes.nextStreamEnqueued = false
-    }
-
-    const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
-
-    // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY 
-
-    const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
-
-    handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
-    // sync localSessionAttributes to sessionAttributes
-    updateLocalSessionAttributes(sessionAttributes)
-
-    let speakOutput = 'Playing ' + userPlaySession.displayTitle + ' by ' + userPlaySession.displayAuthor;
-    console.log("Playing: " + playUrl)
-
-    const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
-    const metadata = {
-      title: chapterTitle,
-      subtitle: userPlaySession.displayTitle,
-      art: {
-        sources: [
-          {
-            url: coverUrl,
-            widthPixels: 512, // these seem to be necessary even though docs say it's not
-            heightPixels: 512
-          }
-        ]
-      },
-      backgroundImage: {
-        sources: [
-          {
-            url: backgroundUrl,
-            widthPixels: 1600,
-            heightPixels: 900
-          }
-        ]
-      }
-    };
-
     return handlerInput.responseBuilder
-      .speak(sanitizeForSSML(speakOutput))
-      .addAudioPlayerPlayDirective(
-        playBehavior,
-        playUrl,
-        currentTrackIndex, // for amazon's token system 
-        offsetInMilliseconds, // offset in ms
-        null,          // expected previous token (don't include if playBehavior is REPLACE)
-        metadata
-      )
+      .speak('PlaybackBookHandler')
       .getResponse();
   }
 };
@@ -1179,7 +971,7 @@ const PlayBookIntentHandler = {
       const validItems = amazonCrossmatch(titleResolutions, authorResolutions, accessToken)
 
       if (!validItems.validAuthors.length || !validItems.validTitles.length) {
-        amazonCrossmatchFailed = true // amazon's proposed titles and authors did not match
+        // amazonCrossmatchFailed = true // amazon's proposed titles and authors did not match
         console.log("Amazon cross match failed")
       }
       else {
@@ -1253,7 +1045,7 @@ const PlayBookIntentHandler = {
     let absMatchedAuthor = null
     // SEARCH THROUGH ABS LIBRARY FIRST USING AMAZON RESOLUTION DATA, THEN AGAIN USING RAW DATA (if still needed)
 
-    for (i = 0; i < 2 && !libraryItem; i++) // up to two loops, and only if libraryItem not found
+    for (let i = 0; i < 2 && !libraryItem; i++) // up to two loops, and only if libraryItem not found
     {
       if (i == 0) // if first run through loop, try Amazon author and title
       {
@@ -1615,8 +1407,7 @@ const PreviousIntentHandler = {
 
 
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(newBookTime, userPlaySession)
-
-    playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+    let playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
 
     let newChapterTitle = currentChapter.title
     let coverUrl = getCoverUrl(userPlaySession.libraryItemId)
@@ -1628,7 +1419,7 @@ const PreviousIntentHandler = {
 
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
 
-    metadata = {
+    let metadata = {
       title: newChapterTitle,
       subtitle: userPlaySession.displayTitle,
       art: {
@@ -1650,7 +1441,7 @@ const PreviousIntentHandler = {
         ]
       }
     };
-    response = handlerInput.responseBuilder
+    const response = handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",               // but then will metadata still be applied?
         playUrl,
@@ -1707,7 +1498,7 @@ const NextIntentHandler = {
 
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(newBookTime, userPlaySession)
 
-    playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+    const playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
 
     let newChapterTitle = nextChapter.title
 
@@ -1720,7 +1511,7 @@ const NextIntentHandler = {
 
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
 
-    metadata = {
+    const metadata = {
       title: newChapterTitle,
       subtitle: userPlaySession.displayTitle,
       art: {
@@ -1742,7 +1533,7 @@ const NextIntentHandler = {
         ]
       }
     };
-    response = handlerInput.responseBuilder
+    const response = handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",               // but then will metadata still be applied?
         playUrl,
@@ -1846,7 +1637,7 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
             remainingDurationInMS = checkTrack.duration * 1000
           }
         }
-        if (goToBeginning) { }
+        if (goToBeginning) { ; } // do nothing
         else {
           newTrack = checkTrack
           newOffsetInMilliseconds = newTrack.duration * 1000 - tickerMilliseconds
@@ -1900,7 +1691,7 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
       }
     };
     // THIS LIKELY ENDS and FORGETS THE SESSION (custom intents do not "remember" session after it closes)
-    return response = handlerInput.responseBuilder
+    return handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",
         newUrl,
@@ -1974,7 +1765,7 @@ const GoForwardXTimeIntentHandler = {
             remainingDurationInMS = checkTrack.duration * 1000
           }
         }
-        if (atTheEnd) { }
+        if (atTheEnd) { ; } // do nothing
         else {
           newTrack = checkTrack
           newTrackArrayIndex = tickerArrayIndex
@@ -2030,7 +1821,7 @@ const GoForwardXTimeIntentHandler = {
       }
     };
 
-    return response = handlerInput.responseBuilder
+    return handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",
         newUrl,
@@ -2132,6 +1923,7 @@ const AudioPlayerEventHandler = {
     return handlerInput.requestEnvelope.request.type.startsWith('AudioPlayer.');
   },
   async handle(handlerInput) {
+    const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
     try {
       // *** AudioPlayerEventHandler can NOT access sessionAttributes
       // need another way of communicating; localSessionAttributes? persistent attributes?
@@ -2142,7 +1934,7 @@ const AudioPlayerEventHandler = {
       // parts of handlerInput sometimes?
       timestamps.AudioPlayerEventHandlerStartTime = new Date();
 
-      const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
+      
       console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
 
       let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds;
@@ -2165,8 +1957,10 @@ const AudioPlayerEventHandler = {
         currentBookTime = calculateCurrentTime(userPlaySession, offset, amazonToken);
       }
 
-      let returnResponseFlag = false;
+      // let returnResponseFlag = false;
       let offsetInMilliseconds
+      let PlaybackStartedTime
+      let response
       switch (audioPlayerEventName) {
         case 'PlaybackStarted':
           // NEW CODE
@@ -2186,8 +1980,26 @@ const AudioPlayerEventHandler = {
           //   console.log("PlaybackStopped: offsetInMilliseconds was null; couldn't update ABS")
           // }
           /// END NEW CODE 
+
+          /** 
+           * Your skill can respond to PlaybackStarted with a Stop or ClearQueue directive.
+
+            The response cannot include:
+
+            Any standard properties such as outputSpeech, card, or reprompt.
+            Any other AudioPlayer directives.
+            Any other directives from other interfaces, such a [Dialog directive][dialog-interface-reference#directives].
+            Note: Your skill isn't required to return a response to AudioPlayer requests.
+           * 
+           * 
+           * 
+           * 
+          */
+
+
+
           console.log("PlaybackStarted")
-          let PlaybackStartedTime = new Date();
+          PlaybackStartedTime = new Date();
           if (timestamps.PlayAudioIntentHandlerStartTime) {
             console.log("TIMER: Time from PlayAudioIntentHandlerStart to PlaybackStarted: " + (PlaybackStartedTime - timestamps.PlayAudioIntentHandlerStartTime) + " ms");
           }
@@ -2195,8 +2007,7 @@ const AudioPlayerEventHandler = {
             console.log("TIMER: Time from PlayBookIntentHandlerStart to PlaybackStarted: " + (PlaybackStartedTime - timestamps.PlayBookIntentHandlerStartTime) + " ms");
           }
 
-          if (!userPlaySession || currentBookTime === undefined) {
-          }
+          if (!userPlaySession || currentBookTime === undefined) { ; } // do nothing
           else {
             // updateUserPlaySession(userPlaySession, currentBookTime);
             localSessionAttributes.userPlaySession.updatedAt = Date.now();
@@ -2204,13 +2015,27 @@ const AudioPlayerEventHandler = {
           }
 
 
-          returnResponseFlag = true;
+          // returnResponseFlag = true;
           break;
 
         case 'PlaybackFinished': // run when playback finishes on its own
+
+          /**
+           * 
+           * Your skill can respond to PlaybackFinished with a Stop or ClearQueue directive.
+  
+              The response cannot include:
+  
+              Any standard properties such as outputSpeech, card, or reprompt.
+              Any other AudioPlayer directives.
+              Any other directives from other interfaces, such a [Dialog directive][dialog-interface-reference#directives].
+              Note: Your skill isn't required to return a response to AudioPlayer requests.
+  
+           * 
+           */
+
           if (localSessionAttributes.nextStreamEnqueued) {
-            if (!userPlaySession || currentBookTime === undefined) {
-            }
+            if (!userPlaySession || currentBookTime === undefined) { ; } // do nothing
             else {
               updateUserPlaySession(userPlaySession, currentBookTime);
               localSessionAttributes.userPlaySession.updatedAt = Date.now();
@@ -2220,8 +2045,7 @@ const AudioPlayerEventHandler = {
             //const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000;
 
 
-            if (!userPlaySession || currentBookTime === undefined) {
-            }
+            if (!userPlaySession || currentBookTime === undefined) { ; } // do nothing
             else {
               closeUserPlaySession(userPlaySession, currentBookTime);
               // PlaybackFinished is the terminal handler -- it doesn't mvoe on to PlaybackStopped
@@ -2265,8 +2089,7 @@ const AudioPlayerEventHandler = {
           }
           /// END NEW CODE 
 
-          if (!userPlaySession || currentBookTime === undefined) {
-          }
+          if (!userPlaySession || currentBookTime === undefined) { ; } // do nothing
           else {
             //updateUserPlaySession(userPlaySession, currentBookTime);
             localSessionAttributes.userPlaySession.updatedAt = Date.now();
@@ -2275,6 +2098,17 @@ const AudioPlayerEventHandler = {
           break;
 
         case 'PlaybackNearlyFinished':
+          /**
+           * 
+           * Your skill can respond to PlaybackNearlyFinished with any AudioPlayer directive.
+
+              The response cannot include:
+
+              Any standard properties such as outputSpeech, card, or reprompt.
+              Any other directives from other interfaces, such a [Dialog directive][dialog-interface-reference#directives].
+              Note: Your skill isn't required to return a response to AudioPlayer requests.
+
+           */
           if (!userPlaySession || currentBookTime === undefined) {
             console.log("PlaybackNearlyFinished, but userPlaySession or currentBookTime was undefined");
           }
@@ -2324,6 +2158,17 @@ const AudioPlayerEventHandler = {
           break;
 
         case 'PlaybackFailed':
+          /**
+           * 
+           * Your skill can respond to PlaybackFailed with any AudioPlayer directive.
+
+              The response cannot include:
+
+              Any standard properties such as outputSpeech, card, or reprompt.
+              Any other directives from other interfaces, such a [Dialog directive][dialog-interface-reference#directives].
+              Note: Your skill isn't required to return a response to AudioPlayer requests.
+
+           */
           console.log('Playback Failed : %j', handlerInput.requestEnvelope.request.error);
           if (!userPlaySession || currentBookTime === undefined) {
             console.log("PlaybackFailed, but userPlaySession or currentBookTime was undefined, so could not sync or close ABS play session.");
@@ -2350,8 +2195,7 @@ const AudioPlayerEventHandler = {
         resetTimestamps()
       }
 
-
-      return handlerInput.responseBuilder.getResponse();
+      return response || handlerInput.responseBuilder.getResponse();
 
     } catch (error) {
       console.error("Error handling AudioPlayer event:", error);
@@ -2374,7 +2218,7 @@ const AudioPlayerEventHandler = {
 
 function resetTimestamps() {
   for (let key in timestamps) {
-    if (timestamps.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(timestamps, key)) {
       timestamps[key] = null;
     }
   }
@@ -2382,16 +2226,16 @@ function resetTimestamps() {
 
 function clearAllMemory(handlerInput = null) {
   try {
-  // book end, clear all attributes
-  console.log("Clearing all memory")
-  localSessionAttributes = {}
-  if (handlerInput?.requestEnvelope?.session?.attributes) {
-    handlerInput.attributesManager.setSessionAttributes(localSessionAttributes);
-  }
-  closedPlaySession = false
-  nextStreamEnqueued = false
-  clearTimers();
-  resetTimestamps();
+    // book end, clear all attributes
+    console.log("Clearing all memory")
+    localSessionAttributes = {}
+    if (handlerInput?.requestEnvelope?.session?.attributes) {
+      handlerInput.attributesManager.setSessionAttributes(localSessionAttributes);
+    }
+    closedPlaySession = false
+    localSessionAttributes.nextStreamEnqueued = false
+    clearTimers();
+    resetTimestamps();
   } catch (error) {
     console.error("Error clearing all memory:", error);
   }
@@ -2406,14 +2250,14 @@ function clearAllMemory(handlerInput = null) {
 function updateLocalSessionAttributes(sessionAttributes) {
   // Delete all keys in localSessionAttributes
   for (let key in localSessionAttributes) {
-    if (localSessionAttributes.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(localSessionAttributes, key)) {
       delete localSessionAttributes[key];
     }
   }
 
   // Assign new keys from sessionAttributes
   for (let key in sessionAttributes) {
-    if (sessionAttributes.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(sessionAttributes, key)) {
       localSessionAttributes[key] = sessionAttributes[key];
     }
   }
@@ -2451,6 +2295,11 @@ const PlaybackControllerHandler = {
     const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
 
     let response;
+    let chapterTitle
+    let previousChapter
+    let playUrl
+    let nextChapter
+    let currentTrack
     switch (playbackControllerEventName) {
       case 'PlayCommandIssued':
         // updateUserPlaySession(userPlaySession, currentBookTime) // don't actually need to sync here, since AudioPlayer will handle updates
@@ -2461,7 +2310,7 @@ const PlaybackControllerHandler = {
         coverUrl = getCoverUrl(userPlaySession.libraryItemId)
         // const coverUrl = localSessionAttributes.coverUrl
 
-        const chapterTitle = getCurrentChapterByBookTime(currentBookTime, userPlaySession).title
+        chapterTitle = getCurrentChapterByBookTime(currentBookTime, userPlaySession).title
         metadata = {
           title: chapterTitle,
           subtitle: userPlaySession.displayTitle,
@@ -2507,7 +2356,7 @@ const PlaybackControllerHandler = {
       case 'PreviousCommandIssued':
         // default behavior: go to beginning of chapter. If within 5 seconds of beginning, go to previous chapter
         currentChapter = getCurrentChapterByBookTime(currentBookTime, userPlaySession)
-        let previousChapter = getCurrentChapterByBookTime(currentChapter.start - 1, userPlaySession)
+        previousChapter = getCurrentChapterByBookTime(currentChapter.start - 1, userPlaySession)
 
         if (offsetInMilliseconds > currentChapter.start * 1000 + 5000) { // if >5 sec, go to beginning of current chapter
           newBookTime = currentChapter.start
@@ -2567,8 +2416,8 @@ const PlaybackControllerHandler = {
       case 'NextCommandIssued':
 
         currentChapter = getCurrentChapterByBookTime(currentBookTime, userPlaySession)
-        let nextChapter = chapters[currentChapter.id + 1]
-        let currentTrack = getCurrentTrackByBookTime(currentBookTime, userPlaySession)
+        nextChapter = chapters[currentChapter.id + 1]
+        currentTrack = getCurrentTrackByBookTime(currentBookTime, userPlaySession)
 
 
         newBookTime = nextChapter.start
@@ -2716,7 +2565,7 @@ const SessionEndedRequestHandler = {
       // clear all
       console.log("SessionEndedRequest: clearing all memory")
       clearAllMemory(handlerInput);
-      testAttributes = handlerInput.attributesManager.getSessionAttributes();
+      // testAttributes = handlerInput.attributesManager.getSessionAttributes();
       localSessionAttributes = sessionAttributes = {}
       // closedPlaySession = false
       // nextStreamEnqueued = false
@@ -2779,42 +2628,53 @@ const ErrorHandler = {
 
 /* HELPER FUNCTIONS */
 
+/**
+ * Sanitizes the given input for use in SSML.
+ * This removes disallowed characters, escapes special characters for XML,
+ * and further sanitizes any remaining invalid sequences.
+ * @param {string} input The input to sanitize.
+ * @returns {string} The sanitized input.
+ */
 function sanitizeForSSML(input) {
-  if (input) {
+  if (!input) {
+    return "";
+  }
+  try {
     // Remove characters that are not allowed in XML/SSML
-    const disallowedRegex = /[\u0000-\u001F\u007F-\u009F]/g;
-    let sanitizedInput = input.replace(disallowedRegex, '');
+    const sanitizedInput = Array.from(input)
+      .filter((char) => {
+        const code = char.charCodeAt(0);
+        return !(code >= 0x00 && code <= 0x1f) && !(code >= 0x7f && code <= 0x9f);
+      })
+      .join("");
 
     // Escape special characters for XML
     const escapeXml = (str) => {
+      if (!str) {
+        return "";
+      }
       return str.replace(/[<>&'"]/g, (char) => {
         switch (char) {
-          case '<':
-            return '&lt;';
-          case '>':
-            return '&gt;';
-          case '&':
-            return '&amp;';
-          case '\'':
-            return '&apos;';
+          case "<":
+            return "&lt;";
+          case ">":
+            return "&gt;";
+          case "&":
+            return "&amp;";
+          case "'":
+            return "&apos;";
           case '"':
-            return '&quot;';
+            return "&quot;";
           default:
             return char;
         }
       });
-
     };
 
-    sanitizedInput = escapeXml(sanitizedInput);
-
-    // Further sanitize any remaining invalid sequences
-    // If needed, add more logic here to validate input thoroughly
-
-    return sanitizedInput;
-  }
-  else {
-    return ""
+    return escapeXml(sanitizedInput);
+  } catch (error) {
+    console.error("Error during sanitizeForSSML:", error);
+    throw error;
   }
 }
 
@@ -2823,8 +2683,8 @@ function sanitizeForSSML(input) {
  * payloads to the handlers above. Make sure any new handlers or interceptors you've
  * defined are included below. The order matters - they're processed top to bottom 
  * */
-exports.handler = Alexa.SkillBuilders.custom()
-  .addRequestHandlers(
+module.exports.handler = Alexa.SkillBuilders.custom()
+.addRequestHandlers(
     LaunchRequestHandler,
     PlayAudioIntentHandler,
     PlayBookIntentHandler,
