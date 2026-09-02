@@ -24,7 +24,7 @@ function makeSecretScrubber({ apiKey, serverUrl } = {}) {
 
   const patterns = [
     [/(\?|&)token=[^"&\s]+/gi, '$1token=' + PLACEHOLDER_KEY],
-    [/Bearer\s+[A-Za-z0-9._\-]+/g, 'Bearer ' + PLACEHOLDER_KEY],
+    [/Bearer\s+[A-Za-z0-9._-]+/g, 'Bearer ' + PLACEHOLDER_KEY],
     [/\\?"ipAddress\\?"\s*:\s*\\?"[^"\\]*\\?"/g, (m) => m.split(':')[0] + ':"<ip>"'],
     [/"(username|osusername|refreshToken|accessToken|oldToken)"\s*:\s*"[^"]*"/gi, '"$1":"<redacted>"'],
     // Email addresses turn up anywhere, not just in an "email" field -- this

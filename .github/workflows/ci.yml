@@ -1,0 +1,41 @@
+name: CI
+
+# Runs on every push and pull request. GitHub spins up a fresh machine, installs
+# the dependencies, and runs the linter and the tests. A green tick on a commit
+# means it passed on a clean machine, not just on someone's laptop.
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The skill deploys to a Lambda Node runtime, not to whatever is
+        # installed locally. Testing on more than one version is what catches
+        # "works on my machine". Node 24 is deliberately absent: its Lambda
+        # runtime dropped callback-style handlers, and ask-sdk's .lambda()
+        # returns exactly that.
+        node: ['20', '22']
+    name: node ${{ matrix.node }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install test tooling
+        run: npm ci
+
+      - name: Install skill dependencies
+        run: npm ci
+        working-directory: lambda
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test
+        run: npm test
