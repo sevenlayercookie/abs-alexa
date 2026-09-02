@@ -1,4 +1,4 @@
-
+'use strict';
 const Alexa = require('ask-sdk-core');
 const request = require('sync-request');
 //const { SsmlUtils } = require('ask-sdk-core');
@@ -147,6 +147,7 @@ function getItemById(id, options = {}) {
 }
 
 function startUserPlaySession(libraryID, handlerInput) {
+  let res;
   try {
     console.log("startUserPlaySession")
     let deviceInfo = {
@@ -173,7 +174,7 @@ function startUserPlaySession(libraryID, handlerInput) {
 
 
 
-    let res = request('POST', SERVER_URL + `/api/items/${libraryID}/play`, { headers: baseheaders, json: bodyParameters });
+    res = request('POST', SERVER_URL + `/api/items/${libraryID}/play`, { headers: baseheaders, json: bodyParameters });
 
     let data = JSON.parse(res.getBody('utf8'));
 
@@ -186,9 +187,10 @@ function startUserPlaySession(libraryID, handlerInput) {
 }
 
 function getExistingUserPlaySession(sessionID) {
+  let res;
   try {
     console.log("getExistingUserPlaySession")
-    let res = request('GET', SERVER_URL + `/api/session/${sessionID}`, { headers: baseheaders });
+    res = request('GET', SERVER_URL + `/api/session/${sessionID}`, { headers: baseheaders });
     let data = JSON.parse(res.getBody('utf8'));
 
     return data;
@@ -245,7 +247,7 @@ function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = ""
   
   try {
       // Make the PATCH request
-      const res = syncRequest('PATCH', url, {
+      const res = request('PATCH', url, {
           json: data,
           headers: {
               'Content-Type': 'application/json',
@@ -260,6 +262,7 @@ function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = ""
 }
 
 function updateUserPlaySession(playSession, currentBookTime) {
+  let res;
   try {
     // currentTime = calculateCurrentTime(playSession, currentTrackOffsetMS, currentToken)
 
@@ -294,7 +297,7 @@ function updateUserPlaySession(playSession, currentBookTime) {
     // update user play session
     console.log("Update ABS play session for book: " + playSession.mediaMetadata.title);
 
-    let res = request('POST', SERVER_URL + `/api/session/${playSessionID}/sync`, { headers: baseheaders, body: body });
+    res = request('POST', SERVER_URL + `/api/session/${playSessionID}/sync`, { headers: baseheaders, body: body });
     console.log("updateUserPlaySession - Response code: " + res.statusCode);
     if (res.statusCode == 200) {
       console.log("updateUserPlaySession - Successfully synced play session with ABS");
@@ -410,7 +413,7 @@ function getCurrentTrackIndexByBookTime(currentTime, userPlaySession) {
   let audioTracks = userPlaySession.audioTracks
   if (currentTime > userPlaySession.duration) { // validation
     console.error("currentTime is greater than book duration; check inputs; setting currentTrackIndex to first track");
-    currentTrack = audioTracks[0]
+    let currentTrack = audioTracks[0]
   }
   else {
     for (let i = 0; i < audioTracks.length; i++) {
@@ -1205,7 +1208,7 @@ const PlayBookIntentHandler = {
       const validItems = amazonCrossmatch(titleResolutions, authorResolutions, accessToken)
 
       if (!validItems.validAuthors.length || !validItems.validTitles.length) {
-        amazonCrossmatchFailed = true // amazon's proposed titles and authors did not match
+        let amazonCrossmatchFailed = true // amazon's proposed titles and authors did not match
         console.log("Amazon cross match failed")
       }
       else {
@@ -1279,7 +1282,7 @@ const PlayBookIntentHandler = {
     let absMatchedAuthor = null
     // SEARCH THROUGH ABS LIBRARY FIRST USING AMAZON RESOLUTION DATA, THEN AGAIN USING RAW DATA (if still needed)
 
-    for (i = 0; i < 2 && !libraryItem; i++) // up to two loops, and only if libraryItem not found
+    for (let i = 0; i < 2 && !libraryItem; i++) // up to two loops, and only if libraryItem not found
     {
       if (i == 0) // if first run through loop, try Amazon author and title
       {
@@ -1633,7 +1636,7 @@ const PreviousIntentHandler = {
 
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(newBookTime, userPlaySession)
 
-    playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+    let playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
 
     let newChapterTitle = currentChapter.title
     let coverUrl = getCoverUrl(userPlaySession.libraryItemId)
@@ -1645,7 +1648,7 @@ const PreviousIntentHandler = {
 
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
 
-    metadata = {
+    let metadata = {
       title: newChapterTitle,
       subtitle: userPlaySession.displayTitle,
       art: {
@@ -1667,7 +1670,7 @@ const PreviousIntentHandler = {
         ]
       }
     };
-    response = handlerInput.responseBuilder
+    let response = handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",               // but then will metadata still be applied?
         playUrl,
@@ -1724,7 +1727,7 @@ const NextIntentHandler = {
 
     amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(newBookTime, userPlaySession)
 
-    playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
+    let playUrl = localSessionAttributes.playUrl = SERVER_URL + localSessionAttributes.userPlaySession.audioTracks[amazonToken - 1].contentUrl + "?token=" + ABS_API_KEY
 
     let newChapterTitle = nextChapter.title
 
@@ -1737,7 +1740,7 @@ const NextIntentHandler = {
 
     handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
 
-    metadata = {
+    let metadata = {
       title: newChapterTitle,
       subtitle: userPlaySession.displayTitle,
       art: {
@@ -1759,7 +1762,7 @@ const NextIntentHandler = {
         ]
       }
     };
-    response = handlerInput.responseBuilder
+    let response = handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",               // but then will metadata still be applied?
         playUrl,
@@ -1917,7 +1920,7 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
       }
     };
     // THIS LIKELY ENDS and FORGETS THE SESSION (custom intents do not "remember" session after it closes)
-    return response = handlerInput.responseBuilder
+    return handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",
         newUrl,
@@ -2047,7 +2050,7 @@ const GoForwardXTimeIntentHandler = {
       }
     };
 
-    return response = handlerInput.responseBuilder
+    return handlerInput.responseBuilder
       .addAudioPlayerPlayDirective(
         "REPLACE_ALL",
         newUrl,
@@ -2149,6 +2152,7 @@ const AudioPlayerEventHandler = {
     return handlerInput.requestEnvelope.request.type.startsWith('AudioPlayer.');
   },
   async handle(handlerInput) {
+    let audioPlayerEventName;
     try {
       // *** AudioPlayerEventHandler can NOT access sessionAttributes
       // need another way of communicating; localSessionAttributes? persistent attributes?
@@ -2159,7 +2163,7 @@ const AudioPlayerEventHandler = {
       // parts of handlerInput sometimes?
       timestamps.AudioPlayerEventHandlerStartTime = new Date();
 
-      const audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
+      audioPlayerEventName = handlerInput.requestEnvelope.request.type.split('.')[1];
       console.log(`AudioPlayer event encountered: ${handlerInput.requestEnvelope.request.type}`);
 
       let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds;
@@ -2321,7 +2325,7 @@ const AudioPlayerEventHandler = {
                   sources: [{ url: resolveBackgroundUrl(coverUrl), widthPixels: 1600, heightPixels: 900 }],
                 },
               };
-              response = handlerInput.responseBuilder
+              let response = handlerInput.responseBuilder
                 .addAudioPlayerPlayDirective(
                   "ENQUEUE",
                   nextUrl,
@@ -2467,6 +2471,7 @@ const PlaybackControllerHandler = {
     const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
 
     let response;
+    let playUrl;
     switch (playbackControllerEventName) {
       case 'PlayCommandIssued':
         // updateUserPlaySession(userPlaySession, currentBookTime) // don't actually need to sync here, since AudioPlayer will handle updates
@@ -2732,7 +2737,7 @@ const SessionEndedRequestHandler = {
       // clear all
       console.log("SessionEndedRequest: clearing all memory")
       clearAllMemory(handlerInput);
-      testAttributes = handlerInput.attributesManager.getSessionAttributes();
+      let testAttributes = handlerInput.attributesManager.getSessionAttributes();
       localSessionAttributes = sessionAttributes = {}
       // closedPlaySession = false
       // nextStreamEnqueued = false
