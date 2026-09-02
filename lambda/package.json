@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "engines": {
-    "node": ">=20 <24"
+    "node": ">=16"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

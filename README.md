@@ -46,9 +46,17 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Development:
 
-Node 22 is the target (see `.nvmrc`). Node 24 is deliberately not supported:
-its AWS Lambda runtime dropped callback-style handlers, which is what the ASK
-SDK's `.lambda()` produces.
+Two different Node versions are in play, and it matters:
+
+- **The deployed skill runs `nodejs16.x`.** Alexa-hosted fixes the runtime when
+  the skill is created and it cannot be changed afterwards. Anything under
+  `lambda/` must therefore stay Node 16 compatible -- no `fetch`, no
+  `structuredClone`, no `Array.prototype.at`.
+- **The test harness needs Node 18+**, because it uses the built-in `node:test`
+  runner. `.nvmrc` pins 22 for local development.
+
+Node 24 is avoided regardless: its AWS Lambda runtime dropped callback-style
+handlers, which is exactly what the ASK SDK's `.lambda()` produces.
 
 ```bash
 npm install          # test tooling (repo root)
