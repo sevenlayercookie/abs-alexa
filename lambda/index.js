@@ -1,10 +1,7 @@
 
 const Alexa = require('ask-sdk-core');
-//const AWS = require('aws-sdk');
 const request = require('sync-request');
-const fs = require('fs');
 //const { SsmlUtils } = require('ask-sdk-core');
-// const xml2js = require('xml2js');
 
 let closedPlaySession = false
 
@@ -18,8 +15,10 @@ let localSessionAttributes = {
   nextStreamEnqueued: true
 }
 
+// To enable persistent attributes (see README To Do), first:
+//   npm i ask-sdk-dynamodb-persistence-adapter @aws-sdk/client-dynamodb
+// then uncomment this and the .withPersistenceAdapter() block at the bottom.
 //const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
-// const Util = require('./util.js');
 
 const { ABS_API_KEY, SERVER_URL, CFAccessClientId, CFAccessClientSecret } = require('./config.js');
 // const { off, title } = require('process');
@@ -1469,15 +1468,6 @@ const PlayBookIntentHandler = {
     console.log("TIMER: Total intent time (PlayBookIntent): " + totalIntentTime + " ms")
     timers.totalIntentTime = totalIntentTime
     timers.preparePlay = timeUntilResponse
-    // log timers to file
-    const timersString = JSON.stringify(timers, null, 2);
-    fs.appendFile('timers.json', timersString + '\n', (err) => {
-      if (err) {
-        console.error('Failed to append timers object:', err);
-      } else {
-        console.log('Timers object appended successfully.');
-      }
-    });
     clearTimers();
 
 
