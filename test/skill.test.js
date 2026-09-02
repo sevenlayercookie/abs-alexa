@@ -10,7 +10,7 @@ const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const { scenarios } = require('./scenarios');
 const { startServer } = require('./helpers/server-process');
-const { loadSkill, invoke } = require('./helpers/alexa');
+const { loadSkill, invoke, intent, playbackController, playerStateFrom } = require('./helpers/alexa');
 const { matchSnapshot } = require('./helpers/snapshot');
 const fs = require('fs');
 const path = require('path');
@@ -52,6 +52,62 @@ describe('skill behaviour', () => {
       }
     });
   }
+
+  // The device Play/Next buttons on an Echo Show arrive as PlaybackController
+  // events, which Alexa sends WITHOUT session attributes. The handler therefore
+  // reads module-level state that outlives the conversation -- see the comment
+  // at PlaybackControllerHandler in lambda/index.js.
+  //
+  // That state is load-bearing, not accidental: replacing localSessionAttributes
+  // with attributesManager would break the device buttons outright. This test
+  // pins the dependency so the rewrite cannot remove it silently.
+  test('device Play button depends on state outliving the conversation', async () => {
+    const playDirective = (res) =>
+      ((res && res.response && res.response.directives) || []).find((d) => d.type === 'AudioPlayer.Play');
+
+    // cold container: nothing played yet, so there is nothing to resume
+    const cold = loadSkill();
+    const coldRes = await invoke(cold, playbackController('PlayCommandIssued'));
+    assert.strictEqual(playDirective(coldRes), undefined,
+      'a cold container has no play session and should emit no Play directive');
+
+    // warm container: a book played earlier in this container's life, so the
+    // handler finds a play session and takes its main path
+    const warm = loadSkill();
+    const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));
+    const warmRes = await invoke(warm,
+      playbackController('PlayCommandIssued', undefined, playerStateFrom(first)));
+    assert.ok(playDirective(warmRes),
+      'the device Play button relies on state outliving the conversation');
+  });
+
+  // KNOWN DEFECT, pinned deliberately.
+  //
+  // PlayCommandIssued builds chapter title, cover art and background metadata
+  // and then calls .addAudioPlayerPlayDirective() with every argument commented
+  // out, so Alexa receives a Play directive with an empty stream: no url, no
+  // token, no offset. Pressing Play on a device with screen controls therefore
+  // cannot resume anything.
+  //
+  // Confirmed pre-existing: the same empty stream comes out of the code as it
+  // was before the strict-mode commit, so it is not a refactoring artifact.
+  //
+  // This asserts the broken behaviour on purpose, so a rewrite cannot change it
+  // without someone noticing. When the directive is given its arguments back,
+  // this test SHOULD fail -- update it then.
+  test('KNOWN BUG: device Play button emits an empty audio stream', async () => {
+    const warm = loadSkill();
+    const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));
+    const res = await invoke(warm,
+      playbackController('PlayCommandIssued', undefined, playerStateFrom(first)));
+    const play = ((res.response && res.response.directives) || [])
+      .find((d) => d.type === 'AudioPlayer.Play');
+    const stream = play.audioItem.stream;
+    assert.strictEqual(stream.url, undefined,
+      'if this now has a url, the bug was fixed -- update this test');
+    assert.strictEqual(stream.token, undefined, 'token is also dropped');
+    assert.strictEqual(stream.offsetInMilliseconds, undefined, 'offset is also dropped');
+  });
 
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();

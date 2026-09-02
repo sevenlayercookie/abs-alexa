@@ -21,7 +21,10 @@ const declaredSlots = (() => {
   } catch { return {}; }
 })();
 
-const base = (sessionAttributes = {}, newSession = true) => ({
+// `player` mirrors what a device reports about the stream it currently has
+// loaded. Alexa includes it on PlaybackController and AudioPlayer requests, and
+// index.js reads context.AudioPlayer.token / .offsetInMilliseconds from it.
+const base = (sessionAttributes = {}, newSession = true, player = {}) => ({
   version: '1.0',
   session: {
     new: newSession,
@@ -38,12 +41,12 @@ const base = (sessionAttributes = {}, newSession = true) => ({
       apiEndpoint: 'https://api.amazonalexa.com',
       apiAccessToken: 'TEST_ACCESS_TOKEN',
     },
-    AudioPlayer: { playerActivity: 'IDLE' },
+    AudioPlayer: { playerActivity: 'IDLE', ...player },
   },
 });
 
-const withRequest = (request, sessionAttributes, newSession) => {
-  const env = base(sessionAttributes, newSession);
+const withRequest = (request, sessionAttributes, newSession, player) => {
+  const env = base(sessionAttributes, newSession, player);
   env.request = {
     requestId: 'amzn1.echo-api.request.TEST',
     timestamp: '2024-01-01T00:00:00Z',
@@ -75,8 +78,17 @@ const intent = (name, slots = {}, attrs, newSession = false) =>
 const audioPlayer = (event, extra = {}, attrs) =>
   withRequest({ type: `AudioPlayer.${event}`, token: 'TEST_TOKEN', offsetInMilliseconds: 0, ...extra }, attrs);
 
-const playbackController = (event, attrs) =>
-  withRequest({ type: `PlaybackController.${event}` }, attrs);
+const playbackController = (event, attrs, player) =>
+  withRequest({ type: `PlaybackController.${event}` }, attrs, false, player);
+
+// Pulls the token/offset out of a previous AudioPlayer.Play directive, so a
+// follow-up device-button event carries what a real Echo would report.
+const playerStateFrom = (res) => {
+  const d = ((res && res.response && res.response.directives) || [])
+    .find((x) => x.type === 'AudioPlayer.Play');
+  const stream = (d && d.audioItem && d.audioItem.stream) || {};
+  return { token: stream.token, offsetInMilliseconds: stream.offsetInMilliseconds, playerActivity: 'PLAYING' };
+};
 
 const sessionEnded = (reason = 'USER_INITIATED', attrs) =>
   withRequest({ type: 'SessionEndedRequest', reason }, attrs);
@@ -106,4 +118,4 @@ function invoke(skill, envelope) {
   });
 }
 
-module.exports = { launch, intent, audioPlayer, playbackController, sessionEnded, loadSkill, invoke };
+module.exports = { launch, intent, audioPlayer, playbackController, playerStateFrom, sessionEnded, loadSkill, invoke };
