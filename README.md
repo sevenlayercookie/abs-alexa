@@ -21,7 +21,11 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Installation:
 1) Fork this repo
-2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this later in the 'Code' tab of Developer Console if using Alexa-hosted)
+2) Provide your **Audiobookshelf API key** and **server URL**. Either way works; environment variables take precedence.
+   - **Environment variables** (recommended): set `ABS_API_KEY` and `SERVER_URL`. On Alexa-hosted, use the 'Code' tab of the Developer Console.
+   - **Config file**: `cd lambda && cp config.example.js config.js`, then edit it. `config.js` is gitignored, so your key is never committed — do not rename or force-add it.
+
+   Optional: `USER_AGENT`, `BACKGROUND_URL` (background art for screen devices; defaults to the current book's cover), and `CFAccessClientId` / `CFAccessClientSecret` for servers behind Cloudflare Access.
 3) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 4) Set your skill invocation name and build the skill
 5) Save and deploy the skill

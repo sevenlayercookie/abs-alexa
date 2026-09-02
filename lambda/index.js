@@ -20,7 +20,30 @@ let localSessionAttributes = {
 // then uncomment this and the .withPersistenceAdapter() block at the bottom.
 //const ddbAdapter = require('ask-sdk-dynamodb-persistence-adapter');
 
-const { ABS_API_KEY, SERVER_URL, CFAccessClientId, CFAccessClientSecret } = require('./config.js');
+// Configuration resolves from the environment first, then config.js.
+// config.js is gitignored; see config.example.js.
+let fileConfig = {};
+try {
+  fileConfig = require('./config.js');
+} catch (err) {
+  if (err.code !== 'MODULE_NOT_FOUND') throw err;
+  console.log('No config.js found; reading configuration from the environment.');
+}
+
+const cfg = (key, fallback) =>
+  process.env[key] !== undefined ? process.env[key] : (fileConfig[key] !== undefined ? fileConfig[key] : fallback);
+
+const ABS_API_KEY = cfg('ABS_API_KEY');
+const SERVER_URL = cfg('SERVER_URL');
+const USER_AGENT = cfg('USER_AGENT', 'AlexaSkill');
+const BACKGROUND_URL = cfg('BACKGROUND_URL');
+const CFAccessClientId = cfg('CFAccessClientId');
+const CFAccessClientSecret = cfg('CFAccessClientSecret');
+
+if (!ABS_API_KEY || !SERVER_URL) {
+  throw new Error('Missing required configuration: set ABS_API_KEY and SERVER_URL in the environment or config.js (see config.example.js).');
+}
+
 // const { off, title } = require('process');
 
 const baseheaders = {
@@ -29,7 +52,7 @@ const baseheaders = {
   "CF-Access-Client-Id": CFAccessClientId,
   "cf-access-client-id": CFAccessClientId,
   "CF-Access-Client-Secret": CFAccessClientSecret,
-  "User-Agent": "AlexaSkill"
+  "User-Agent": USER_AGENT
 }
 
 // GLOBAL VARIABLES
@@ -60,7 +83,11 @@ let timestamps = {
   PlayBookIntentHandlerEndTime: null
 };
 
-let backgroundUrl = "https://images.steelcase.com/image/upload/c_fill,q_auto,f_auto,h_900,w_1600/v1567243086/6130_1000.jpg"
+// Background art for screen devices. Defaults to the cover of the book being
+// played; set BACKGROUND_URL to pin a static image instead.
+function resolveBackgroundUrl(coverUrl) {
+  return BACKGROUND_URL || coverUrl;
+}
 
 // AUDIOBOOKSHELF API CALL FUNCTIONS
 function getLastPlayedLibraryItem() {
@@ -558,7 +585,7 @@ const PlayAudioIntentHandler = {
         backgroundImage: {
           sources: [
             {
-              url: backgroundUrl,
+              url: resolveBackgroundUrl(coverUrl),
               widthPixels: 1600,
               heightPixels: 900
             }
@@ -888,7 +915,7 @@ const PlaybackBookHandler = { // this handler is not currently used (has limitat
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -1452,7 +1479,7 @@ const PlayBookIntentHandler = {
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -1633,7 +1660,7 @@ const PreviousIntentHandler = {
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -1725,7 +1752,7 @@ const NextIntentHandler = {
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -1882,7 +1909,7 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -2012,7 +2039,7 @@ const GoForwardXTimeIntentHandler = {
       backgroundImage: {
         sources: [
           {
-            url: backgroundUrl,
+            url: resolveBackgroundUrl(coverUrl),
             widthPixels: 1600,
             heightPixels: 900
           }
@@ -2291,7 +2318,7 @@ const AudioPlayerEventHandler = {
                   sources: [{ url: coverUrl, widthPixels: 512, heightPixels: 512 }],
                 },
                 backgroundImage: {
-                  sources: [{ url: backgroundUrl, widthPixels: 1600, heightPixels: 900 }],
+                  sources: [{ url: resolveBackgroundUrl(coverUrl), widthPixels: 1600, heightPixels: 900 }],
                 },
               };
               response = handlerInput.responseBuilder
@@ -2379,7 +2406,6 @@ function clearAllMemory(handlerInput = null) {
     handlerInput.attributesManager.setSessionAttributes(localSessionAttributes);
   }
   closedPlaySession = false
-  nextStreamEnqueued = false
   clearTimers();
   resetTimestamps();
   } catch (error) {
@@ -2467,7 +2493,7 @@ const PlaybackControllerHandler = {
           backgroundImage: {
             sources: [
               {
-                url: backgroundUrl,
+                url: resolveBackgroundUrl(coverUrl),
                 widthPixels: 1600,
                 heightPixels: 900
               }
@@ -2538,7 +2564,7 @@ const PlaybackControllerHandler = {
           backgroundImage: {
             sources: [
               {
-                url: backgroundUrl,
+                url: resolveBackgroundUrl(coverUrl),
                 widthPixels: 1600,
                 heightPixels: 900
               }
@@ -2601,7 +2627,7 @@ const PlaybackControllerHandler = {
           backgroundImage: {
             sources: [
               {
-                url: backgroundUrl,
+                url: resolveBackgroundUrl(coverUrl),
                 widthPixels: 1600,
                 heightPixels: 900
               }
@@ -2739,7 +2765,8 @@ const IntentReflectorHandler = {
   },
   handle(handlerInput) {
     const intentName = Alexa.getIntentName(handlerInput.requestEnvelope);
-    const speakOutput = `You just triggered ${intentName}`;
+    console.log(`Unhandled intent reached IntentReflectorHandler: ${intentName}`);
+    const speakOutput = "Sorry, I can't do that yet.";
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
