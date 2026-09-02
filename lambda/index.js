@@ -4,7 +4,6 @@ const { ABS_API_KEY, SERVER_URL, baseheaders, resolveBackgroundUrl } = require('
 const { calculateCurrentTime, getCurrentTrackByBookTime, getCurrentTrackIndexByBookTime,
   getCurrentChapterByBookTime, getTrackAndOffsetFromBookTime, isoDurationToMilliseconds,
   sanitizeForSSML } = require('./lib/audio');
-const Fuse = require('fuse.js'); // only still used by PlaybackBookHandler (unreachable)
 const { timers, timestamps, clearTimers, resetTimestamps } = require('./lib/timers');
 const { getEntityData, fuzzyMatch, fuzzyStringMatch, searchBookWithAbsAPI, amazonCrossmatch,
   searchByTitleOnly } = require('./lib/search');
@@ -239,186 +238,6 @@ const PlayAudioIntentHandler = {
 };
 
 // const { match } = require('assert');
-
-const PlaybackBookHandler = { // this handler is not currently used (has limitations)
-  canHandle(handlerInput) {
-    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
-      && (Alexa.getIntentName(handlerInput.requestEnvelope) === 'AMAZON.PlaybackAction<object@Book>');
-  },
-  async handle(handlerInput) {
-    // this function is mainly limited by the poor intent slots that are returned. May only be 
-    // actually useful if I were to upload the catalogue for Alexa to analyze.....
-    // it doesn't do any entity resolution, which is stupid
-    // created a custom handler that does entity resolution through amazon
-    console.log("Intent: PlaybackBookHandler Triggered")
-    const bookTitle = handlerInput.requestEnvelope.request.intent.slots["object.name"].value
-    const author = handlerInput.requestEnvelope.request.intent.slots["object.author.name"].value
-
-    let libraryItem
-    console.log("Title: " + bookTitle)
-    console.log("Author: " + author)
-    if (!bookTitle) {
-      let speakOutput = 'I did not understand the request. For example, try saying "Play audiobook title by author".';
-      console.log("Book and/or author slot undefined")
-      return handlerInput.responseBuilder
-        .speak(speakOutput)
-        .reprompt(speakOutput)
-        .getResponse();
-    }
-    else if (bookTitle && author) { // if I'm given both author and book
-      const allLibraries = getAllLibraries()
-      const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-      const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-      const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
-
-      const filterdata = getLibraryFilterData(bookLibraryIDs[0])
-      let authorEntry
-
-      // fuzzy match author
-      const optionsAuthor = {
-        keys: ['name'],
-        threshold: 0.3 // Adjust the threshold according to your needs
-      };
-
-      const fuseAuthor = new Fuse(filterdata.authors, optionsAuthor);
-      authorEntry = fuseAuthor.search(author)[0].item;
-      const authorResult = getAuthor(authorEntry.id)
-      const libraryItems = authorResult.libraryItems
-
-      // fuzzy match title
-      const optionsTitle = {
-        keys: ['media.metadata.title'],  // Specify the keys to search within the nested structure
-        includeScore: true,              // Include score in the results
-        threshold: 0.3,                  // Adjust the threshold to control the fuzzy matching sensitivity
-      };
-
-      // Create a Fuse instance
-      const fuseTitle = new Fuse(libraryItems, optionsTitle);
-
-      // Perform the search
-      libraryItem = fuseTitle.search(bookTitle)[0].item;
-
-      // Log the results
-      console.log("Found a book in the library!")
-      console.log("Title: " + libraryItem.media.metadata.title);
-      console.log("Author: " + libraryItem.media.metadata.authorName);
-    }
-    else if (bookTitle && !author) { // if only given book title
-      const allLibraries = getAllLibraries()
-      const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-      const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-      const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
-      let results = []
-      bookLibraryIDs.forEach(function (libraryID, i) {
-        results[i] = searchFor(bookTitle, libraryID)
-      });
-      if (results[0].book.length == 0) {
-        console.log("No book of title '" + bookTitle + "' found")
-        const speakOutput = "No book of title '" + bookTitle + "' found. Please try again.";
-        return handlerInput.responseBuilder
-          .speak(sanitizeForSSML(speakOutput))
-          .reprompt(sanitizeForSSML(speakOutput))
-          .getResponse();
-      }
-
-      const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
-      // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
-      console.log("Matched a book using ABS search API!")
-      //absSearchResults[0].book[0].libraryItem.media.metadata.title
-
-      libraryItem = firstMatchingBook.libraryItem
-
-      console.log("Found a book in the library!")
-      console.log("Title: " + libraryItem.media.metadata.title);
-      console.log("Author: " + libraryItem.media.metadata.authorName);
-    }
-
-    let userPlaySession
-
-    const playBehavior = 'REPLACE_ALL';
-
-    const libraryItemID = libraryItem.id
-
-    let expandedItem = getItemById(lastPlayedID, { include: ['progress'], expanded: 1 });
-
-    userPlaySession = startUserPlaySession(libraryItemID, handlerInput)
-    delete userPlaySession.libraryItem // this property very large and nothing useful
-    // playSession = userPlaySession
-
-    const sessionAttributes = handlerInput.attributesManager.getSessionAttributes(); // cannot set sessionAttriubtes and localAttributes equal
-    localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
-
-    let mediaProgress = expandedItem.userMediaProgress
-
-    sessionAttributes.userPlaySessionID = userPlaySession.id // can call API to pull the whole playSession again if needed
-
-    let currentTime = mediaProgress.currentTime
-    if (currentTime > userPlaySession.duration) { // validation
-      currentTime = 0.0 // start at beginning
-    }
-    let currentTrack = sessionAttributes.currentTrack = getCurrentTrackByBookTime(currentTime, userPlaySession)
-    let currentTrackIndex = sessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(currentTime, userPlaySession) // should start at 1
-    sessionAttributes.currentTrackIndex = currentTrackIndex;
-    let trackStartOffset = currentTrack.startOffset
-    const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = (currentTime - trackStartOffset) * 1000
-
-    if (userPlaySession.audioTracks[currentTrackIndex]) {
-      localSessionAttributes.nextStreamEnqueued = true
-    }
-    else {
-      localSessionAttributes.nextStreamEnqueued = false
-    }
-
-    const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
-
-    // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY 
-
-    const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
-
-    handlerInput.attributesManager.setSessionAttributes(sessionAttributes)
-    // sync localSessionAttributes to sessionAttributes
-    updateLocalSessionAttributes(sessionAttributes)
-
-    let speakOutput = 'Playing ' + userPlaySession.displayTitle + ' by ' + userPlaySession.displayAuthor;
-    console.log("Playing: " + playUrl)
-
-    const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
-    const metadata = {
-      title: chapterTitle,
-      subtitle: userPlaySession.displayTitle,
-      art: {
-        sources: [
-          {
-            url: coverUrl,
-            widthPixels: 512, // these seem to be necessary even though docs say it's not
-            heightPixels: 512
-          }
-        ]
-      },
-      backgroundImage: {
-        sources: [
-          {
-            url: resolveBackgroundUrl(coverUrl),
-            widthPixels: 1600,
-            heightPixels: 900
-          }
-        ]
-      }
-    };
-
-    return handlerInput.responseBuilder
-      .speak(sanitizeForSSML(speakOutput))
-      .addAudioPlayerPlayDirective(
-        playBehavior,
-        playUrl,
-        currentTrackIndex, // for amazon's token system 
-        offsetInMilliseconds, // offset in ms
-        null,          // expected previous token (don't include if playBehavior is REPLACE)
-        metadata
-      )
-      .getResponse();
-  }
-};
 
 // Function to perform fuzzy string matching, for simple strings 1 to 1
 
@@ -2006,7 +1825,6 @@ exports.handler = Alexa.SkillBuilders.custom()
     LaunchRequestHandler,
     PlayAudioIntentHandler,
     PlayBookIntentHandler,
-    PlaybackBookHandler,
     PauseAudioIntentHandler,
     PreviousIntentHandler,
     NextIntentHandler,
