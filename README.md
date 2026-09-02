@@ -71,9 +71,15 @@ globally rather than as a project dependency; it pulls in ~485 packages.
 
 ```bash
 npm install -g ask-cli
-ask configure         # opens a browser to sign in to your Amazon developer account
-ask init              # generates ask-resources.json -- commit that file
+ask configure                      # browser sign-in to your Amazon developer account
+ask smapi list-skills-for-vendor   # find your skill id
 ```
+
+`ask dialog` needs nothing else -- no `ask init`, no `ask-resources.json`.
+Those are only for letting the CLI manage deployment, which an Alexa-hosted
+skill does not need: Amazon provisions the Lambda and sets the endpoint itself.
+Running plain `ask init` here would configure the project to deploy to a
+*new* Lambda in your own AWS account, which is not how this skill is hosted.
 
 - `ask dialog -s <skill-id>` — type utterances and get real Alexa responses,
   multi-turn. `--save-skill-io` writes the request/response JSON to a file, and
@@ -83,7 +89,8 @@ ask init              # generates ask-resources.json -- commit that file
   restarts on edit.
 
 `.ask/` holds deployment state and account-specific resource ids and is
-gitignored. `ask-resources.json` is project configuration and should be committed.
+gitignored. If you ever do adopt CLI-managed deployment, `ask-resources.json`
+is project configuration and should be committed.
 ## Background:
 - ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
