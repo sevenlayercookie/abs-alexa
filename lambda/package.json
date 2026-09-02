@@ -4,6 +4,9 @@
   "description": "Alexa skill for controlling a self-hosted Audiobookshelf server",
   "main": "index.js",
   "license": "MIT",
+  "engines": {
+    "node": ">=20 <24"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

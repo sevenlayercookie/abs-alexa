@@ -36,19 +36,30 @@
       "isAvailableWorldwide": true,
       "locales": {
         "en-US": {
-          "description": "Sample Full Description",
+          "description": "Play audiobooks from a self-hosted Audiobookshelf server on your Echo devices.\n\nSay \"play\" to pick up your most recent audiobook exactly where you stopped, or ask for a specific title or author and the skill will find it in your library.\n\nFeatures:\n- Resume your last audiobook, or start one by title and author\n- Skip forward and back by chapter\n- Seek by time, for example \"go back two minutes\"\n- Listening progress is written back to your Audiobookshelf server, so it stays in sync with the Audiobookshelf apps and the web player\n- Finds books even when the title is not spoken exactly, using a fuzzy search across your library\n\nRequirements: this skill talks to your own Audiobookshelf server. You need a publicly reachable Audiobookshelf instance and an API key for it, both of which you supply when you deploy the skill. No audiobooks or accounts are provided by the skill itself.",
           "examplePhrases": [
             "Play",
             "Play last audiobook",
             "Play The Fellowship of the Ring by J.R.R. Tolkien",
             "Skip forward 30 seconds"
           ],
-          "keywords": [],
+          "keywords": [
+            "audiobook",
+            "audiobooks",
+            "audiobookshelf",
+            "abs",
+            "self-hosted",
+            "selfhosted",
+            "books",
+            "listening",
+            "library",
+            "homelab"
+          ],
           "name": "Audiobookshelf",
-          "summary": "Play audiobooks from self-hosted Audiobookshelf server"
+          "summary": "Listen to audiobooks from your own Audiobookshelf server. Resume where you left off, jump between chapters, and keep progress in sync."
         }
       },
-      "testingInstructions": "Sample Testing Instructions."
+      "testingInstructions": "This skill is a client for the user's own self-hosted Audiobookshelf server (https://www.audiobookshelf.org). It has no content or accounts of its own, and it cannot function without a server URL and API key that the operator supplies at deploy time.\n\nBecause the backing server is private to each operator, this skill is intended for personal use rather than public distribution, and there is no shared test account to provide.\n\nTo exercise it against your own instance:\n1. Set ABS_API_KEY and SERVER_URL for the skill's Lambda (or copy lambda/config.example.js to lambda/config.js and fill it in).\n2. Ensure the Audiobookshelf library type is set to audiobooks; other library types are not searched.\n3. Open the skill and say \"play\" to resume the most recently played book.\n4. Say \"next\" or \"previous\" to move between chapters.\n5. Say \"go back two minutes\" to seek within the current chapter.\n6. Say \"play\" followed by a title in the library to start a specific book."
     }
   }
 }

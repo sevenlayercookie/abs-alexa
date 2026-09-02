@@ -44,6 +44,46 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Though there are some useful intents, I find that the most reliable way of using the skill is to just say "Play" to resume last listened to audiobook
   - "Play" is a built-in intent, which Alexa tends to execute more reliably
 
+## Development:
+
+Node 22 is the target (see `.nvmrc`). Node 24 is deliberately not supported:
+its AWS Lambda runtime dropped callback-style handlers, which is what the ASK
+SDK's `.lambda()` produces.
+
+```bash
+npm install          # test tooling (repo root)
+npm install --prefix lambda   # the skill's own dependencies
+npm test             # 16 tests, ~0.3s, no server or device needed
+npm run lint
+```
+
+`npm test` replays recorded Audiobookshelf responses from `test/fixtures/`, so
+it needs no network. See [test/README.md](test/README.md) for how to re-record
+them and what the tests do and do not cover.
+
+CI runs both commands on Node 20 and 22 for every push.
+
+### Optional: the ASK CLI
+
+Not required to develop or deploy, but it covers the one thing the local tests
+cannot -- whether Alexa maps a spoken phrase to the right intent. Install it
+globally rather than as a project dependency; it pulls in ~485 packages.
+
+```bash
+npm install -g ask-cli
+ask configure         # opens a browser to sign in to your Amazon developer account
+ask init              # generates ask-resources.json -- commit that file
+```
+
+- `ask dialog -s <skill-id>` — type utterances and get real Alexa responses,
+  multi-turn. `--save-skill-io` writes the request/response JSON to a file, and
+  `--replay` re-runs a recorded session.
+- `ask run` — routes live requests from a real Echo or the simulator to the code
+  on your machine, so you can test a change without deploying. `--watch`
+  restarts on edit.
+
+`.ask/` holds deployment state and account-specific resource ids and is
+gitignored. `ask-resources.json` is project configuration and should be committed.
 ## Background:
 - ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
