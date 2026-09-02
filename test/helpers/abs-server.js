@@ -12,7 +12,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { makeScrubber } = require('./scrub');
+const { makeSecretScrubber } = require('./scrub');
 
 const FIXTURES = path.join(__dirname, '..', 'fixtures');
 
@@ -47,14 +47,40 @@ function replay(name) {
   return { server, misses, cassette };
 }
 
+// Endpoints that would modify the user's library are never forwarded. The
+// skill reports listening progress back to Audiobookshelf, so recording these
+// for real would overwrite the position in whatever books are in progress.
+// They are answered with a canned success instead, which is what the skill
+// checks for anyway (it only looks at statusCode).
+const WRITE_ENDPOINTS = [
+  /^\/api\/session\/[^/]+\/sync$/,
+  /^\/api\/session\/[^/]+\/close$/,
+  /^\/api\/me\/progress\//,
+];
+
+const isWrite = (url) => {
+  const p = url.split('?')[0];
+  return WRITE_ENDPOINTS.some((re) => re.test(p));
+};
+
 // Proxy to the real server, recording as we go.
 function record(name, upstream, apiKey) {
   const cassette = loadCassette(name);
-  const scrub = makeScrubber({ apiKey, serverUrl: upstream });
+  const scrubSecrets = makeSecretScrubber({ apiKey, serverUrl: upstream });
   const server = http.createServer(async (req, res) => {
     const chunks = [];
     for await (const c of req) chunks.push(c);
     const body = Buffer.concat(chunks);
+
+    if (isWrite(req.url)) {
+      const canned = { status: 200, headers: { 'Content-Type': 'application/json' }, body: '{}' };
+      cassette[keyFor(req.method, scrubSecrets(req.url))] = { ...canned, note: 'write blocked during recording' };
+      saveCassette(name, cassette);
+      console.error(`  [write blocked] ${req.method} ${req.url}`);
+      res.writeHead(canned.status, canned.headers);
+      return res.end(canned.body);
+    }
+
     let upstreamRes, text;
     try {
       upstreamRes = await fetch(upstream + req.url, {
@@ -68,17 +94,18 @@ function record(name, upstream, apiKey) {
       return res.end(JSON.stringify({ error: String(err) }));
     }
     const ct = upstreamRes.headers.get('content-type') || 'application/json';
-    // store the scrubbed copy; hand the caller the scrubbed copy too, so the
-    // skill under test never sees the real key
-    const safeBody = ct.includes('json') || ct.includes('text') ? scrub(text) : '<binary omitted>';
-    cassette[keyFor(req.method, scrub(req.url))] = {
+    const isText = ct.includes('json') || ct.includes('text');
+    // Store the secret-scrubbed copy, but hand the skill the REAL body. The
+    // skill takes ids out of one response and builds the next request's URL
+    // from them, so a placeholder here would break the chain (and did).
+    cassette[keyFor(req.method, scrubSecrets(req.url))] = {
       status: upstreamRes.status,
       headers: { 'Content-Type': ct },
-      body: safeBody,
+      body: isText ? scrubSecrets(text) : '<binary omitted>',
     };
     saveCassette(name, cassette);
     res.writeHead(upstreamRes.status, { 'Content-Type': ct });
-    res.end(safeBody);
+    res.end(isText ? text : '');
   });
   return { server, cassette };
 }

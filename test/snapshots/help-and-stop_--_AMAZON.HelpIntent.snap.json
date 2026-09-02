@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>You can say \"play audio\" to start playing your book! How can I help?</speak>"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "SSML",
+        "ssml": "<speak>You can say \"play audio\" to start playing your book! How can I help?</speak>"
+      }
+    },
+    "shouldEndSession": false
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

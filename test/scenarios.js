@@ -25,11 +25,11 @@ const scenarios = [
   },
   {
     name: 'play-book-by-title',
-    steps: [{ label: 'PlayBookIntent title only', make: () => A.intent('PlayBookIntent', { title: 'dune' }, {}, true) }],
+    steps: [{ label: 'PlayBookIntent title only', make: () => A.intent('PlayBookIntent', { title: 'the lies of locke lamora' }, {}, true) }],
   },
   {
     name: 'play-book-by-title-and-author',
-    steps: [{ label: 'PlayBookIntent title + author', make: () => A.intent('PlayBookIntent', { title: 'dune', author: 'frank herbert' }, {}, true) }],
+    steps: [{ label: 'PlayBookIntent title + author', make: () => A.intent('PlayBookIntent', { title: 'red seas under red skies', author: 'scott lynch' }, {}, true) }],
   },
   {
     name: 'chapter-navigation',
@@ -67,6 +67,10 @@ const scenarios = [
       { label: 'AMAZON.HelpIntent', make: () => A.intent('AMAZON.HelpIntent', {}, {}, true) },
       { label: 'AMAZON.StopIntent', make: (a) => A.intent('AMAZON.StopIntent', {}, a) },
     ],
+  },
+  {
+    name: 'play-book-not-in-library',
+    steps: [{ label: 'PlayBookIntent unknown title', make: () => A.intent('PlayBookIntent', { title: 'a book that does not exist anywhere' }, {}, true) }],
   },
   {
     name: 'unhandled-intent-falls-back',

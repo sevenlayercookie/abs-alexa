@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Could not find a playable book matching: a book that does not exist anywhere by null. Please try again.</speak>"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "SSML",
+        "ssml": "<speak>Could not find a playable book matching: a book that does not exist anywhere by null. Please try again.</speak>"
+      }
+    },
+    "shouldEndSession": false
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

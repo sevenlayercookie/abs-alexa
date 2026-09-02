@@ -2,7 +2,24 @@
 // Builds Alexa request envelopes and invokes the skill against them.
 
 const path = require('path');
+const fs = require('fs');
 const SKILL = path.join(__dirname, '..', '..', 'lambda', 'index.js');
+const MODEL = path.join(__dirname, '..', '..', 'skill-package', 'interactionModels', 'custom', 'en-US.json');
+
+// Alexa sends every slot declared for an intent, with `value` absent when the
+// user did not fill it -- not just the ones that were filled. Reproducing that
+// matters: index.js reads `slots.author.value` directly, which throws if the
+// slot object is missing altogether.
+const declaredSlots = (() => {
+  try {
+    const model = JSON.parse(fs.readFileSync(MODEL, 'utf8'));
+    const out = {};
+    for (const i of model.interactionModel.languageModel.intents || []) {
+      out[i.name] = (i.slots || []).map((s) => s.name);
+    }
+    return out;
+  } catch { return {}; }
+})();
 
 const base = (sessionAttributes = {}, newSession = true) => ({
   version: '1.0',
@@ -45,7 +62,12 @@ const intent = (name, slots = {}, attrs, newSession = false) =>
       name,
       confirmationStatus: 'NONE',
       slots: Object.fromEntries(
-        Object.entries(slots).map(([k, v]) => [k, { name: k, value: v, confirmationStatus: 'NONE' }])
+        [...new Set([...(declaredSlots[name] || []), ...Object.keys(slots)])].map((k) => [
+          k,
+          slots[k] === undefined
+            ? { name: k, confirmationStatus: 'NONE' }              // declared but unfilled
+            : { name: k, value: slots[k], confirmationStatus: 'NONE' },
+        ])
       ),
     },
   }, attrs, newSession);

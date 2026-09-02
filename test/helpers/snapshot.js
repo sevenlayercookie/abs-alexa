@@ -6,21 +6,13 @@
 const fs = require('fs');
 const path = require('path');
 const assert = require('node:assert');
-const { makeScrubber } = require('./scrub');
+const { normaliseVolatile } = require('./scrub');
 
 const DIR = path.join(__dirname, '..', 'snapshots');
-const scrub = makeScrubber({});
 
 // Anything derived from the clock or a random id would differ on every run.
 function normalise(value) {
-  let s = JSON.stringify(scrub(value), null, 2);
-  s = s
-    .replace(/"token"\s*:\s*"[^"]*"/g, '"token":"<token>"')
-    .replace(/"url"\s*:\s*"([^"]*?)\?token=[^"]*"/g, '"url":"$1?token=<token>"')
-    .replace(/"offsetInMilliseconds"\s*:\s*\d+/g, '"offsetInMilliseconds":<offset>')
-    .replace(/"expectedPreviousToken"\s*:\s*"[^"]*"/g, '"expectedPreviousToken":"<token>"')
-    .replace(/ask-node\/[\d.]+ Node\/v[\d.]+/g, 'ask-node/<ver> Node/<ver>');
-  return s;
+  return normaliseVolatile(JSON.stringify(value, null, 2));
 }
 
 function matchSnapshot(name, value) {
