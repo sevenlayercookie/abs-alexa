@@ -49,9 +49,12 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 Two different Node versions are in play, and it matters:
 
 - **The deployed skill runs `nodejs16.x`.** Alexa-hosted fixes the runtime when
-  the skill is created and it cannot be changed afterwards. Anything under
-  `lambda/` must therefore stay Node 16 compatible -- no `fetch`, no
-  `structuredClone`, no `Array.prototype.at`.
+  the skill is created and offers no alternative -- skills created from the
+  developer console and from the CLI both come out as `nodejs16.x`. Anything
+  under `lambda/` must therefore stay Node 16 compatible: no `fetch`, no
+  `structuredClone`, no `Array.prototype.at`, no `Object.hasOwn`.
+  `npm run lint` enforces this, so you get an error rather than a runtime
+  failure in production.
 - **The test harness needs Node 18+**, because it uses the built-in `node:test`
   runner. `.nvmrc` pins 22 for local development.
 
