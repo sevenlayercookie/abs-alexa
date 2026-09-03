@@ -99,6 +99,23 @@ Running plain `ask init` here would configure the project to deploy to a
   on your machine, so you can test a change without deploying. `--watch`
   restarts on edit.
 
+### Do not strip the endpoint from skill.json
+
+`manifest.apis.custom.endpoint` looks like a placeholder in this repo, and for a
+*new* skill it is -- Alexa-hosted fills it in at creation with
+`arn:aws:lambda:<region>:905418158688:function:<skillId>:Release_0`.
+
+But once a skill exists, that field is how the developer console knows the code
+is Alexa-hosted. Pushing a manifest with it removed makes the console report:
+
+> Your default endpoint has changed and the code below is no longer hosted by Alexa.
+
+The code is fine when this happens; only the manifest is wrong. Restore the
+`endpoint` and the three `regions` entries (NA/EU/FE, in us-east-1, eu-west-1 and
+us-west-2) and the console reconnects. So when updating an existing skill's
+manifest, always start from `ask smapi get-skill-manifest` rather than from this
+repo's `skill.json`.
+
 `.ask/` holds deployment state and account-specific resource ids and is
 gitignored. If you ever do adopt CLI-managed deployment, `ask-resources.json`
 is project configuration and should be committed.
