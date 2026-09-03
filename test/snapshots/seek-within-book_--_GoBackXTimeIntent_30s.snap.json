@@ -7,10 +7,12 @@
         "playBehavior": "REPLACE_ALL",
         "audioItem": {
           "stream": {
-            "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"
+            "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
+            "token": 1,
+            "offsetInMilliseconds": 84398000.324322
           },
           "metadata": {
-            "title": "Opening Credits",
+            "title": "Chapter 15 - Between Brethren",
             "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
             "art": {
               "sources": [
@@ -735,6 +737,9 @@
       "startOffset": 0,
       "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
     },
+    "amazonToken": 1,
+    "currentTrackIndex": 1,
+    "offsetInMilliseconds": 84398000.324322,
     "nextStreamEnqueued": false,
     "coverUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
     "playUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"

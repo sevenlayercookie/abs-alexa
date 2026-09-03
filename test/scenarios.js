@@ -6,6 +6,12 @@
 
 const A = require('./helpers/alexa');
 
+// Steps receive (sessionAttributes, player). `player` is what the device would
+// report about the stream it currently has loaded, derived from the previous
+// AudioPlayer.Play directive -- null until something is playing. Alexa only
+// sends context.AudioPlayer when a stream exists, and index.js dereferences it
+// in 21 places, so getting this right decides which code paths are reachable.
+
 const scenarios = [
   {
     name: 'launch',
@@ -15,8 +21,8 @@ const scenarios = [
     name: 'play-last-then-pause',
     steps: [
       { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
-      { label: 'AudioPlayer.PlaybackStarted', make: (a) => A.audioPlayer('PlaybackStarted', {}, a) },
-      { label: 'AMAZON.PauseIntent', make: (a) => A.intent('AMAZON.PauseIntent', {}, a) },
+      { label: 'AudioPlayer.PlaybackStarted', make: (a, p) => A.audioPlayer('PlaybackStarted', p || {}, a) },
+      { label: 'AMAZON.PauseIntent', make: (a, p) => A.intent('AMAZON.PauseIntent', {}, a, false, p) },
     ],
   },
   {
@@ -35,37 +41,37 @@ const scenarios = [
     name: 'chapter-navigation',
     steps: [
       { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
-      { label: 'AMAZON.NextIntent', make: (a) => A.intent('AMAZON.NextIntent', {}, a) },
-      { label: 'AMAZON.PreviousIntent', make: (a) => A.intent('AMAZON.PreviousIntent', {}, a) },
+      { label: 'AMAZON.NextIntent', make: (a, p) => A.intent('AMAZON.NextIntent', {}, a, false, p) },
+      { label: 'AMAZON.PreviousIntent', make: (a, p) => A.intent('AMAZON.PreviousIntent', {}, a, false, p) },
     ],
   },
   {
     name: 'seek-within-book',
     steps: [
       { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
-      { label: 'GoForwardXTimeIntent 2m', make: (a) => A.intent('GoForwardXTimeIntent', { time: 'PT2M' }, a) },
-      { label: 'GoBackXTimeIntent 30s', make: (a) => A.intent('GoBackXTimeIntent', { time: 'PT30S' }, a) },
+      { label: 'GoForwardXTimeIntent 2m', make: (a, p) => A.intent('GoForwardXTimeIntent', { time: 'PT2M' }, a, false, p) },
+      { label: 'GoBackXTimeIntent 30s', make: (a, p) => A.intent('GoBackXTimeIntent', { time: 'PT30S' }, a, false, p) },
     ],
   },
   {
     name: 'nearly-finished-enqueues-next',
     steps: [
       { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
-      { label: 'AudioPlayer.PlaybackNearlyFinished', make: (a) => A.audioPlayer('PlaybackNearlyFinished', {}, a) },
+      { label: 'AudioPlayer.PlaybackNearlyFinished', make: (a, p) => A.audioPlayer('PlaybackNearlyFinished', p || {}, a) },
     ],
   },
   {
     name: 'device-buttons',
     steps: [
       { label: 'PlaybackController.PlayCommandIssued', make: () => A.playbackController('PlayCommandIssued') },
-      { label: 'PlaybackController.NextCommandIssued', make: (a) => A.playbackController('NextCommandIssued', a) },
+      { label: 'PlaybackController.NextCommandIssued', make: (a, p) => A.playbackController('NextCommandIssued', a, p) },
     ],
   },
   {
     name: 'help-and-stop',
     steps: [
       { label: 'AMAZON.HelpIntent', make: () => A.intent('AMAZON.HelpIntent', {}, {}, true) },
-      { label: 'AMAZON.StopIntent', make: (a) => A.intent('AMAZON.StopIntent', {}, a) },
+      { label: 'AMAZON.StopIntent', make: (a, p) => A.intent('AMAZON.StopIntent', {}, a, false, p) },
     ],
   },
   {

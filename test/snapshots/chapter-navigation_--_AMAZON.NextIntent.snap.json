@@ -9,10 +9,10 @@
           "stream": {
             "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
             "token": 1,
-            "offsetInMilliseconds": 29698
+            "offsetInMilliseconds": 85775952
           },
           "metadata": {
-            "title": "Prologue - A Strained Conversation",
+            "title": "Chapter 16 - Settling Accounts",
             "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
             "art": {
               "sources": [
@@ -278,7 +278,7 @@
       "dayOfWeek": "Wednesday",
       "timeListening": 0,
       "startTime": 84308.000324322,
-      "currentTime": 0,
+      "currentTime": 84308.000324322,
       "startedAt":0,
       "updatedAt":0,
       "audioTracks": [
@@ -737,7 +737,9 @@
       "startOffset": 0,
       "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
     },
+    "amazonToken": 1,
     "currentTrackIndex": 1,
+    "offsetInMilliseconds": 84308000.324322,
     "nextStreamEnqueued": false,
     "coverUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
     "playUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"

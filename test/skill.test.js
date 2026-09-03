@@ -44,11 +44,14 @@ describe('skill behaviour', () => {
       // the turns of a single conversation, a cold start between scenarios
       const skill = loadSkill();
       let attrs = {};
+      let player = null;   // what the device has loaded; null until something plays
       for (const step of scenario.steps) {
-        const res = await invoke(skill, step.make(attrs));
+        const res = await invoke(skill, step.make(attrs, player));
         assert.ok(res, `${step.label} returned no response`);
         matchSnapshot(`${scenario.name} -- ${step.label}`, res);
         attrs = (res && res.sessionAttributes) || attrs;
+        const p = playerStateFrom(res);
+        if (p && p.token !== undefined) player = p;   // a Play directive means a stream is now loaded
       }
     });
   }

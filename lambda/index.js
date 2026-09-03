@@ -637,12 +637,12 @@ const PauseAudioIntentHandler = {
         // maybe this is why i need persistent attributes....
       }
 
-      if (handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds != undefined && sessionAttributes.offsetInMilliseconds != undefined) {
+      if (handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds != undefined && sessionAttributes.offsetInMilliseconds != undefined) {
 
         const userPlaySession = sessionAttributes.userPlaySession
 
-        const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-        const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+        const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+        const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
 
         const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
 
@@ -675,11 +675,11 @@ const PreviousIntentHandler = {
   },
   async handle(handlerInput) {
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
-    sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
-    let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     const userPlaySession = sessionAttributes.userPlaySession
 
     const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
@@ -771,13 +771,13 @@ const NextIntentHandler = {
   async handle(handlerInput) {
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
     const userPlaySession = sessionAttributes.userPlaySession
-    sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     localSessionAttributes = JSON.parse(JSON.stringify(sessionAttributes)); // clone sessionAttriubtes (avoid pointer issue)
     const chapters = sessionAttributes.userPlaySession.chapters
 
-    let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    let offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    let amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
 
     const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
 
@@ -857,8 +857,8 @@ const GoBackXTimeIntentHandler = { // THIS LIKELY ENDS and FORGETS THE SESSION (
   async handle(handlerInput) {
 
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
-    const currentOffsetInMilliseconds = sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    const currentToken = sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    const currentOffsetInMilliseconds = sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    const currentToken = sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     const userPlaySession = sessionAttributes.userPlaySession
 
     const beforeBookTime = calculateCurrentTime(userPlaySession, currentOffsetInMilliseconds, currentToken)
@@ -977,8 +977,8 @@ const GoForwardXTimeIntentHandler = {
   },
   async handle(handlerInput) {
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
-    const currentOffsetInMilliseconds = sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    const currentToken = sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    const currentOffsetInMilliseconds = sessionAttributes.offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    const currentToken = sessionAttributes.amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     // !!!need to handle if this is null
     const userPlaySession = sessionAttributes.userPlaySession
 
@@ -1153,8 +1153,8 @@ const CancelAndStopIntentHandler = {
 
     const sessionAttributes = handlerInput.attributesManager.getSessionAttributes()
     const userPlaySession = sessionAttributes.userPlaySession
-    const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-    const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    const offsetInMilliseconds = sessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+    const amazonToken = sessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     if (userPlaySession && offsetInMilliseconds !== null && amazonToken !== null) {
       const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)
       //const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
@@ -1202,7 +1202,7 @@ const AudioPlayerEventHandler = {
 
       let offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds;
       if (offset == undefined) {
-        offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds;
+        offset = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds;
       }
       if (offset == undefined) {
         console.log("offsetInMilliseconds wasn't pulled from handlerInput correctly");
@@ -1230,7 +1230,7 @@ const AudioPlayerEventHandler = {
           // but maybe should sync with ABS anyways just to timestamp playback start time
           // could do this in the intent though
           //offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds 
-          //?? handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds 
+          //?? handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds 
           //?? null
 
           // if (offsetInMilliseconds !== null) {
@@ -1298,7 +1298,7 @@ const AudioPlayerEventHandler = {
           // need to write "offset" and "token" to ABS here
           // but actually just writing currentBookTime and maybe just noting the token (filename? fileID?)
           offsetInMilliseconds = handlerInput.requestEnvelope.request.offsetInMilliseconds
-            ?? handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
+            ?? handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
             ?? null
           if (closedPlaySession) // if ABS play session is already closed, don't update again
           {
@@ -1484,9 +1484,9 @@ const PlaybackControllerHandler = {
     let newChapterTitle
     const chapters = userPlaySession.chapters
 
-    if (handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds != undefined) {
-      offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer.offsetInMilliseconds
-      amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer.token
+    if (handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds != undefined) {
+      offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = handlerInput.requestEnvelope.context.AudioPlayer?.offsetInMilliseconds
+      amazonToken = localSessionAttributes.amazonToken = handlerInput.requestEnvelope.context.AudioPlayer?.token
     }
 
     const currentBookTime = calculateCurrentTime(userPlaySession, offsetInMilliseconds, amazonToken)

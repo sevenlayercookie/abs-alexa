@@ -22,9 +22,14 @@ const declaredSlots = (() => {
 })();
 
 // `player` mirrors what a device reports about the stream it currently has
-// loaded. Alexa includes it on PlaybackController and AudioPlayer requests, and
-// index.js reads context.AudioPlayer.token / .offsetInMilliseconds from it.
-const base = (sessionAttributes = {}, newSession = true, player = {}) => ({
+// loaded. Alexa includes context.AudioPlayer ONLY when there is such a stream:
+// captured envelopes for PlayLastIntent, ResumeIntent, PauseIntent, HelpIntent,
+// GoBackXTimeIntent, GoForwardXTimeIntent and GoToChapterX all omit it entirely
+// when nothing is playing. index.js dereferences
+// context.AudioPlayer.offsetInMilliseconds in 21 places, so whether the object
+// is there at all changes which failures are reachable. Passing no player state
+// therefore omits the key, exactly as Alexa does.
+const base = (sessionAttributes = {}, newSession = true, player = null) => ({
   version: '1.0',
   session: {
     new: newSession,
@@ -41,7 +46,7 @@ const base = (sessionAttributes = {}, newSession = true, player = {}) => ({
       apiEndpoint: 'https://api.amazonalexa.com',
       apiAccessToken: 'TEST_ACCESS_TOKEN',
     },
-    AudioPlayer: { playerActivity: 'IDLE', ...player },
+    ...(player ? { AudioPlayer: { playerActivity: 'PLAYING', ...player } } : {}),
   },
 });
 
@@ -58,7 +63,7 @@ const withRequest = (request, sessionAttributes, newSession, player) => {
 
 const launch = (attrs) => withRequest({ type: 'LaunchRequest' }, attrs);
 
-const intent = (name, slots = {}, attrs, newSession = false) =>
+const intent = (name, slots = {}, attrs, newSession = false, player = null) =>
   withRequest({
     type: 'IntentRequest',
     intent: {
@@ -73,10 +78,15 @@ const intent = (name, slots = {}, attrs, newSession = false) =>
         ])
       ),
     },
-  }, attrs, newSession);
+  }, attrs, newSession, player);
 
-const audioPlayer = (event, extra = {}, attrs) =>
-  withRequest({ type: `AudioPlayer.${event}`, token: 'TEST_TOKEN', offsetInMilliseconds: 0, ...extra }, attrs);
+// An AudioPlayer.* request always describes a stream, so it always carries
+// context.AudioPlayer.
+const audioPlayer = (event, extra = {}, attrs) => {
+  const req = { type: `AudioPlayer.${event}`, token: 'TEST_TOKEN', offsetInMilliseconds: 0, ...extra };
+  return withRequest(req, attrs, false,
+    { token: req.token, offsetInMilliseconds: req.offsetInMilliseconds });
+};
 
 const playbackController = (event, attrs, player) =>
   withRequest({ type: `PlaybackController.${event}` }, attrs, false, player);
