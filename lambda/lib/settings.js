@@ -4,7 +4,7 @@
 
 let fileConfig = {};
 try {
-  fileConfig = require('./config.js');
+  fileConfig = require('../config.js');
 } catch (err) {
   if (err.code !== 'MODULE_NOT_FOUND') throw err;
   console.log('No config.js found; reading configuration from the environment.');
