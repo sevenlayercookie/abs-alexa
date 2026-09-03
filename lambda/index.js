@@ -699,11 +699,13 @@ const PreviousIntentHandler = {
     }
     else { // go to beginning of prior chapter
 
-      newBookTime = previousChapter.start
+      // getCurrentChapterByBookTime(-1) returns null at the start of the first
+      // chapter, so there is no earlier chapter to go to. Restart the book.
+      newBookTime = previousChapter ? previousChapter.start : 0
       const result = getTrackAndOffsetFromBookTime(newBookTime, userPlaySession)
       const offset = result.goalOffset
 
-      currentChapter = previousChapter
+      if (previousChapter) currentChapter = previousChapter
       offsetInMilliseconds = offset
     }
 
@@ -1555,9 +1557,11 @@ const PlaybackControllerHandler = {
         }
         else { // go to beginning of prior chapter
 
-          newBookTime = previousChapter.start
-          currentChapter = previousChapter
-          offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = previousChapter.start * 1000
+          // getCurrentChapterByBookTime(-1) returns null at the start of the first
+          // chapter, so there is no earlier chapter to go to. Restart the book.
+          newBookTime = previousChapter ? previousChapter.start : 0
+          if (previousChapter) currentChapter = previousChapter
+          offsetInMilliseconds = localSessionAttributes.offsetInMilliseconds = newBookTime * 1000
         }
 
         amazonToken = localSessionAttributes.amazonToken = getCurrentTrackIndexByBookTime(newBookTime, userPlaySession)

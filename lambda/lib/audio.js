@@ -84,8 +84,10 @@ function getCurrentChapterByBookTime(currentBookTime, playSession) {
 }
 
 function getTrackAndOffsetFromBookTime(bookTime, userPlaySession) {
-  let audioTracks = userPlaySession.audioTracks
-  const currentTrack = getCurrentTrackByBookTime(bookTime, audioTracks)
+  // getCurrentTrackByBookTime takes the play session, not the track array.
+  // Passing audioTracks made it read audioTracks.audioTracks (undefined) and
+  // return null every time, so this function could never succeed.
+  const currentTrack = getCurrentTrackByBookTime(bookTime, userPlaySession)
   const goalOffset = (bookTime - currentTrack.startOffset) * 1000
   return {
     currentTrack: currentTrack,

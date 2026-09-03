@@ -1,17 +1,41 @@
 {
   "version": "1.0",
   "response": {
-    "outputSpeech": {
-      "type": "SSML",
-      "ssml": "<speak>Sorry, I had trouble doing what you asked. Please try again.</speak>"
-    },
-    "reprompt": {
-      "outputSpeech": {
-        "type": "SSML",
-        "ssml": "<speak>Sorry, I had trouble doing what you asked. Please try again.</speak>"
+    "directives": [
+      {
+        "type": "AudioPlayer.Play",
+        "playBehavior": "REPLACE_ALL",
+        "audioItem": {
+          "stream": {
+            "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
+            "token": 1,
+            "offsetInMilliseconds": 0
+          },
+          "metadata": {
+            "title": "Opening Credits",
+            "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+            "art": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "widthPixels": 512,
+                  "heightPixels": 512
+                }
+              ]
+            },
+            "backgroundImage": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "widthPixels": 1600,
+                  "heightPixels": 900
+                }
+              ]
+            }
+          }
+        }
       }
-    },
-    "shouldEndSession": false
+    ]
   },
   "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
   "sessionAttributes": {
