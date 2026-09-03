@@ -122,31 +122,6 @@ is project configuration and should be committed.
 ## Background:
 - ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
-## Cloudflare and other reverse proxies
-
-The skill runs as an AWS Lambda, so requests to your Audiobookshelf server
-arrive from an Amazon datacenter IP, not from your home network. If the server
-sits behind Cloudflare with bot protection enabled, those requests get a managed
-challenge and the skill sees:
-
-```
-Server responded to https://your-abs-host/api/libraries with status code 403:
-<!DOCTYPE html>... <title>Just a moment...</title> ...
-```
-
-The skill is working correctly here; it is being blocked before it reaches
-Audiobookshelf. Testing with `curl` from your own network will not reproduce it,
-because your own IP is not challenged.
-
-Fixes, in rough order of preference:
-
-- Add a Cloudflare WAF rule that skips bot protection for the Audiobookshelf
-  hostname, or at least for `/api/*`.
-- Use a Cloudflare Access service token and set `CFAccessClientId` and
-  `CFAccessClientSecret` in your config -- the skill already sends these as
-  `CF-Access-Client-Id` / `CF-Access-Client-Secret` headers when set.
-- Turn off Bot Fight Mode for that hostname.
-
 ## Known Issues:
 - Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
 - Some requests may require the user to restart the Alexa session after an intent is executed.
