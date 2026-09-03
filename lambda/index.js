@@ -1804,7 +1804,8 @@ const ErrorHandler = {
   },
   handle(handlerInput, error) {
     const speakOutput = 'Sorry, I had trouble doing what you asked. Please try again.';
-    console.log(`~~~~ Error handled: ${JSON.stringify(error)}`);
+    // JSON.stringify(error) is always "{}" for an Error, which is why every failure in this skill used to be opaque. Log the stack.
+    console.error('~~~~ Error handled:', (error && (error.stack || error.message)) || error);
 
     return handlerInput.responseBuilder
       .speak(speakOutput)
