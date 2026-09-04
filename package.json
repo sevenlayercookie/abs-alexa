@@ -6,7 +6,8 @@
     "test": "node --test test/*.test.js",
     "record": "node test/record.js",
     "lint": "eslint .",
-    "test:live": "LIVE=1 node --test test/live.test.js"
+    "test:live": "LIVE=1 node --test test/live.test.js",
+    "deploy": "node scripts/deploy.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
