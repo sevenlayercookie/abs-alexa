@@ -21,7 +21,11 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 
 ## Installation:
 1) Fork this repo
-2) Edit the config.js file to include your **Audiobookshelf API key** and **server URL** (you can do this later in the 'Code' tab of Developer Console if using Alexa-hosted)
+2) Provide your **Audiobookshelf API key** and **server URL**. Either way works; environment variables take precedence.
+   - **Environment variables** (recommended): set `ABS_API_KEY` and `SERVER_URL`. On Alexa-hosted, use the 'Code' tab of the Developer Console.
+   - **Config file**: `cd lambda && cp config.example.js config.js`, then edit it. `config.js` is gitignored, so your key is never committed — do not rename or force-add it.
+
+   Optional: `USER_AGENT`, `BACKGROUND_URL` (background art for screen devices; defaults to the current book's cover), and `CFAccessClientId` / `CFAccessClientSecret` for servers behind Cloudflare Access.
 3) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 4) Set your skill invocation name and build the skill
 5) Save and deploy the skill
@@ -40,6 +44,81 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 - Though there are some useful intents, I find that the most reliable way of using the skill is to just say "Play" to resume last listened to audiobook
   - "Play" is a built-in intent, which Alexa tends to execute more reliably
 
+## Development:
+
+Two different Node versions are in play, and it matters:
+
+- **The deployed skill runs `nodejs16.x`.** Alexa-hosted fixes the runtime when
+  the skill is created and offers no alternative -- skills created from the
+  developer console and from the CLI both come out as `nodejs16.x`. Anything
+  under `lambda/` must therefore stay Node 16 compatible: no `fetch`, no
+  `structuredClone`, no `Array.prototype.at`, no `Object.hasOwn`.
+  `npm run lint` enforces this, so you get an error rather than a runtime
+  failure in production.
+- **The test harness needs Node 18+**, because it uses the built-in `node:test`
+  runner. `.nvmrc` pins 22 for local development.
+
+Node 24 is avoided regardless: its AWS Lambda runtime dropped callback-style
+handlers, which is exactly what the ASK SDK's `.lambda()` produces.
+
+```bash
+npm install          # test tooling (repo root)
+npm install --prefix lambda   # the skill's own dependencies
+npm test             # 16 tests, ~0.3s, no server or device needed
+npm run lint
+```
+
+`npm test` replays recorded Audiobookshelf responses from `test/fixtures/`, so
+it needs no network. See [test/README.md](test/README.md) for how to re-record
+them and what the tests do and do not cover.
+
+CI runs both commands on Node 20 and 22 for every push.
+
+### Optional: the ASK CLI
+
+Not required to develop or deploy, but it covers the one thing the local tests
+cannot -- whether Alexa maps a spoken phrase to the right intent. Install it
+globally rather than as a project dependency; it pulls in ~485 packages.
+
+```bash
+npm install -g ask-cli
+ask configure                      # browser sign-in to your Amazon developer account
+ask smapi list-skills-for-vendor   # find your skill id
+```
+
+`ask dialog` needs nothing else -- no `ask init`, no `ask-resources.json`.
+Those are only for letting the CLI manage deployment, which an Alexa-hosted
+skill does not need: Amazon provisions the Lambda and sets the endpoint itself.
+Running plain `ask init` here would configure the project to deploy to a
+*new* Lambda in your own AWS account, which is not how this skill is hosted.
+
+- `ask dialog -s <skill-id>` — type utterances and get real Alexa responses,
+  multi-turn. `--save-skill-io` writes the request/response JSON to a file, and
+  `--replay` re-runs a recorded session.
+- `ask run` — routes live requests from a real Echo or the simulator to the code
+  on your machine, so you can test a change without deploying. `--watch`
+  restarts on edit.
+
+### Do not strip the endpoint from skill.json
+
+`manifest.apis.custom.endpoint` looks like a placeholder in this repo, and for a
+*new* skill it is -- Alexa-hosted fills it in at creation with
+`arn:aws:lambda:<region>:905418158688:function:<skillId>:Release_0`.
+
+But once a skill exists, that field is how the developer console knows the code
+is Alexa-hosted. Pushing a manifest with it removed makes the console report:
+
+> Your default endpoint has changed and the code below is no longer hosted by Alexa.
+
+The code is fine when this happens; only the manifest is wrong. Restore the
+`endpoint` and the three `regions` entries (NA/EU/FE, in us-east-1, eu-west-1 and
+us-west-2) and the console reconnects. So when updating an existing skill's
+manifest, always start from `ask smapi get-skill-manifest` rather than from this
+repo's `skill.json`.
+
+`.ask/` holds deployment state and account-specific resource ids and is
+gitignored. If you ever do adopt CLI-managed deployment, `ask-resources.json`
+is project configuration and should be committed.
 ## Background:
 - ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 

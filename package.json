@@ -1,0 +1,19 @@
+{
+  "name": "abs-alexa-tests",
+  "private": true,
+  "description": "Test harness for the ABS-Alexa skill. Not deployed; the skill itself lives in lambda/.",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "record": "node test/record.js",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-n": "^18.3.0",
+    "globals": "^15.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

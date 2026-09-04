@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Sorry, I can't do that yet.</speak>"
+    }
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Welcome to Audiobookshelf, you can say \"play audiobook\" to start listening.</speak>"
+    },
+    "reprompt": {
+      "outputSpeech": {
+        "type": "SSML",
+        "ssml": "<speak>Welcome to Audiobookshelf, you can say \"play audiobook\" to start listening.</speak>"
+      }
+    },
+    "shouldEndSession": false
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

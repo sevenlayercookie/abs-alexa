@@ -1,0 +1,6 @@
+{
+  "version": "1.0",
+  "response": {},
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

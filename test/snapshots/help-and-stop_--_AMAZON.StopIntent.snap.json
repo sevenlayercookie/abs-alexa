@@ -1,0 +1,17 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Goodbye!</speak>"
+    },
+    "directives": [
+      {
+        "type": "AudioPlayer.Stop"
+      }
+    ],
+    "shouldEndSession": true
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

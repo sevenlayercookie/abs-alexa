@@ -1,0 +1,749 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Playing Gentleman Bastard Book 2 - Red Seas under Red Skies by Scott Lynch</speak>"
+    },
+    "directives": [
+      {
+        "type": "AudioPlayer.Play",
+        "playBehavior": "REPLACE_ALL",
+        "audioItem": {
+          "stream": {
+            "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
+            "token": 1,
+            "offsetInMilliseconds": 84308000.324322
+          },
+          "metadata": {
+            "title": "Chapter 15 - Between Brethren",
+            "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+            "art": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "widthPixels": 512,
+                  "heightPixels": 512
+                }
+              ]
+            },
+            "backgroundImage": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "widthPixels": 1600,
+                  "heightPixels": 900
+                }
+              ]
+            }
+          }
+        }
+      }
+    ]
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {
+    "userPlaySession": {
+      "id": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+      "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
+      "libraryId": "ec19ca6c-0c6c-4f09-bac0-7317ac8f3181",
+      "libraryItemId": "10eb5463-cfce-4d84-9680-a9b36add5bfb",
+      "bookId": "2db034d0-9776-4854-90ba-c6b38ccdc977",
+      "episodeId": null,
+      "mediaType": "book",
+      "mediaMetadata": {
+        "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+        "subtitle": "Gentleman Bastards, Book 2",
+        "authors": [
+          {
+            "id": "413ae824-68d4-41e7-8291-f781e8a56faa",
+            "name": "Scott Lynch"
+          }
+        ],
+        "narrators": [
+          "Michael Page"
+        ],
+        "series": [
+          {
+            "id": "ae391e11-af4e-4416-bbd4-5815c2b21950",
+            "name": "Gentleman Bastard",
+            "sequence": null
+          }
+        ],
+        "genres": [
+          "Fantasy Crime"
+        ],
+        "publishedYear": "2020",
+        "publishedDate": null,
+        "publisher": "Random House Audio",
+        "description": "In his highly acclaimed debut, The Lies of Locke Lamora, Scott Lynch took us on an adrenaline-fueled adventure with a band of daring thieves led by con artist extraordinaire Locke Lamora. Now, Lynch brings back his outrageous hero for a caper so death-defying, nothing short of a miracle will pull it off.\n\nAfter a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can't rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves.\n\nThis time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world. Its nine floors attract the wealthiest clientele - and to rise to the top, one must impress with good credit, amusing behavior...and excruciatingly impeccable play. For there is one cardinal rule, enforced by Requin, the house's cold-blooded master: It is death to cheat at any game at the Sinspire.\n\nBrazenly undeterred, Locke and Jean have orchestrated an elaborate plan to lie, trick, and swindle their way up the nine floors...straight to Requin's teeming vault. Under the cloak of false identities, they meticulously make their climb - until they are closer to the spoils than ever.\n\nBut someone in Tal Verrar has uncovered the duo's secret. Someone from their past who has every intention of making the impudent criminals pay for their sins. Now, it will take every ounce of cunning to save their mercenary souls. And even that may not be enough....",
+        "isbn": "9780593163429",
+        "asin": "0593163427",
+        "language": "English",
+        "explicit": false,
+        "abridged": false
+      },
+      "chapters": [
+        {
+          "start": 0,
+          "end": 29.698,
+          "title": "Opening Credits",
+          "id": 0
+        },
+        {
+          "start": 29.698,
+          "end": 395.993,
+          "title": "Prologue - A Strained Conversation",
+          "id": 1
+        },
+        {
+          "start": 395.993,
+          "end": 415.132,
+          "title": "PART I - Cards in the Hand",
+          "id": 2
+        },
+        {
+          "start": 415.132,
+          "end": 5617.65,
+          "title": "Chapter 01 - Little Games",
+          "id": 3
+        },
+        {
+          "start": 5617.65,
+          "end": 8848.59,
+          "title": "Reminiscence - The Capa of Vel Virazzo",
+          "id": 4
+        },
+        {
+          "start": 8848.59,
+          "end": 12588.373,
+          "title": "Chapter 02 - Requin",
+          "id": 5
+        },
+        {
+          "start": 12588.373,
+          "end": 13891.477,
+          "title": "Reminiscence - Best Laid Plans",
+          "id": 6
+        },
+        {
+          "start": 13891.477,
+          "end": 16889.034,
+          "title": "Chapter 03 - Warm Hospitality",
+          "id": 7
+        },
+        {
+          "start": 16889.034,
+          "end": 19252.384,
+          "title": "Reminiscence - Lady of the Glass Pylon",
+          "id": 8
+        },
+        {
+          "start": 19252.384,
+          "end": 23556.318,
+          "title": "Chapter 04 - Blind Alliances",
+          "id": 9
+        },
+        {
+          "start": 23556.318,
+          "end": 27814.231,
+          "title": "Reminiscence - The Amusement War",
+          "id": 10
+        },
+        {
+          "start": 27814.231,
+          "end": 31395.979,
+          "title": "Chapter 05 - On a Clockwork River",
+          "id": 11
+        },
+        {
+          "start": 31395.979,
+          "end": 33908.889,
+          "title": "Last Reminiscence - By Their Own Rope",
+          "id": 12
+        },
+        {
+          "start": 33908.889,
+          "end": 42119.581,
+          "title": "Chapter 06 - Balance of Trades",
+          "id": 13
+        },
+        {
+          "start": 42119.581,
+          "end": 47368.73,
+          "title": "Chapter 07 - Casting Loose",
+          "id": 14
+        },
+        {
+          "start": 47368.73,
+          "end": 47388.59,
+          "title": "PART II - Cards up the Sleeve",
+          "id": 15
+        },
+        {
+          "start": 47388.59,
+          "end": 51069.364,
+          "title": "Chapter 08 - Summer's End",
+          "id": 16
+        },
+        {
+          "start": 51069.364,
+          "end": 54532.992,
+          "title": "Chapter 09 - The Poison Orchid",
+          "id": 17
+        },
+        {
+          "start": 54532.992,
+          "end": 59676.072,
+          "title": "Chapter 10 - All Souls in Peril",
+          "id": 18
+        },
+        {
+          "start": 59676.072,
+          "end": 65100.904,
+          "title": "Chapter 11 - All Else, Truth",
+          "id": 19
+        },
+        {
+          "start": 65100.904,
+          "end": 71415.965,
+          "title": "Chapter 12 - Port Prodigal",
+          "id": 20
+        },
+        {
+          "start": 71415.965,
+          "end": 77868.628,
+          "title": "Chapter 13 - Points of Decision",
+          "id": 21
+        },
+        {
+          "start": 77868.628,
+          "end": 77885.67,
+          "title": "PART III - Cards on the Table",
+          "id": 22
+        },
+        {
+          "start": 77885.67,
+          "end": 81637.97,
+          "title": "Chapter 14 - Scourging the Sea of Brass",
+          "id": 23
+        },
+        {
+          "start": 81637.97,
+          "end": 85775.952,
+          "title": "Chapter 15 - Between Brethren",
+          "id": 24
+        },
+        {
+          "start": 85775.952,
+          "end": 92017.917,
+          "title": "Chapter 16 - Settling Accounts",
+          "id": 25
+        },
+        {
+          "start": 92017.917,
+          "end": 93283.009,
+          "title": "Epilogue - Red Seas under Red Skies",
+          "id": 26
+        },
+        {
+          "start": 93283.009,
+          "end": 93346.98,
+          "title": "Afterword",
+          "id": 27
+        },
+        {
+          "start": 93346.98,
+          "end": 93384.063129,
+          "title": "End Credits",
+          "id": 28
+        }
+      ],
+      "displayTitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+      "displayAuthor": "Scott Lynch",
+      "coverPath": "/audiobooks/Scott Lynch/Red Seas under Red Skies/cover.jpg",
+      "duration": 93384.063129,
+      "playMethod": 0,
+      "mediaPlayer": "unknown",
+      "deviceInfo": {
+        "id": "546fac5d-5da7-4e44-8c6e-228e4cd63e42",
+        "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
+        "deviceId": "TESTDEVICE",
+        "ipAddress": "<ip>",
+        "clientVersion": "1.0",
+        "manufacturer": "Amazon",
+        "model": "Echo",
+        "sdkVersion": "1",
+        "clientName": "Alexa Device",
+        "deviceName": "Amazon Echo"
+      },
+      "serverVersion": "2.36.0",
+      "date": "2026-09-02",
+      "dayOfWeek": "Wednesday",
+      "timeListening": 0,
+      "startTime": 84308.000324322,
+      "currentTime": 84308.000324322,
+      "startedAt":0,
+      "updatedAt":0,
+      "audioTracks": [
+        {
+          "index": 1,
+          "ino": "4721615",
+          "metadata": {
+            "filename": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+            "ext": ".m4b",
+            "path": "/audiobooks/Scott Lynch/Red Seas under Red Skies/Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+            "relPath": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+            "size": 1482360757,
+            "mtimeMs": 1775797283514,
+            "ctimeMs": 1778018545122,
+            "birthtimeMs": 1775797254337
+          },
+          "addedAt": 1778018566434,
+          "updatedAt":0,
+          "trackNumFromMeta": 1,
+          "discNumFromMeta": null,
+          "trackNumFromFilename": 2,
+          "discNumFromFilename": null,
+          "manuallyVerified": false,
+          "exclude": false,
+          "error": null,
+          "format": "QuickTime / MOV",
+          "duration": 93384.063129,
+          "bitRate": 125588,
+          "language": "und",
+          "codec": "aac",
+          "timeBase": "1/44100",
+          "channels": 2,
+          "channelLayout": "stereo",
+          "chapters": [
+            {
+              "start": 0,
+              "end": 29.698,
+              "title": "Opening Credits",
+              "id": 0
+            },
+            {
+              "start": 29.698,
+              "end": 395.993,
+              "title": "Prologue - A Strained Conversation",
+              "id": 1
+            },
+            {
+              "start": 395.993,
+              "end": 415.132,
+              "title": "PART I - Cards in the Hand",
+              "id": 2
+            },
+            {
+              "start": 415.132,
+              "end": 5617.65,
+              "title": "Chapter 01 - Little Games",
+              "id": 3
+            },
+            {
+              "start": 5617.65,
+              "end": 8848.59,
+              "title": "Reminiscence - The Capa of Vel Virazzo",
+              "id": 4
+            },
+            {
+              "start": 8848.59,
+              "end": 12588.373,
+              "title": "Chapter 02 - Requin",
+              "id": 5
+            },
+            {
+              "start": 12588.373,
+              "end": 13891.477,
+              "title": "Reminiscence - Best Laid Plans",
+              "id": 6
+            },
+            {
+              "start": 13891.477,
+              "end": 16889.034,
+              "title": "Chapter 03 - Warm Hospitality",
+              "id": 7
+            },
+            {
+              "start": 16889.034,
+              "end": 19252.384,
+              "title": "Reminiscence - Lady of the Glass Pylon",
+              "id": 8
+            },
+            {
+              "start": 19252.384,
+              "end": 23556.318,
+              "title": "Chapter 04 - Blind Alliances",
+              "id": 9
+            },
+            {
+              "start": 23556.318,
+              "end": 27814.231,
+              "title": "Reminiscence - The Amusement War",
+              "id": 10
+            },
+            {
+              "start": 27814.231,
+              "end": 31395.979,
+              "title": "Chapter 05 - On a Clockwork River",
+              "id": 11
+            },
+            {
+              "start": 31395.979,
+              "end": 33908.889,
+              "title": "Last Reminiscence - By Their Own Rope",
+              "id": 12
+            },
+            {
+              "start": 33908.889,
+              "end": 42119.581,
+              "title": "Chapter 06 - Balance of Trades",
+              "id": 13
+            },
+            {
+              "start": 42119.581,
+              "end": 47368.73,
+              "title": "Chapter 07 - Casting Loose",
+              "id": 14
+            },
+            {
+              "start": 47368.73,
+              "end": 47388.59,
+              "title": "PART II - Cards up the Sleeve",
+              "id": 15
+            },
+            {
+              "start": 47388.59,
+              "end": 51069.364,
+              "title": "Chapter 08 - Summer's End",
+              "id": 16
+            },
+            {
+              "start": 51069.364,
+              "end": 54532.992,
+              "title": "Chapter 09 - The Poison Orchid",
+              "id": 17
+            },
+            {
+              "start": 54532.992,
+              "end": 59676.072,
+              "title": "Chapter 10 - All Souls in Peril",
+              "id": 18
+            },
+            {
+              "start": 59676.072,
+              "end": 65100.904,
+              "title": "Chapter 11 - All Else, Truth",
+              "id": 19
+            },
+            {
+              "start": 65100.904,
+              "end": 71415.965,
+              "title": "Chapter 12 - Port Prodigal",
+              "id": 20
+            },
+            {
+              "start": 71415.965,
+              "end": 77868.628,
+              "title": "Chapter 13 - Points of Decision",
+              "id": 21
+            },
+            {
+              "start": 77868.628,
+              "end": 77885.67,
+              "title": "PART III - Cards on the Table",
+              "id": 22
+            },
+            {
+              "start": 77885.67,
+              "end": 81637.97,
+              "title": "Chapter 14 - Scourging the Sea of Brass",
+              "id": 23
+            },
+            {
+              "start": 81637.97,
+              "end": 85775.952,
+              "title": "Chapter 15 - Between Brethren",
+              "id": 24
+            },
+            {
+              "start": 85775.952,
+              "end": 92017.917,
+              "title": "Chapter 16 - Settling Accounts",
+              "id": 25
+            },
+            {
+              "start": 92017.917,
+              "end": 93283.009,
+              "title": "Epilogue - Red Seas under Red Skies",
+              "id": 26
+            },
+            {
+              "start": 93283.009,
+              "end": 93346.98,
+              "title": "Afterword",
+              "id": 27
+            },
+            {
+              "start": 93346.98,
+              "end": 93384.063129,
+              "title": "End Credits",
+              "id": 28
+            }
+          ],
+          "embeddedCoverArt": "mjpeg",
+          "metaTags": {
+            "tagAlbum": "02 Red Seas under Red Skies",
+            "tagArtist": "Scott Lynch",
+            "tagGenre": "Fantasy Crime",
+            "tagTitle": "Red Seas under Red Skies",
+            "tagGrouping": "Gentleman Bastard",
+            "tagTrack": "1/1",
+            "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
+            "tagDate": "2007",
+            "tagComposer": "Michael Page",
+            "tagComment": "Unabridged",
+            "tagDescription": "After a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can’t rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves. This time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world.",
+            "tagEncoder": "inAudible 1.97"
+          },
+          "mimeType": "audio/mp4",
+          "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+          "startOffset": 0,
+          "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
+        }
+      ]
+    },
+    "userPlaySessionID": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+    "currentTrack": {
+      "index": 1,
+      "ino": "4721615",
+      "metadata": {
+        "filename": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+        "ext": ".m4b",
+        "path": "/audiobooks/Scott Lynch/Red Seas under Red Skies/Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+        "relPath": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+        "size": 1482360757,
+        "mtimeMs": 1775797283514,
+        "ctimeMs": 1778018545122,
+        "birthtimeMs": 1775797254337
+      },
+      "addedAt": 1778018566434,
+      "updatedAt":0,
+      "trackNumFromMeta": 1,
+      "discNumFromMeta": null,
+      "trackNumFromFilename": 2,
+      "discNumFromFilename": null,
+      "manuallyVerified": false,
+      "exclude": false,
+      "error": null,
+      "format": "QuickTime / MOV",
+      "duration": 93384.063129,
+      "bitRate": 125588,
+      "language": "und",
+      "codec": "aac",
+      "timeBase": "1/44100",
+      "channels": 2,
+      "channelLayout": "stereo",
+      "chapters": [
+        {
+          "start": 0,
+          "end": 29.698,
+          "title": "Opening Credits",
+          "id": 0
+        },
+        {
+          "start": 29.698,
+          "end": 395.993,
+          "title": "Prologue - A Strained Conversation",
+          "id": 1
+        },
+        {
+          "start": 395.993,
+          "end": 415.132,
+          "title": "PART I - Cards in the Hand",
+          "id": 2
+        },
+        {
+          "start": 415.132,
+          "end": 5617.65,
+          "title": "Chapter 01 - Little Games",
+          "id": 3
+        },
+        {
+          "start": 5617.65,
+          "end": 8848.59,
+          "title": "Reminiscence - The Capa of Vel Virazzo",
+          "id": 4
+        },
+        {
+          "start": 8848.59,
+          "end": 12588.373,
+          "title": "Chapter 02 - Requin",
+          "id": 5
+        },
+        {
+          "start": 12588.373,
+          "end": 13891.477,
+          "title": "Reminiscence - Best Laid Plans",
+          "id": 6
+        },
+        {
+          "start": 13891.477,
+          "end": 16889.034,
+          "title": "Chapter 03 - Warm Hospitality",
+          "id": 7
+        },
+        {
+          "start": 16889.034,
+          "end": 19252.384,
+          "title": "Reminiscence - Lady of the Glass Pylon",
+          "id": 8
+        },
+        {
+          "start": 19252.384,
+          "end": 23556.318,
+          "title": "Chapter 04 - Blind Alliances",
+          "id": 9
+        },
+        {
+          "start": 23556.318,
+          "end": 27814.231,
+          "title": "Reminiscence - The Amusement War",
+          "id": 10
+        },
+        {
+          "start": 27814.231,
+          "end": 31395.979,
+          "title": "Chapter 05 - On a Clockwork River",
+          "id": 11
+        },
+        {
+          "start": 31395.979,
+          "end": 33908.889,
+          "title": "Last Reminiscence - By Their Own Rope",
+          "id": 12
+        },
+        {
+          "start": 33908.889,
+          "end": 42119.581,
+          "title": "Chapter 06 - Balance of Trades",
+          "id": 13
+        },
+        {
+          "start": 42119.581,
+          "end": 47368.73,
+          "title": "Chapter 07 - Casting Loose",
+          "id": 14
+        },
+        {
+          "start": 47368.73,
+          "end": 47388.59,
+          "title": "PART II - Cards up the Sleeve",
+          "id": 15
+        },
+        {
+          "start": 47388.59,
+          "end": 51069.364,
+          "title": "Chapter 08 - Summer's End",
+          "id": 16
+        },
+        {
+          "start": 51069.364,
+          "end": 54532.992,
+          "title": "Chapter 09 - The Poison Orchid",
+          "id": 17
+        },
+        {
+          "start": 54532.992,
+          "end": 59676.072,
+          "title": "Chapter 10 - All Souls in Peril",
+          "id": 18
+        },
+        {
+          "start": 59676.072,
+          "end": 65100.904,
+          "title": "Chapter 11 - All Else, Truth",
+          "id": 19
+        },
+        {
+          "start": 65100.904,
+          "end": 71415.965,
+          "title": "Chapter 12 - Port Prodigal",
+          "id": 20
+        },
+        {
+          "start": 71415.965,
+          "end": 77868.628,
+          "title": "Chapter 13 - Points of Decision",
+          "id": 21
+        },
+        {
+          "start": 77868.628,
+          "end": 77885.67,
+          "title": "PART III - Cards on the Table",
+          "id": 22
+        },
+        {
+          "start": 77885.67,
+          "end": 81637.97,
+          "title": "Chapter 14 - Scourging the Sea of Brass",
+          "id": 23
+        },
+        {
+          "start": 81637.97,
+          "end": 85775.952,
+          "title": "Chapter 15 - Between Brethren",
+          "id": 24
+        },
+        {
+          "start": 85775.952,
+          "end": 92017.917,
+          "title": "Chapter 16 - Settling Accounts",
+          "id": 25
+        },
+        {
+          "start": 92017.917,
+          "end": 93283.009,
+          "title": "Epilogue - Red Seas under Red Skies",
+          "id": 26
+        },
+        {
+          "start": 93283.009,
+          "end": 93346.98,
+          "title": "Afterword",
+          "id": 27
+        },
+        {
+          "start": 93346.98,
+          "end": 93384.063129,
+          "title": "End Credits",
+          "id": 28
+        }
+      ],
+      "embeddedCoverArt": "mjpeg",
+      "metaTags": {
+        "tagAlbum": "02 Red Seas under Red Skies",
+        "tagArtist": "Scott Lynch",
+        "tagGenre": "Fantasy Crime",
+        "tagTitle": "Red Seas under Red Skies",
+        "tagGrouping": "Gentleman Bastard",
+        "tagTrack": "1/1",
+        "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
+        "tagDate": "2007",
+        "tagComposer": "Michael Page",
+        "tagComment": "Unabridged",
+        "tagDescription": "After a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can’t rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves. This time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world.",
+        "tagEncoder": "inAudible 1.97"
+      },
+      "mimeType": "audio/mp4",
+      "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+      "startOffset": 0,
+      "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
+    },
+    "amazonToken": 1,
+    "currentTrackIndex": 1,
+    "offsetInMilliseconds": 84308000.324322,
+    "playUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"
+  }
+}

@@ -1,1 +1,5 @@
 node_modules
+lambda/config.js
+config.js
+.ask/
+.env
