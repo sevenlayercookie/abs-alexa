@@ -8,7 +8,8 @@
         "audioItem": {
           "stream": {
             "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
-            "token": 1
+            "token": 1,
+            "offsetInMilliseconds": 81637970
           },
           "metadata": {
             "title": "Chapter 15 - Between Brethren",
