@@ -691,7 +691,10 @@ const PreviousIntentHandler = {
 
     if (offsetInMilliseconds > currentChapter.start * 1000 + 5000) { // go to beginning of current chapter
       newBookTime = currentChapter.start
-      const result = getTrackAndOffsetFromBookTime(newBookTime, userPlaySession).currentTrack
+      // NOT .currentTrack: goalOffset lives on the returned object, not on the
+      // track inside it, so this used to set offsetInMilliseconds to undefined
+      // and start the chapter from the wrong place.
+      const result = getTrackAndOffsetFromBookTime(newBookTime, userPlaySession)
 
       const offset = result.goalOffset
 
@@ -783,7 +786,15 @@ const NextIntentHandler = {
 
     // default behavior: go to beginning of chapter.
     let currentChapter = getCurrentChapterByBookTime(currentBookTime, userPlaySession)
+    // chapters[last + 1] is undefined: nothing follows the final chapter,
+    // so this used to throw on nextChapter.start.
     let nextChapter = chapters[currentChapter.id + 1]
+    if (!nextChapter) {
+      console.log('NextIntent: already in the final chapter')
+      return handlerInput.responseBuilder
+        .speak(sanitizeForSSML('This is the last chapter of ' + userPlaySession.displayTitle + '.'))
+        .getResponse()
+    }
     let newBookTime
     let currentTrack = getCurrentTrackByBookTime(currentBookTime, userPlaySession)
     // go to beginning of next chapter
@@ -1345,7 +1356,10 @@ const AudioPlayerEventHandler = {
               const currentChapterID = getCurrentChapterByBookTime(currentBookTime, userPlaySession).id;
 
               const coverUrl = getCoverUrl(userPlaySession.libraryItemId);
-              const nextChapterTitle = userPlaySession.chapters[currentChapterID + 1].title;
+              // The final chapter has no successor; fall back to the book title rather
+        // than throwing while enqueuing the next track.
+        const nextChapterTitle = (userPlaySession.chapters[currentChapterID + 1] || {}).title
+          || userPlaySession.displayTitle;
               const metadata = {
                 title: nextChapterTitle,
                 subtitle: userPlaySession.displayTitle,
@@ -1609,7 +1623,13 @@ const PlaybackControllerHandler = {
       case 'NextCommandIssued':
 
         currentChapter = getCurrentChapterByBookTime(currentBookTime, userPlaySession)
+        // chapters[last + 1] is undefined: nothing follows the final chapter,
+        // so this used to throw on nextChapter.start.
         let nextChapter = chapters[currentChapter.id + 1]
+        if (!nextChapter) {
+          console.log('NextCommandIssued: already in the final chapter')
+          return handlerInput.responseBuilder.getResponse()
+        }
         let currentTrack = getCurrentTrackByBookTime(currentBookTime, userPlaySession)
 
         newBookTime = nextChapter.start
