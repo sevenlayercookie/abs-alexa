@@ -13,10 +13,10 @@
           "stream": {
             "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
             "token": 1,
-            "offsetInMilliseconds": 84308000.324322
+            "offsetInMilliseconds": 88680500.177211
           },
           "metadata": {
-            "title": "Chapter 15 - Between Brethren",
+            "title": "Chapter 16 - Settling Accounts",
             "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
             "art": {
               "sources": [
@@ -44,7 +44,7 @@
   "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
   "sessionAttributes": {
     "userPlaySession": {
-      "id": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+      "id": "5ec11cc5-4227-4298-a5f5-13b7904a81fb",
       "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
       "libraryId": "ec19ca6c-0c6c-4f09-bac0-7317ac8f3181",
       "libraryItemId": "10eb5463-cfce-4d84-9680-a9b36add5bfb",
@@ -278,11 +278,11 @@
         "deviceName": "Amazon Echo"
       },
       "serverVersion": "2.36.0",
-      "date": "2026-09-02",
-      "dayOfWeek": "Wednesday",
+      "date": "2026-09-04",
+      "dayOfWeek": "Friday",
       "timeListening": 0,
-      "startTime": 84308.000324322,
-      "currentTime": 84308.000324322,
+      "startTime": 88680.500177211,
+      "currentTime": 88680.500177211,
       "startedAt":0,
       "updatedAt":0,
       "audioTracks": [
@@ -514,7 +514,7 @@
         }
       ]
     },
-    "userPlaySessionID": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+    "userPlaySessionID": "5ec11cc5-4227-4298-a5f5-13b7904a81fb",
     "currentTrack": {
       "index": 1,
       "ino": "4721615",
@@ -743,7 +743,7 @@
     },
     "amazonToken": 1,
     "currentTrackIndex": 1,
-    "offsetInMilliseconds": 84308000.324322,
+    "offsetInMilliseconds": 88680500.177211,
     "playUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"
   }
 }

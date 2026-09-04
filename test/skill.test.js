@@ -12,6 +12,7 @@ const { scenarios } = require('./scenarios');
 const { startServer } = require('./helpers/server-process');
 const { loadSkill, invoke, intent, playbackController, playerStateFrom } = require('./helpers/alexa');
 const { matchSnapshot } = require('./helpers/snapshot');
+const { playDirective, assertWellFormedStream, assertNotErrorResponse } = require('./helpers/assertions');
 const fs = require('fs');
 const path = require('path');
 
@@ -48,7 +49,18 @@ describe('skill behaviour', () => {
       for (const step of scenario.steps) {
         const res = await invoke(skill, step.make(attrs, player));
         assert.ok(res, `${step.label} returned no response`);
-        matchSnapshot(`${scenario.name} -- ${step.label}`, res);
+
+        // Snapshots record whatever happened; these say what a valid answer
+        // looks like. Without them a Play directive with an undefined offset
+        // gets banked as the baseline, which is how the "previous" bug hid.
+        const label = `${scenario.name} -- ${step.label}`;
+        const play = playDirective(res);
+        if (play && !(scenario.expectMalformedStream || []).includes(step.label)) {
+          assertWellFormedStream(play, label);
+        }
+        if (!(scenario.expectErrors || []).includes(step.label)) assertNotErrorResponse(res, label);
+
+        matchSnapshot(label, res);
         attrs = (res && res.sessionAttributes) || attrs;
         const p = playerStateFrom(res);
         if (p && p.token !== undefined) player = p;   // a Play directive means a stream is now loaded

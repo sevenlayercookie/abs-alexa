@@ -44,7 +44,7 @@
   "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
   "sessionAttributes": {
     "userPlaySession": {
-      "id": "1865a5e5-d289-4972-9b3a-69e78a3d6603",
+      "id": "53180345-c96a-4c64-b6c5-94695453e38b",
       "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
       "libraryId": "ec19ca6c-0c6c-4f09-bac0-7317ac8f3181",
       "libraryItemId": "95b7a24b-62e2-438a-ad9c-c41b991a7a32",
@@ -338,8 +338,8 @@
         "deviceName": "Amazon Echo"
       },
       "serverVersion": "2.36.0",
-      "date": "2026-09-02",
-      "dayOfWeek": "Wednesday",
+      "date": "2026-09-04",
+      "dayOfWeek": "Friday",
       "timeListening": 0,
       "startTime": 81389.233038136,
       "currentTime": 81389.233038136,
@@ -634,7 +634,7 @@
         }
       ]
     },
-    "userPlaySessionID": "1865a5e5-d289-4972-9b3a-69e78a3d6603",
+    "userPlaySessionID": "53180345-c96a-4c64-b6c5-94695453e38b",
     "currentTrack": {
       "index": 1,
       "ino": "39190583",

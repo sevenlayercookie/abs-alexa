@@ -14,7 +14,7 @@
 // The fixture-based suite in skill.test.js stays the fast default; this is the
 // one that answers "would a real Echo actually play sound".
 
-const { test, describe, before } = require('node:test');
+const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const A = require('./helpers/alexa');
@@ -37,13 +37,56 @@ const why = !process.env.LIVE
     ? 'no usable ABS_API_KEY / SERVER_URL in the environment or lambda/config.js'
     : false;
 
+// Headers for direct Audiobookshelf calls made by the test itself (saving and
+// restoring position), including the Cloudflare Access token when configured.
+function absHeaders() {
+  let file = {};
+  try { file = require(path.join(__dirname, '..', 'lambda', 'config.js')); } catch { /* optional */ }
+  const h = { Authorization: `Bearer ${cred.key}` };
+  const id = process.env.CFAccessClientId || file.CFAccessClientId;
+  const secret = process.env.CFAccessClientSecret || file.CFAccessClientSecret;
+  if (id && secret) { h['CF-Access-Client-Id'] = id; h['CF-Access-Client-Secret'] = secret; }
+  return h;
+}
+
+const playOf = (res) => ((((res || {}).response) || {}).directives || [])
+  .find((d) => d.type === 'AudioPlayer.Play');
+
 describe('live: every implemented intent', { skip: why }, () => {
   let skill;
+  let restore = null;   // { itemId, currentTime } captured before anything moves
 
-  before(() => {
+  before(async () => {
     process.env.ABS_API_KEY = cred.key;
     process.env.SERVER_URL = cred.url;
     skill = A.loadSkill();
+
+    // These tests skip chapters and seek around, which writes the new position
+    // back to Audiobookshelf. Record where the book actually was so it can be
+    // put back afterwards, rather than requiring a book you do not mind losing
+    // your place in.
+    const first = await A.invoke(skill, A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const url = (((playOf(first) || {}).audioItem || {}).stream || {}).url || '';
+    const m = url.match(/\/api\/items\/([0-9a-f-]+)\//);
+    if (!m) return;
+    const itemId = m[1];
+    const res = await fetch(`${cred.url}/api/me/progress/${itemId}`, { headers: absHeaders() });
+    if (!res.ok) return;
+    const body = await res.json();
+    if (typeof body.currentTime === 'number') {
+      restore = { itemId, currentTime: body.currentTime };
+      console.log('      saved position: %ss in %s', Math.round(restore.currentTime), itemId);
+    }
+  });
+
+  after(async () => {
+    if (!restore) return;
+    const res = await fetch(`${cred.url}/api/me/progress/${restore.itemId}`, {
+      method: 'PATCH',
+      headers: { ...absHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ currentTime: restore.currentTime }),
+    });
+    console.log('      restored position: %ss (HTTP %d)', Math.round(restore.currentTime), res.status);
   });
 
   const invoke = (env) => A.invoke(skill, env);

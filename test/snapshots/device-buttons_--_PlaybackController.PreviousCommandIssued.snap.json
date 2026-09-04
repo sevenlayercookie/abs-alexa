@@ -9,29 +9,7 @@
           "stream": {
             "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>",
             "token": 1,
-            "offsetInMilliseconds": 81388743.129
-          },
-          "metadata": {
-            "title": "Epilogue - Falselight",
-            "subtitle": "The Lies of Locke Lamora",
-            "art": {
-              "sources": [
-                {
-                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
-                  "widthPixels": 512,
-                  "heightPixels": 512
-                }
-              ]
-            },
-            "backgroundImage": {
-              "sources": [
-                {
-                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
-                  "widthPixels": 1600,
-                  "heightPixels": 900
-                }
-              ]
-            }
+            "offsetInMilliseconds": 80177295
           }
         }
       }
@@ -919,7 +897,7 @@
     },
     "amazonToken": 1,
     "currentTrackIndex": 1,
-    "offsetInMilliseconds": 81388743.129,
+    "offsetInMilliseconds": 81389233.03813599,
     "nextStreamEnqueued": false,
     "coverUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
     "playUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>"

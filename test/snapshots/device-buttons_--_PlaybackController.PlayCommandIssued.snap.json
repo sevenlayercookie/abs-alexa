@@ -1,18 +1,900 @@
 {
   "version": "1.0",
   "response": {
-    "outputSpeech": {
-      "type": "SSML",
-      "ssml": "<speak>Sorry, I had trouble doing what you asked. Please try again.</speak>"
-    },
-    "reprompt": {
-      "outputSpeech": {
-        "type": "SSML",
-        "ssml": "<speak>Sorry, I had trouble doing what you asked. Please try again.</speak>"
+    "directives": [
+      {
+        "type": "AudioPlayer.Play",
+        "audioItem": {
+          "stream": {}
+        }
       }
-    },
-    "shouldEndSession": false
+    ]
   },
   "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
-  "sessionAttributes": {}
+  "sessionAttributes": {
+    "userPlaySession": {
+      "id": "53180345-c96a-4c64-b6c5-94695453e38b",
+      "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
+      "libraryId": "ec19ca6c-0c6c-4f09-bac0-7317ac8f3181",
+      "libraryItemId": "95b7a24b-62e2-438a-ad9c-c41b991a7a32",
+      "bookId": "e8bf63a8-8329-4b0e-a2ff-5e9a28538ad6",
+      "episodeId": null,
+      "mediaType": "book",
+      "mediaMetadata": {
+        "title": "The Lies of Locke Lamora",
+        "subtitle": "Gentleman Bastard, Book 1",
+        "authors": [
+          {
+            "id": "413ae824-68d4-41e7-8291-f781e8a56faa",
+            "name": "Scott Lynch"
+          }
+        ],
+        "narrators": [
+          "Michael Page"
+        ],
+        "series": [
+          {
+            "id": "045f0fd1-38f8-4d08-b64f-d6f1b8f1d06c",
+            "name": "Gentleman Bastard Sequence",
+            "sequence": "1"
+          }
+        ],
+        "genres": [
+          "Science Fiction & Fantasy"
+        ],
+        "publishedYear": "2019",
+        "publishedDate": null,
+        "publisher": "Random House Audio",
+        "description": "<p><b>“Remarkable...Scott Lynch’s first novel, </b><b><i>The Lies of Locke Lamora, </i></b><b>exports the suspense and wit of a cleverly constructed crime caper into an exotic realm of fantasy, and the result is engagingly entertaining.” (</b><b><i>The Times</i></b><b>, London)</b> </p> <p>An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game - or die trying. </p> <p><b>Praise for </b><b><i>The Lies of Locke Lamora</i></b> </p> <p>“Fresh, original, and engrossing...gorgeously realized.” (George R. R. Martin) </p> <p>“Right now, in the full flush of a second reading, I think <i>The Lies of Locke Lamora</i> is probably in my top ten favorite books ever. Maybe my top five. If you haven’t read it, you should. If you have read it, you should probably read it again.” (Patrick Rothfuss, <i>New York Times</i> best-selling author of <i>The Name of the Wind</i>)</p> <p>“High-octane fantasy...a great swashbuckling yarn of a novel.” (Richard Morgan)</p>",
+        "isbn": "9780593163382",
+        "asin": "0593163389",
+        "language": "English",
+        "explicit": false,
+        "abridged": false
+      },
+      "chapters": [
+        {
+          "start": 0,
+          "end": 29.767,
+          "title": "Opening Credits",
+          "id": 0
+        },
+        {
+          "start": 29.767,
+          "end": 4599.153,
+          "title": "Prologue - The Boy Who Stole Too Much",
+          "id": 1
+        },
+        {
+          "start": 4599.153,
+          "end": 4622.117,
+          "title": "PART I - Ambition",
+          "id": 2
+        },
+        {
+          "start": 4622.117,
+          "end": 9452.704,
+          "title": "Chapter 01 - The Don Salvara Game",
+          "id": 3
+        },
+        {
+          "start": 9452.704,
+          "end": 10198.343,
+          "title": "Interlude - Locke Explains",
+          "id": 4
+        },
+        {
+          "start": 10198.343,
+          "end": 13810.764,
+          "title": "Chapter 02 - Second Touch at the Teeth Show",
+          "id": 5
+        },
+        {
+          "start": 13810.764,
+          "end": 16250.09,
+          "title": "Interlude - Locke Stays for Dinner",
+          "id": 6
+        },
+        {
+          "start": 16250.09,
+          "end": 20540.046,
+          "title": "Chapter 03 - Imaginary Men",
+          "id": 7
+        },
+        {
+          "start": 20540.046,
+          "end": 23076.548,
+          "title": "Interlude - The Last Mistake",
+          "id": 8
+        },
+        {
+          "start": 23076.548,
+          "end": 23096.563,
+          "title": "PART II - Complication",
+          "id": 9
+        },
+        {
+          "start": 23096.563,
+          "end": 28725.127,
+          "title": "Chapter 04 - At the Court of Capa Barsavi",
+          "id": 10
+        },
+        {
+          "start": 28725.127,
+          "end": 31645.965,
+          "title": "Interlude - The Boy Who Cried for a Corpse",
+          "id": 11
+        },
+        {
+          "start": 31645.965,
+          "end": 34837.733,
+          "title": "Chapter 05 - The Gray King",
+          "id": 12
+        },
+        {
+          "start": 34837.733,
+          "end": 36805.81,
+          "title": "Interlude - Jean Tannen",
+          "id": 13
+        },
+        {
+          "start": 36805.81,
+          "end": 39573.977,
+          "title": "Chapter 06 - Limitations",
+          "id": 14
+        },
+        {
+          "start": 39573.977,
+          "end": 41471.047,
+          "title": "Interlude - Brat Masterpieces",
+          "id": 15
+        },
+        {
+          "start": 41471.047,
+          "end": 43808.531,
+          "title": "Chapter 07 - Out the Window",
+          "id": 16
+        },
+        {
+          "start": 43808.531,
+          "end": 44889.327,
+          "title": "Interlude - Up the River",
+          "id": 17
+        },
+        {
+          "start": 44889.327,
+          "end": 47257.251,
+          "title": "Chapter 08 - The Funeral Cask",
+          "id": 18
+        },
+        {
+          "start": 47257.251,
+          "end": 48693.568,
+          "title": "Interlude - The Half-Crown War",
+          "id": 19
+        },
+        {
+          "start": 48693.568,
+          "end": 48711.865,
+          "title": "PART III - Revelation",
+          "id": 20
+        },
+        {
+          "start": 48711.865,
+          "end": 50738.48,
+          "title": "Chapter 09 - Curious Tale/Countess A.Glass",
+          "id": 21
+        },
+        {
+          "start": 50738.48,
+          "end": 51260.209,
+          "title": "Interlude - The Schoolmaster of Roses",
+          "id": 22
+        },
+        {
+          "start": 51260.209,
+          "end": 54306.063,
+          "title": "Chapter 10 - Teeth Lessons",
+          "id": 23
+        },
+        {
+          "start": 54306.063,
+          "end": 54685.57,
+          "title": "Interlude - The Tale of the Old Handball Players",
+          "id": 24
+        },
+        {
+          "start": 54685.57,
+          "end": 57801.758,
+          "title": "Chapter 11 - At the Court of Capa Raza",
+          "id": 25
+        },
+        {
+          "start": 57801.758,
+          "end": 58728.489,
+          "title": "Interlude - The Lady of the Long Silence",
+          "id": 26
+        },
+        {
+          "start": 58728.489,
+          "end": 58742.212,
+          "title": "PART IV - Desperate Improvisation",
+          "id": 27
+        },
+        {
+          "start": 58742.212,
+          "end": 61145.64,
+          "title": "Chapter 12 - The Fat Priest from Tal Verrar",
+          "id": 28
+        },
+        {
+          "start": 61145.64,
+          "end": 61478.057,
+          "title": "Interlude - The White Iron Conjurers",
+          "id": 29
+        },
+        {
+          "start": 61478.057,
+          "end": 65366.331,
+          "title": "Chapter 13 - Orchids and Assassins",
+          "id": 30
+        },
+        {
+          "start": 65366.331,
+          "end": 68712.954,
+          "title": "Chapter 14 - Three Invitations",
+          "id": 31
+        },
+        {
+          "start": 68712.954,
+          "end": 69102.817,
+          "title": "Interlude - The Daughters of Camorr",
+          "id": 32
+        },
+        {
+          "start": 69102.817,
+          "end": 72686.701,
+          "title": "Chapter 15 - Spiderbite",
+          "id": 33
+        },
+        {
+          "start": 72686.701,
+          "end": 73086.711,
+          "title": "Interlude - The Throne in Ashes",
+          "id": 34
+        },
+        {
+          "start": 73086.711,
+          "end": 80123.634,
+          "title": "Chapter 16 - Justice Is Red",
+          "id": 35
+        },
+        {
+          "start": 80123.634,
+          "end": 80177.295,
+          "title": "Interlude - A Minor Prophecy",
+          "id": 36
+        },
+        {
+          "start": 80177.295,
+          "end": 81389.006,
+          "title": "Epilogue - Falselight",
+          "id": 37
+        },
+        {
+          "start": 81389.006,
+          "end": 81423.743129,
+          "title": "End Credits",
+          "id": 38
+        }
+      ],
+      "displayTitle": "The Lies of Locke Lamora",
+      "displayAuthor": "Scott Lynch",
+      "coverPath": "/unorganized/01 The Lies of Locke Lamora/cover.jpg",
+      "duration": 81423.743129,
+      "playMethod": 0,
+      "mediaPlayer": "unknown",
+      "deviceInfo": {
+        "id": "546fac5d-5da7-4e44-8c6e-228e4cd63e42",
+        "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
+        "deviceId": "TESTDEVICE",
+        "ipAddress": "<ip>",
+        "clientVersion": "1.0",
+        "manufacturer": "Amazon",
+        "model": "Echo",
+        "sdkVersion": "1",
+        "clientName": "Alexa Device",
+        "deviceName": "Amazon Echo"
+      },
+      "serverVersion": "2.36.0",
+      "date": "2026-09-04",
+      "dayOfWeek": "Friday",
+      "timeListening": 0,
+      "startTime": 81389.233038136,
+      "currentTime": 81389.233038136,
+      "startedAt":0,
+      "updatedAt":0,
+      "audioTracks": [
+        {
+          "index": 1,
+          "ino": "39190583",
+          "metadata": {
+            "filename": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+            "ext": ".m4b",
+            "path": "/unorganized/01 The Lies of Locke Lamora/Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+            "relPath": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+            "size": 1292473440,
+            "mtimeMs": 1758682691855,
+            "ctimeMs": 1766641084713,
+            "birthtimeMs": 1758682657867
+          },
+          "addedAt": 1758682703468,
+          "updatedAt":0,
+          "trackNumFromMeta": 1,
+          "discNumFromMeta": null,
+          "trackNumFromFilename": 1,
+          "discNumFromFilename": null,
+          "manuallyVerified": false,
+          "exclude": false,
+          "error": null,
+          "format": "QuickTime / MOV",
+          "duration": 81423.743129,
+          "bitRate": 125588,
+          "language": "und",
+          "codec": "aac",
+          "timeBase": "1/44100",
+          "channels": 2,
+          "channelLayout": "stereo",
+          "chapters": [
+            {
+              "start": 0,
+              "end": 29.767,
+              "title": "Opening Credits",
+              "id": 0
+            },
+            {
+              "start": 29.767,
+              "end": 4599.153,
+              "title": "Prologue - The Boy Who Stole Too Much",
+              "id": 1
+            },
+            {
+              "start": 4599.153,
+              "end": 4622.117,
+              "title": "PART I - Ambition",
+              "id": 2
+            },
+            {
+              "start": 4622.117,
+              "end": 9452.704,
+              "title": "Chapter 01 - The Don Salvara Game",
+              "id": 3
+            },
+            {
+              "start": 9452.704,
+              "end": 10198.343,
+              "title": "Interlude - Locke Explains",
+              "id": 4
+            },
+            {
+              "start": 10198.343,
+              "end": 13810.764,
+              "title": "Chapter 02 - Second Touch at the Teeth Show",
+              "id": 5
+            },
+            {
+              "start": 13810.764,
+              "end": 16250.09,
+              "title": "Interlude - Locke Stays for Dinner",
+              "id": 6
+            },
+            {
+              "start": 16250.09,
+              "end": 20540.046,
+              "title": "Chapter 03 - Imaginary Men",
+              "id": 7
+            },
+            {
+              "start": 20540.046,
+              "end": 23076.548,
+              "title": "Interlude - The Last Mistake",
+              "id": 8
+            },
+            {
+              "start": 23076.548,
+              "end": 23096.563,
+              "title": "PART II - Complication",
+              "id": 9
+            },
+            {
+              "start": 23096.563,
+              "end": 28725.127,
+              "title": "Chapter 04 - At the Court of Capa Barsavi",
+              "id": 10
+            },
+            {
+              "start": 28725.127,
+              "end": 31645.965,
+              "title": "Interlude - The Boy Who Cried for a Corpse",
+              "id": 11
+            },
+            {
+              "start": 31645.965,
+              "end": 34837.733,
+              "title": "Chapter 05 - The Gray King",
+              "id": 12
+            },
+            {
+              "start": 34837.733,
+              "end": 36805.81,
+              "title": "Interlude - Jean Tannen",
+              "id": 13
+            },
+            {
+              "start": 36805.81,
+              "end": 39573.977,
+              "title": "Chapter 06 - Limitations",
+              "id": 14
+            },
+            {
+              "start": 39573.977,
+              "end": 41471.047,
+              "title": "Interlude - Brat Masterpieces",
+              "id": 15
+            },
+            {
+              "start": 41471.047,
+              "end": 43808.531,
+              "title": "Chapter 07 - Out the Window",
+              "id": 16
+            },
+            {
+              "start": 43808.531,
+              "end": 44889.327,
+              "title": "Interlude - Up the River",
+              "id": 17
+            },
+            {
+              "start": 44889.327,
+              "end": 47257.251,
+              "title": "Chapter 08 - The Funeral Cask",
+              "id": 18
+            },
+            {
+              "start": 47257.251,
+              "end": 48693.568,
+              "title": "Interlude - The Half-Crown War",
+              "id": 19
+            },
+            {
+              "start": 48693.568,
+              "end": 48711.865,
+              "title": "PART III - Revelation",
+              "id": 20
+            },
+            {
+              "start": 48711.865,
+              "end": 50738.48,
+              "title": "Chapter 09 - Curious Tale/Countess A.Glass",
+              "id": 21
+            },
+            {
+              "start": 50738.48,
+              "end": 51260.209,
+              "title": "Interlude - The Schoolmaster of Roses",
+              "id": 22
+            },
+            {
+              "start": 51260.209,
+              "end": 54306.063,
+              "title": "Chapter 10 - Teeth Lessons",
+              "id": 23
+            },
+            {
+              "start": 54306.063,
+              "end": 54685.57,
+              "title": "Interlude - The Tale of the Old Handball Players",
+              "id": 24
+            },
+            {
+              "start": 54685.57,
+              "end": 57801.758,
+              "title": "Chapter 11 - At the Court of Capa Raza",
+              "id": 25
+            },
+            {
+              "start": 57801.758,
+              "end": 58728.489,
+              "title": "Interlude - The Lady of the Long Silence",
+              "id": 26
+            },
+            {
+              "start": 58728.489,
+              "end": 58742.212,
+              "title": "PART IV - Desperate Improvisation",
+              "id": 27
+            },
+            {
+              "start": 58742.212,
+              "end": 61145.64,
+              "title": "Chapter 12 - The Fat Priest from Tal Verrar",
+              "id": 28
+            },
+            {
+              "start": 61145.64,
+              "end": 61478.057,
+              "title": "Interlude - The White Iron Conjurers",
+              "id": 29
+            },
+            {
+              "start": 61478.057,
+              "end": 65366.331,
+              "title": "Chapter 13 - Orchids and Assassins",
+              "id": 30
+            },
+            {
+              "start": 65366.331,
+              "end": 68712.954,
+              "title": "Chapter 14 - Three Invitations",
+              "id": 31
+            },
+            {
+              "start": 68712.954,
+              "end": 69102.817,
+              "title": "Interlude - The Daughters of Camorr",
+              "id": 32
+            },
+            {
+              "start": 69102.817,
+              "end": 72686.701,
+              "title": "Chapter 15 - Spiderbite",
+              "id": 33
+            },
+            {
+              "start": 72686.701,
+              "end": 73086.711,
+              "title": "Interlude - The Throne in Ashes",
+              "id": 34
+            },
+            {
+              "start": 73086.711,
+              "end": 80123.634,
+              "title": "Chapter 16 - Justice Is Red",
+              "id": 35
+            },
+            {
+              "start": 80123.634,
+              "end": 80177.295,
+              "title": "Interlude - A Minor Prophecy",
+              "id": 36
+            },
+            {
+              "start": 80177.295,
+              "end": 81389.006,
+              "title": "Epilogue - Falselight",
+              "id": 37
+            },
+            {
+              "start": 81389.006,
+              "end": 81423.743129,
+              "title": "End Credits",
+              "id": 38
+            }
+          ],
+          "embeddedCoverArt": "mjpeg",
+          "metaTags": {
+            "tagAlbum": "01 The Lies of Locke Lamora",
+            "tagArtist": "Scott Lynch",
+            "tagGenre": "Fantasy Crime",
+            "tagTitle": "The Lies of Locke Lamora",
+            "tagGrouping": "Gentleman Bastard",
+            "tagTrack": "1/1",
+            "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
+            "tagDate": "2006",
+            "tagComposer": "Michael Page",
+            "tagComment": "Unabridged",
+            "tagDescription": "An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game.",
+            "tagEncoder": "inAudible 1.97"
+          },
+          "mimeType": "audio/mp4",
+          "title": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+          "startOffset": 0,
+          "contentUrl": "/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583"
+        }
+      ]
+    },
+    "userPlaySessionID": "53180345-c96a-4c64-b6c5-94695453e38b",
+    "currentTrack": {
+      "index": 1,
+      "ino": "39190583",
+      "metadata": {
+        "filename": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+        "ext": ".m4b",
+        "path": "/unorganized/01 The Lies of Locke Lamora/Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+        "relPath": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+        "size": 1292473440,
+        "mtimeMs": 1758682691855,
+        "ctimeMs": 1766641084713,
+        "birthtimeMs": 1758682657867
+      },
+      "addedAt": 1758682703468,
+      "updatedAt":0,
+      "trackNumFromMeta": 1,
+      "discNumFromMeta": null,
+      "trackNumFromFilename": 1,
+      "discNumFromFilename": null,
+      "manuallyVerified": false,
+      "exclude": false,
+      "error": null,
+      "format": "QuickTime / MOV",
+      "duration": 81423.743129,
+      "bitRate": 125588,
+      "language": "und",
+      "codec": "aac",
+      "timeBase": "1/44100",
+      "channels": 2,
+      "channelLayout": "stereo",
+      "chapters": [
+        {
+          "start": 0,
+          "end": 29.767,
+          "title": "Opening Credits",
+          "id": 0
+        },
+        {
+          "start": 29.767,
+          "end": 4599.153,
+          "title": "Prologue - The Boy Who Stole Too Much",
+          "id": 1
+        },
+        {
+          "start": 4599.153,
+          "end": 4622.117,
+          "title": "PART I - Ambition",
+          "id": 2
+        },
+        {
+          "start": 4622.117,
+          "end": 9452.704,
+          "title": "Chapter 01 - The Don Salvara Game",
+          "id": 3
+        },
+        {
+          "start": 9452.704,
+          "end": 10198.343,
+          "title": "Interlude - Locke Explains",
+          "id": 4
+        },
+        {
+          "start": 10198.343,
+          "end": 13810.764,
+          "title": "Chapter 02 - Second Touch at the Teeth Show",
+          "id": 5
+        },
+        {
+          "start": 13810.764,
+          "end": 16250.09,
+          "title": "Interlude - Locke Stays for Dinner",
+          "id": 6
+        },
+        {
+          "start": 16250.09,
+          "end": 20540.046,
+          "title": "Chapter 03 - Imaginary Men",
+          "id": 7
+        },
+        {
+          "start": 20540.046,
+          "end": 23076.548,
+          "title": "Interlude - The Last Mistake",
+          "id": 8
+        },
+        {
+          "start": 23076.548,
+          "end": 23096.563,
+          "title": "PART II - Complication",
+          "id": 9
+        },
+        {
+          "start": 23096.563,
+          "end": 28725.127,
+          "title": "Chapter 04 - At the Court of Capa Barsavi",
+          "id": 10
+        },
+        {
+          "start": 28725.127,
+          "end": 31645.965,
+          "title": "Interlude - The Boy Who Cried for a Corpse",
+          "id": 11
+        },
+        {
+          "start": 31645.965,
+          "end": 34837.733,
+          "title": "Chapter 05 - The Gray King",
+          "id": 12
+        },
+        {
+          "start": 34837.733,
+          "end": 36805.81,
+          "title": "Interlude - Jean Tannen",
+          "id": 13
+        },
+        {
+          "start": 36805.81,
+          "end": 39573.977,
+          "title": "Chapter 06 - Limitations",
+          "id": 14
+        },
+        {
+          "start": 39573.977,
+          "end": 41471.047,
+          "title": "Interlude - Brat Masterpieces",
+          "id": 15
+        },
+        {
+          "start": 41471.047,
+          "end": 43808.531,
+          "title": "Chapter 07 - Out the Window",
+          "id": 16
+        },
+        {
+          "start": 43808.531,
+          "end": 44889.327,
+          "title": "Interlude - Up the River",
+          "id": 17
+        },
+        {
+          "start": 44889.327,
+          "end": 47257.251,
+          "title": "Chapter 08 - The Funeral Cask",
+          "id": 18
+        },
+        {
+          "start": 47257.251,
+          "end": 48693.568,
+          "title": "Interlude - The Half-Crown War",
+          "id": 19
+        },
+        {
+          "start": 48693.568,
+          "end": 48711.865,
+          "title": "PART III - Revelation",
+          "id": 20
+        },
+        {
+          "start": 48711.865,
+          "end": 50738.48,
+          "title": "Chapter 09 - Curious Tale/Countess A.Glass",
+          "id": 21
+        },
+        {
+          "start": 50738.48,
+          "end": 51260.209,
+          "title": "Interlude - The Schoolmaster of Roses",
+          "id": 22
+        },
+        {
+          "start": 51260.209,
+          "end": 54306.063,
+          "title": "Chapter 10 - Teeth Lessons",
+          "id": 23
+        },
+        {
+          "start": 54306.063,
+          "end": 54685.57,
+          "title": "Interlude - The Tale of the Old Handball Players",
+          "id": 24
+        },
+        {
+          "start": 54685.57,
+          "end": 57801.758,
+          "title": "Chapter 11 - At the Court of Capa Raza",
+          "id": 25
+        },
+        {
+          "start": 57801.758,
+          "end": 58728.489,
+          "title": "Interlude - The Lady of the Long Silence",
+          "id": 26
+        },
+        {
+          "start": 58728.489,
+          "end": 58742.212,
+          "title": "PART IV - Desperate Improvisation",
+          "id": 27
+        },
+        {
+          "start": 58742.212,
+          "end": 61145.64,
+          "title": "Chapter 12 - The Fat Priest from Tal Verrar",
+          "id": 28
+        },
+        {
+          "start": 61145.64,
+          "end": 61478.057,
+          "title": "Interlude - The White Iron Conjurers",
+          "id": 29
+        },
+        {
+          "start": 61478.057,
+          "end": 65366.331,
+          "title": "Chapter 13 - Orchids and Assassins",
+          "id": 30
+        },
+        {
+          "start": 65366.331,
+          "end": 68712.954,
+          "title": "Chapter 14 - Three Invitations",
+          "id": 31
+        },
+        {
+          "start": 68712.954,
+          "end": 69102.817,
+          "title": "Interlude - The Daughters of Camorr",
+          "id": 32
+        },
+        {
+          "start": 69102.817,
+          "end": 72686.701,
+          "title": "Chapter 15 - Spiderbite",
+          "id": 33
+        },
+        {
+          "start": 72686.701,
+          "end": 73086.711,
+          "title": "Interlude - The Throne in Ashes",
+          "id": 34
+        },
+        {
+          "start": 73086.711,
+          "end": 80123.634,
+          "title": "Chapter 16 - Justice Is Red",
+          "id": 35
+        },
+        {
+          "start": 80123.634,
+          "end": 80177.295,
+          "title": "Interlude - A Minor Prophecy",
+          "id": 36
+        },
+        {
+          "start": 80177.295,
+          "end": 81389.006,
+          "title": "Epilogue - Falselight",
+          "id": 37
+        },
+        {
+          "start": 81389.006,
+          "end": 81423.743129,
+          "title": "End Credits",
+          "id": 38
+        }
+      ],
+      "embeddedCoverArt": "mjpeg",
+      "metaTags": {
+        "tagAlbum": "01 The Lies of Locke Lamora",
+        "tagArtist": "Scott Lynch",
+        "tagGenre": "Fantasy Crime",
+        "tagTitle": "The Lies of Locke Lamora",
+        "tagGrouping": "Gentleman Bastard",
+        "tagTrack": "1/1",
+        "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
+        "tagDate": "2006",
+        "tagComposer": "Michael Page",
+        "tagComment": "Unabridged",
+        "tagDescription": "An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game.",
+        "tagEncoder": "inAudible 1.97"
+      },
+      "mimeType": "audio/mp4",
+      "title": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+      "startOffset": 0,
+      "contentUrl": "/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583"
+    },
+    "amazonToken": 1,
+    "currentTrackIndex": 1,
+    "offsetInMilliseconds": 81389233.03813599,
+    "nextStreamEnqueued": false,
+    "coverUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
+    "playUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>"
+  }
 }

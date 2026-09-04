@@ -31,6 +31,27 @@ to talk to your server, and are scrubbed out before anything is written to
 disk. Review `test/fixtures/abs.json` before committing — it is a copy of real
 responses from your library.
 
+## Fixtures go stale, silently
+
+`test/fixtures/abs.json` is frozen at the moment it was recorded. If
+Audiobookshelf changes a response shape in a later version, every test here
+stays green while the real skill breaks -- the fixtures keep answering in the
+old shape forever.
+
+Nothing detects this automatically. Re-record after upgrading your server, and
+occasionally regardless:
+
+```bash
+npm run record        # re-capture from a live server
+npm test              # see whether any baseline moved
+```
+
+A diff after re-recording means the server's responses changed. That is worth
+reading rather than accepting blindly.
+
+`npm run test:live` is the other half of this: it talks to the real server every
+time, so it notices what frozen fixtures cannot.
+
 ## When a test fails
 
 1. Read the diff. It shows exactly what changed in the response Alexa receives.

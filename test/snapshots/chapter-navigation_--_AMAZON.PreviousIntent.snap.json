@@ -7,17 +7,17 @@
         "playBehavior": "REPLACE_ALL",
         "audioItem": {
           "stream": {
-            "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>",
+            "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>",
             "token": 1,
-            "offsetInMilliseconds": 81637970
+            "offsetInMilliseconds": 80177295
           },
           "metadata": {
-            "title": "Chapter 15 - Between Brethren",
-            "subtitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+            "title": "Epilogue - Falselight",
+            "subtitle": "The Lies of Locke Lamora",
             "art": {
               "sources": [
                 {
-                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
                   "widthPixels": 512,
                   "heightPixels": 512
                 }
@@ -26,7 +26,7 @@
             "backgroundImage": {
               "sources": [
                 {
-                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
                   "widthPixels": 1600,
                   "heightPixels": 900
                 }
@@ -40,16 +40,16 @@
   "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
   "sessionAttributes": {
     "userPlaySession": {
-      "id": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+      "id": "53180345-c96a-4c64-b6c5-94695453e38b",
       "userId": "f1d80007-ad96-4897-bd08-ac3b184b0c36",
       "libraryId": "ec19ca6c-0c6c-4f09-bac0-7317ac8f3181",
-      "libraryItemId": "10eb5463-cfce-4d84-9680-a9b36add5bfb",
-      "bookId": "2db034d0-9776-4854-90ba-c6b38ccdc977",
+      "libraryItemId": "95b7a24b-62e2-438a-ad9c-c41b991a7a32",
+      "bookId": "e8bf63a8-8329-4b0e-a2ff-5e9a28538ad6",
       "episodeId": null,
       "mediaType": "book",
       "mediaMetadata": {
-        "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
-        "subtitle": "Gentleman Bastards, Book 2",
+        "title": "The Lies of Locke Lamora",
+        "subtitle": "Gentleman Bastard, Book 1",
         "authors": [
           {
             "id": "413ae824-68d4-41e7-8291-f781e8a56faa",
@@ -61,20 +61,20 @@
         ],
         "series": [
           {
-            "id": "ae391e11-af4e-4416-bbd4-5815c2b21950",
-            "name": "Gentleman Bastard",
-            "sequence": null
+            "id": "045f0fd1-38f8-4d08-b64f-d6f1b8f1d06c",
+            "name": "Gentleman Bastard Sequence",
+            "sequence": "1"
           }
         ],
         "genres": [
-          "Fantasy Crime"
+          "Science Fiction & Fantasy"
         ],
-        "publishedYear": "2020",
+        "publishedYear": "2019",
         "publishedDate": null,
         "publisher": "Random House Audio",
-        "description": "In his highly acclaimed debut, The Lies of Locke Lamora, Scott Lynch took us on an adrenaline-fueled adventure with a band of daring thieves led by con artist extraordinaire Locke Lamora. Now, Lynch brings back his outrageous hero for a caper so death-defying, nothing short of a miracle will pull it off.\n\nAfter a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can't rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves.\n\nThis time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world. Its nine floors attract the wealthiest clientele - and to rise to the top, one must impress with good credit, amusing behavior...and excruciatingly impeccable play. For there is one cardinal rule, enforced by Requin, the house's cold-blooded master: It is death to cheat at any game at the Sinspire.\n\nBrazenly undeterred, Locke and Jean have orchestrated an elaborate plan to lie, trick, and swindle their way up the nine floors...straight to Requin's teeming vault. Under the cloak of false identities, they meticulously make their climb - until they are closer to the spoils than ever.\n\nBut someone in Tal Verrar has uncovered the duo's secret. Someone from their past who has every intention of making the impudent criminals pay for their sins. Now, it will take every ounce of cunning to save their mercenary souls. And even that may not be enough....",
-        "isbn": "9780593163429",
-        "asin": "0593163427",
+        "description": "<p><b>“Remarkable...Scott Lynch’s first novel, </b><b><i>The Lies of Locke Lamora, </i></b><b>exports the suspense and wit of a cleverly constructed crime caper into an exotic realm of fantasy, and the result is engagingly entertaining.” (</b><b><i>The Times</i></b><b>, London)</b> </p> <p>An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game - or die trying. </p> <p><b>Praise for </b><b><i>The Lies of Locke Lamora</i></b> </p> <p>“Fresh, original, and engrossing...gorgeously realized.” (George R. R. Martin) </p> <p>“Right now, in the full flush of a second reading, I think <i>The Lies of Locke Lamora</i> is probably in my top ten favorite books ever. Maybe my top five. If you haven’t read it, you should. If you have read it, you should probably read it again.” (Patrick Rothfuss, <i>New York Times</i> best-selling author of <i>The Name of the Wind</i>)</p> <p>“High-octane fantasy...a great swashbuckling yarn of a novel.” (Richard Morgan)</p>",
+        "isbn": "9780593163382",
+        "asin": "0593163389",
         "language": "English",
         "explicit": false,
         "abridged": false
@@ -82,183 +82,243 @@
       "chapters": [
         {
           "start": 0,
-          "end": 29.698,
+          "end": 29.767,
           "title": "Opening Credits",
           "id": 0
         },
         {
-          "start": 29.698,
-          "end": 395.993,
-          "title": "Prologue - A Strained Conversation",
+          "start": 29.767,
+          "end": 4599.153,
+          "title": "Prologue - The Boy Who Stole Too Much",
           "id": 1
         },
         {
-          "start": 395.993,
-          "end": 415.132,
-          "title": "PART I - Cards in the Hand",
+          "start": 4599.153,
+          "end": 4622.117,
+          "title": "PART I - Ambition",
           "id": 2
         },
         {
-          "start": 415.132,
-          "end": 5617.65,
-          "title": "Chapter 01 - Little Games",
+          "start": 4622.117,
+          "end": 9452.704,
+          "title": "Chapter 01 - The Don Salvara Game",
           "id": 3
         },
         {
-          "start": 5617.65,
-          "end": 8848.59,
-          "title": "Reminiscence - The Capa of Vel Virazzo",
+          "start": 9452.704,
+          "end": 10198.343,
+          "title": "Interlude - Locke Explains",
           "id": 4
         },
         {
-          "start": 8848.59,
-          "end": 12588.373,
-          "title": "Chapter 02 - Requin",
+          "start": 10198.343,
+          "end": 13810.764,
+          "title": "Chapter 02 - Second Touch at the Teeth Show",
           "id": 5
         },
         {
-          "start": 12588.373,
-          "end": 13891.477,
-          "title": "Reminiscence - Best Laid Plans",
+          "start": 13810.764,
+          "end": 16250.09,
+          "title": "Interlude - Locke Stays for Dinner",
           "id": 6
         },
         {
-          "start": 13891.477,
-          "end": 16889.034,
-          "title": "Chapter 03 - Warm Hospitality",
+          "start": 16250.09,
+          "end": 20540.046,
+          "title": "Chapter 03 - Imaginary Men",
           "id": 7
         },
         {
-          "start": 16889.034,
-          "end": 19252.384,
-          "title": "Reminiscence - Lady of the Glass Pylon",
+          "start": 20540.046,
+          "end": 23076.548,
+          "title": "Interlude - The Last Mistake",
           "id": 8
         },
         {
-          "start": 19252.384,
-          "end": 23556.318,
-          "title": "Chapter 04 - Blind Alliances",
+          "start": 23076.548,
+          "end": 23096.563,
+          "title": "PART II - Complication",
           "id": 9
         },
         {
-          "start": 23556.318,
-          "end": 27814.231,
-          "title": "Reminiscence - The Amusement War",
+          "start": 23096.563,
+          "end": 28725.127,
+          "title": "Chapter 04 - At the Court of Capa Barsavi",
           "id": 10
         },
         {
-          "start": 27814.231,
-          "end": 31395.979,
-          "title": "Chapter 05 - On a Clockwork River",
+          "start": 28725.127,
+          "end": 31645.965,
+          "title": "Interlude - The Boy Who Cried for a Corpse",
           "id": 11
         },
         {
-          "start": 31395.979,
-          "end": 33908.889,
-          "title": "Last Reminiscence - By Their Own Rope",
+          "start": 31645.965,
+          "end": 34837.733,
+          "title": "Chapter 05 - The Gray King",
           "id": 12
         },
         {
-          "start": 33908.889,
-          "end": 42119.581,
-          "title": "Chapter 06 - Balance of Trades",
+          "start": 34837.733,
+          "end": 36805.81,
+          "title": "Interlude - Jean Tannen",
           "id": 13
         },
         {
-          "start": 42119.581,
-          "end": 47368.73,
-          "title": "Chapter 07 - Casting Loose",
+          "start": 36805.81,
+          "end": 39573.977,
+          "title": "Chapter 06 - Limitations",
           "id": 14
         },
         {
-          "start": 47368.73,
-          "end": 47388.59,
-          "title": "PART II - Cards up the Sleeve",
+          "start": 39573.977,
+          "end": 41471.047,
+          "title": "Interlude - Brat Masterpieces",
           "id": 15
         },
         {
-          "start": 47388.59,
-          "end": 51069.364,
-          "title": "Chapter 08 - Summer's End",
+          "start": 41471.047,
+          "end": 43808.531,
+          "title": "Chapter 07 - Out the Window",
           "id": 16
         },
         {
-          "start": 51069.364,
-          "end": 54532.992,
-          "title": "Chapter 09 - The Poison Orchid",
+          "start": 43808.531,
+          "end": 44889.327,
+          "title": "Interlude - Up the River",
           "id": 17
         },
         {
-          "start": 54532.992,
-          "end": 59676.072,
-          "title": "Chapter 10 - All Souls in Peril",
+          "start": 44889.327,
+          "end": 47257.251,
+          "title": "Chapter 08 - The Funeral Cask",
           "id": 18
         },
         {
-          "start": 59676.072,
-          "end": 65100.904,
-          "title": "Chapter 11 - All Else, Truth",
+          "start": 47257.251,
+          "end": 48693.568,
+          "title": "Interlude - The Half-Crown War",
           "id": 19
         },
         {
-          "start": 65100.904,
-          "end": 71415.965,
-          "title": "Chapter 12 - Port Prodigal",
+          "start": 48693.568,
+          "end": 48711.865,
+          "title": "PART III - Revelation",
           "id": 20
         },
         {
-          "start": 71415.965,
-          "end": 77868.628,
-          "title": "Chapter 13 - Points of Decision",
+          "start": 48711.865,
+          "end": 50738.48,
+          "title": "Chapter 09 - Curious Tale/Countess A.Glass",
           "id": 21
         },
         {
-          "start": 77868.628,
-          "end": 77885.67,
-          "title": "PART III - Cards on the Table",
+          "start": 50738.48,
+          "end": 51260.209,
+          "title": "Interlude - The Schoolmaster of Roses",
           "id": 22
         },
         {
-          "start": 77885.67,
-          "end": 81637.97,
-          "title": "Chapter 14 - Scourging the Sea of Brass",
+          "start": 51260.209,
+          "end": 54306.063,
+          "title": "Chapter 10 - Teeth Lessons",
           "id": 23
         },
         {
-          "start": 81637.97,
-          "end": 85775.952,
-          "title": "Chapter 15 - Between Brethren",
+          "start": 54306.063,
+          "end": 54685.57,
+          "title": "Interlude - The Tale of the Old Handball Players",
           "id": 24
         },
         {
-          "start": 85775.952,
-          "end": 92017.917,
-          "title": "Chapter 16 - Settling Accounts",
+          "start": 54685.57,
+          "end": 57801.758,
+          "title": "Chapter 11 - At the Court of Capa Raza",
           "id": 25
         },
         {
-          "start": 92017.917,
-          "end": 93283.009,
-          "title": "Epilogue - Red Seas under Red Skies",
+          "start": 57801.758,
+          "end": 58728.489,
+          "title": "Interlude - The Lady of the Long Silence",
           "id": 26
         },
         {
-          "start": 93283.009,
-          "end": 93346.98,
-          "title": "Afterword",
+          "start": 58728.489,
+          "end": 58742.212,
+          "title": "PART IV - Desperate Improvisation",
           "id": 27
         },
         {
-          "start": 93346.98,
-          "end": 93384.063129,
-          "title": "End Credits",
+          "start": 58742.212,
+          "end": 61145.64,
+          "title": "Chapter 12 - The Fat Priest from Tal Verrar",
           "id": 28
+        },
+        {
+          "start": 61145.64,
+          "end": 61478.057,
+          "title": "Interlude - The White Iron Conjurers",
+          "id": 29
+        },
+        {
+          "start": 61478.057,
+          "end": 65366.331,
+          "title": "Chapter 13 - Orchids and Assassins",
+          "id": 30
+        },
+        {
+          "start": 65366.331,
+          "end": 68712.954,
+          "title": "Chapter 14 - Three Invitations",
+          "id": 31
+        },
+        {
+          "start": 68712.954,
+          "end": 69102.817,
+          "title": "Interlude - The Daughters of Camorr",
+          "id": 32
+        },
+        {
+          "start": 69102.817,
+          "end": 72686.701,
+          "title": "Chapter 15 - Spiderbite",
+          "id": 33
+        },
+        {
+          "start": 72686.701,
+          "end": 73086.711,
+          "title": "Interlude - The Throne in Ashes",
+          "id": 34
+        },
+        {
+          "start": 73086.711,
+          "end": 80123.634,
+          "title": "Chapter 16 - Justice Is Red",
+          "id": 35
+        },
+        {
+          "start": 80123.634,
+          "end": 80177.295,
+          "title": "Interlude - A Minor Prophecy",
+          "id": 36
+        },
+        {
+          "start": 80177.295,
+          "end": 81389.006,
+          "title": "Epilogue - Falselight",
+          "id": 37
+        },
+        {
+          "start": 81389.006,
+          "end": 81423.743129,
+          "title": "End Credits",
+          "id": 38
         }
       ],
-      "displayTitle": "Gentleman Bastard Book 2 - Red Seas under Red Skies",
+      "displayTitle": "The Lies of Locke Lamora",
       "displayAuthor": "Scott Lynch",
-      "coverPath": "/audiobooks/Scott Lynch/Red Seas under Red Skies/cover.jpg",
-      "duration": 93384.063129,
+      "coverPath": "/unorganized/01 The Lies of Locke Lamora/cover.jpg",
+      "duration": 81423.743129,
       "playMethod": 0,
       "mediaPlayer": "unknown",
       "deviceInfo": {
@@ -274,38 +334,38 @@
         "deviceName": "Amazon Echo"
       },
       "serverVersion": "2.36.0",
-      "date": "2026-09-02",
-      "dayOfWeek": "Wednesday",
+      "date": "2026-09-04",
+      "dayOfWeek": "Friday",
       "timeListening": 0,
-      "startTime": 84308.000324322,
-      "currentTime": 85775.952,
+      "startTime": 81389.233038136,
+      "currentTime": 81389.233038136,
       "startedAt":0,
       "updatedAt":0,
       "audioTracks": [
         {
           "index": 1,
-          "ino": "4721615",
+          "ino": "39190583",
           "metadata": {
-            "filename": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+            "filename": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
             "ext": ".m4b",
-            "path": "/audiobooks/Scott Lynch/Red Seas under Red Skies/Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
-            "relPath": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
-            "size": 1482360757,
-            "mtimeMs": 1775797283514,
-            "ctimeMs": 1778018545122,
-            "birthtimeMs": 1775797254337
+            "path": "/unorganized/01 The Lies of Locke Lamora/Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+            "relPath": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+            "size": 1292473440,
+            "mtimeMs": 1758682691855,
+            "ctimeMs": 1766641084713,
+            "birthtimeMs": 1758682657867
           },
-          "addedAt": 1778018566434,
+          "addedAt": 1758682703468,
           "updatedAt":0,
           "trackNumFromMeta": 1,
           "discNumFromMeta": null,
-          "trackNumFromFilename": 2,
+          "trackNumFromFilename": 1,
           "discNumFromFilename": null,
           "manuallyVerified": false,
           "exclude": false,
           "error": null,
           "format": "QuickTime / MOV",
-          "duration": 93384.063129,
+          "duration": 81423.743129,
           "bitRate": 125588,
           "language": "und",
           "codec": "aac",
@@ -315,226 +375,286 @@
           "chapters": [
             {
               "start": 0,
-              "end": 29.698,
+              "end": 29.767,
               "title": "Opening Credits",
               "id": 0
             },
             {
-              "start": 29.698,
-              "end": 395.993,
-              "title": "Prologue - A Strained Conversation",
+              "start": 29.767,
+              "end": 4599.153,
+              "title": "Prologue - The Boy Who Stole Too Much",
               "id": 1
             },
             {
-              "start": 395.993,
-              "end": 415.132,
-              "title": "PART I - Cards in the Hand",
+              "start": 4599.153,
+              "end": 4622.117,
+              "title": "PART I - Ambition",
               "id": 2
             },
             {
-              "start": 415.132,
-              "end": 5617.65,
-              "title": "Chapter 01 - Little Games",
+              "start": 4622.117,
+              "end": 9452.704,
+              "title": "Chapter 01 - The Don Salvara Game",
               "id": 3
             },
             {
-              "start": 5617.65,
-              "end": 8848.59,
-              "title": "Reminiscence - The Capa of Vel Virazzo",
+              "start": 9452.704,
+              "end": 10198.343,
+              "title": "Interlude - Locke Explains",
               "id": 4
             },
             {
-              "start": 8848.59,
-              "end": 12588.373,
-              "title": "Chapter 02 - Requin",
+              "start": 10198.343,
+              "end": 13810.764,
+              "title": "Chapter 02 - Second Touch at the Teeth Show",
               "id": 5
             },
             {
-              "start": 12588.373,
-              "end": 13891.477,
-              "title": "Reminiscence - Best Laid Plans",
+              "start": 13810.764,
+              "end": 16250.09,
+              "title": "Interlude - Locke Stays for Dinner",
               "id": 6
             },
             {
-              "start": 13891.477,
-              "end": 16889.034,
-              "title": "Chapter 03 - Warm Hospitality",
+              "start": 16250.09,
+              "end": 20540.046,
+              "title": "Chapter 03 - Imaginary Men",
               "id": 7
             },
             {
-              "start": 16889.034,
-              "end": 19252.384,
-              "title": "Reminiscence - Lady of the Glass Pylon",
+              "start": 20540.046,
+              "end": 23076.548,
+              "title": "Interlude - The Last Mistake",
               "id": 8
             },
             {
-              "start": 19252.384,
-              "end": 23556.318,
-              "title": "Chapter 04 - Blind Alliances",
+              "start": 23076.548,
+              "end": 23096.563,
+              "title": "PART II - Complication",
               "id": 9
             },
             {
-              "start": 23556.318,
-              "end": 27814.231,
-              "title": "Reminiscence - The Amusement War",
+              "start": 23096.563,
+              "end": 28725.127,
+              "title": "Chapter 04 - At the Court of Capa Barsavi",
               "id": 10
             },
             {
-              "start": 27814.231,
-              "end": 31395.979,
-              "title": "Chapter 05 - On a Clockwork River",
+              "start": 28725.127,
+              "end": 31645.965,
+              "title": "Interlude - The Boy Who Cried for a Corpse",
               "id": 11
             },
             {
-              "start": 31395.979,
-              "end": 33908.889,
-              "title": "Last Reminiscence - By Their Own Rope",
+              "start": 31645.965,
+              "end": 34837.733,
+              "title": "Chapter 05 - The Gray King",
               "id": 12
             },
             {
-              "start": 33908.889,
-              "end": 42119.581,
-              "title": "Chapter 06 - Balance of Trades",
+              "start": 34837.733,
+              "end": 36805.81,
+              "title": "Interlude - Jean Tannen",
               "id": 13
             },
             {
-              "start": 42119.581,
-              "end": 47368.73,
-              "title": "Chapter 07 - Casting Loose",
+              "start": 36805.81,
+              "end": 39573.977,
+              "title": "Chapter 06 - Limitations",
               "id": 14
             },
             {
-              "start": 47368.73,
-              "end": 47388.59,
-              "title": "PART II - Cards up the Sleeve",
+              "start": 39573.977,
+              "end": 41471.047,
+              "title": "Interlude - Brat Masterpieces",
               "id": 15
             },
             {
-              "start": 47388.59,
-              "end": 51069.364,
-              "title": "Chapter 08 - Summer's End",
+              "start": 41471.047,
+              "end": 43808.531,
+              "title": "Chapter 07 - Out the Window",
               "id": 16
             },
             {
-              "start": 51069.364,
-              "end": 54532.992,
-              "title": "Chapter 09 - The Poison Orchid",
+              "start": 43808.531,
+              "end": 44889.327,
+              "title": "Interlude - Up the River",
               "id": 17
             },
             {
-              "start": 54532.992,
-              "end": 59676.072,
-              "title": "Chapter 10 - All Souls in Peril",
+              "start": 44889.327,
+              "end": 47257.251,
+              "title": "Chapter 08 - The Funeral Cask",
               "id": 18
             },
             {
-              "start": 59676.072,
-              "end": 65100.904,
-              "title": "Chapter 11 - All Else, Truth",
+              "start": 47257.251,
+              "end": 48693.568,
+              "title": "Interlude - The Half-Crown War",
               "id": 19
             },
             {
-              "start": 65100.904,
-              "end": 71415.965,
-              "title": "Chapter 12 - Port Prodigal",
+              "start": 48693.568,
+              "end": 48711.865,
+              "title": "PART III - Revelation",
               "id": 20
             },
             {
-              "start": 71415.965,
-              "end": 77868.628,
-              "title": "Chapter 13 - Points of Decision",
+              "start": 48711.865,
+              "end": 50738.48,
+              "title": "Chapter 09 - Curious Tale/Countess A.Glass",
               "id": 21
             },
             {
-              "start": 77868.628,
-              "end": 77885.67,
-              "title": "PART III - Cards on the Table",
+              "start": 50738.48,
+              "end": 51260.209,
+              "title": "Interlude - The Schoolmaster of Roses",
               "id": 22
             },
             {
-              "start": 77885.67,
-              "end": 81637.97,
-              "title": "Chapter 14 - Scourging the Sea of Brass",
+              "start": 51260.209,
+              "end": 54306.063,
+              "title": "Chapter 10 - Teeth Lessons",
               "id": 23
             },
             {
-              "start": 81637.97,
-              "end": 85775.952,
-              "title": "Chapter 15 - Between Brethren",
+              "start": 54306.063,
+              "end": 54685.57,
+              "title": "Interlude - The Tale of the Old Handball Players",
               "id": 24
             },
             {
-              "start": 85775.952,
-              "end": 92017.917,
-              "title": "Chapter 16 - Settling Accounts",
+              "start": 54685.57,
+              "end": 57801.758,
+              "title": "Chapter 11 - At the Court of Capa Raza",
               "id": 25
             },
             {
-              "start": 92017.917,
-              "end": 93283.009,
-              "title": "Epilogue - Red Seas under Red Skies",
+              "start": 57801.758,
+              "end": 58728.489,
+              "title": "Interlude - The Lady of the Long Silence",
               "id": 26
             },
             {
-              "start": 93283.009,
-              "end": 93346.98,
-              "title": "Afterword",
+              "start": 58728.489,
+              "end": 58742.212,
+              "title": "PART IV - Desperate Improvisation",
               "id": 27
             },
             {
-              "start": 93346.98,
-              "end": 93384.063129,
-              "title": "End Credits",
+              "start": 58742.212,
+              "end": 61145.64,
+              "title": "Chapter 12 - The Fat Priest from Tal Verrar",
               "id": 28
+            },
+            {
+              "start": 61145.64,
+              "end": 61478.057,
+              "title": "Interlude - The White Iron Conjurers",
+              "id": 29
+            },
+            {
+              "start": 61478.057,
+              "end": 65366.331,
+              "title": "Chapter 13 - Orchids and Assassins",
+              "id": 30
+            },
+            {
+              "start": 65366.331,
+              "end": 68712.954,
+              "title": "Chapter 14 - Three Invitations",
+              "id": 31
+            },
+            {
+              "start": 68712.954,
+              "end": 69102.817,
+              "title": "Interlude - The Daughters of Camorr",
+              "id": 32
+            },
+            {
+              "start": 69102.817,
+              "end": 72686.701,
+              "title": "Chapter 15 - Spiderbite",
+              "id": 33
+            },
+            {
+              "start": 72686.701,
+              "end": 73086.711,
+              "title": "Interlude - The Throne in Ashes",
+              "id": 34
+            },
+            {
+              "start": 73086.711,
+              "end": 80123.634,
+              "title": "Chapter 16 - Justice Is Red",
+              "id": 35
+            },
+            {
+              "start": 80123.634,
+              "end": 80177.295,
+              "title": "Interlude - A Minor Prophecy",
+              "id": 36
+            },
+            {
+              "start": 80177.295,
+              "end": 81389.006,
+              "title": "Epilogue - Falselight",
+              "id": 37
+            },
+            {
+              "start": 81389.006,
+              "end": 81423.743129,
+              "title": "End Credits",
+              "id": 38
             }
           ],
           "embeddedCoverArt": "mjpeg",
           "metaTags": {
-            "tagAlbum": "02 Red Seas under Red Skies",
+            "tagAlbum": "01 The Lies of Locke Lamora",
             "tagArtist": "Scott Lynch",
             "tagGenre": "Fantasy Crime",
-            "tagTitle": "Red Seas under Red Skies",
+            "tagTitle": "The Lies of Locke Lamora",
             "tagGrouping": "Gentleman Bastard",
             "tagTrack": "1/1",
             "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
-            "tagDate": "2007",
+            "tagDate": "2006",
             "tagComposer": "Michael Page",
             "tagComment": "Unabridged",
-            "tagDescription": "After a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can’t rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves. This time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world.",
+            "tagDescription": "An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game.",
             "tagEncoder": "inAudible 1.97"
           },
           "mimeType": "audio/mp4",
-          "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+          "title": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
           "startOffset": 0,
-          "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
+          "contentUrl": "/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583"
         }
       ]
     },
-    "userPlaySessionID": "bd7014bc-869b-427f-bc5f-00ff6706fa5b",
+    "userPlaySessionID": "53180345-c96a-4c64-b6c5-94695453e38b",
     "currentTrack": {
       "index": 1,
-      "ino": "4721615",
+      "ino": "39190583",
       "metadata": {
-        "filename": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+        "filename": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
         "ext": ".m4b",
-        "path": "/audiobooks/Scott Lynch/Red Seas under Red Skies/Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
-        "relPath": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
-        "size": 1482360757,
-        "mtimeMs": 1775797283514,
-        "ctimeMs": 1778018545122,
-        "birthtimeMs": 1775797254337
+        "path": "/unorganized/01 The Lies of Locke Lamora/Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+        "relPath": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
+        "size": 1292473440,
+        "mtimeMs": 1758682691855,
+        "ctimeMs": 1766641084713,
+        "birthtimeMs": 1758682657867
       },
-      "addedAt": 1778018566434,
+      "addedAt": 1758682703468,
       "updatedAt":0,
       "trackNumFromMeta": 1,
       "discNumFromMeta": null,
-      "trackNumFromFilename": 2,
+      "trackNumFromFilename": 1,
       "discNumFromFilename": null,
       "manuallyVerified": false,
       "exclude": false,
       "error": null,
       "format": "QuickTime / MOV",
-      "duration": 93384.063129,
+      "duration": 81423.743129,
       "bitRate": 125588,
       "language": "und",
       "codec": "aac",
@@ -544,204 +664,264 @@
       "chapters": [
         {
           "start": 0,
-          "end": 29.698,
+          "end": 29.767,
           "title": "Opening Credits",
           "id": 0
         },
         {
-          "start": 29.698,
-          "end": 395.993,
-          "title": "Prologue - A Strained Conversation",
+          "start": 29.767,
+          "end": 4599.153,
+          "title": "Prologue - The Boy Who Stole Too Much",
           "id": 1
         },
         {
-          "start": 395.993,
-          "end": 415.132,
-          "title": "PART I - Cards in the Hand",
+          "start": 4599.153,
+          "end": 4622.117,
+          "title": "PART I - Ambition",
           "id": 2
         },
         {
-          "start": 415.132,
-          "end": 5617.65,
-          "title": "Chapter 01 - Little Games",
+          "start": 4622.117,
+          "end": 9452.704,
+          "title": "Chapter 01 - The Don Salvara Game",
           "id": 3
         },
         {
-          "start": 5617.65,
-          "end": 8848.59,
-          "title": "Reminiscence - The Capa of Vel Virazzo",
+          "start": 9452.704,
+          "end": 10198.343,
+          "title": "Interlude - Locke Explains",
           "id": 4
         },
         {
-          "start": 8848.59,
-          "end": 12588.373,
-          "title": "Chapter 02 - Requin",
+          "start": 10198.343,
+          "end": 13810.764,
+          "title": "Chapter 02 - Second Touch at the Teeth Show",
           "id": 5
         },
         {
-          "start": 12588.373,
-          "end": 13891.477,
-          "title": "Reminiscence - Best Laid Plans",
+          "start": 13810.764,
+          "end": 16250.09,
+          "title": "Interlude - Locke Stays for Dinner",
           "id": 6
         },
         {
-          "start": 13891.477,
-          "end": 16889.034,
-          "title": "Chapter 03 - Warm Hospitality",
+          "start": 16250.09,
+          "end": 20540.046,
+          "title": "Chapter 03 - Imaginary Men",
           "id": 7
         },
         {
-          "start": 16889.034,
-          "end": 19252.384,
-          "title": "Reminiscence - Lady of the Glass Pylon",
+          "start": 20540.046,
+          "end": 23076.548,
+          "title": "Interlude - The Last Mistake",
           "id": 8
         },
         {
-          "start": 19252.384,
-          "end": 23556.318,
-          "title": "Chapter 04 - Blind Alliances",
+          "start": 23076.548,
+          "end": 23096.563,
+          "title": "PART II - Complication",
           "id": 9
         },
         {
-          "start": 23556.318,
-          "end": 27814.231,
-          "title": "Reminiscence - The Amusement War",
+          "start": 23096.563,
+          "end": 28725.127,
+          "title": "Chapter 04 - At the Court of Capa Barsavi",
           "id": 10
         },
         {
-          "start": 27814.231,
-          "end": 31395.979,
-          "title": "Chapter 05 - On a Clockwork River",
+          "start": 28725.127,
+          "end": 31645.965,
+          "title": "Interlude - The Boy Who Cried for a Corpse",
           "id": 11
         },
         {
-          "start": 31395.979,
-          "end": 33908.889,
-          "title": "Last Reminiscence - By Their Own Rope",
+          "start": 31645.965,
+          "end": 34837.733,
+          "title": "Chapter 05 - The Gray King",
           "id": 12
         },
         {
-          "start": 33908.889,
-          "end": 42119.581,
-          "title": "Chapter 06 - Balance of Trades",
+          "start": 34837.733,
+          "end": 36805.81,
+          "title": "Interlude - Jean Tannen",
           "id": 13
         },
         {
-          "start": 42119.581,
-          "end": 47368.73,
-          "title": "Chapter 07 - Casting Loose",
+          "start": 36805.81,
+          "end": 39573.977,
+          "title": "Chapter 06 - Limitations",
           "id": 14
         },
         {
-          "start": 47368.73,
-          "end": 47388.59,
-          "title": "PART II - Cards up the Sleeve",
+          "start": 39573.977,
+          "end": 41471.047,
+          "title": "Interlude - Brat Masterpieces",
           "id": 15
         },
         {
-          "start": 47388.59,
-          "end": 51069.364,
-          "title": "Chapter 08 - Summer's End",
+          "start": 41471.047,
+          "end": 43808.531,
+          "title": "Chapter 07 - Out the Window",
           "id": 16
         },
         {
-          "start": 51069.364,
-          "end": 54532.992,
-          "title": "Chapter 09 - The Poison Orchid",
+          "start": 43808.531,
+          "end": 44889.327,
+          "title": "Interlude - Up the River",
           "id": 17
         },
         {
-          "start": 54532.992,
-          "end": 59676.072,
-          "title": "Chapter 10 - All Souls in Peril",
+          "start": 44889.327,
+          "end": 47257.251,
+          "title": "Chapter 08 - The Funeral Cask",
           "id": 18
         },
         {
-          "start": 59676.072,
-          "end": 65100.904,
-          "title": "Chapter 11 - All Else, Truth",
+          "start": 47257.251,
+          "end": 48693.568,
+          "title": "Interlude - The Half-Crown War",
           "id": 19
         },
         {
-          "start": 65100.904,
-          "end": 71415.965,
-          "title": "Chapter 12 - Port Prodigal",
+          "start": 48693.568,
+          "end": 48711.865,
+          "title": "PART III - Revelation",
           "id": 20
         },
         {
-          "start": 71415.965,
-          "end": 77868.628,
-          "title": "Chapter 13 - Points of Decision",
+          "start": 48711.865,
+          "end": 50738.48,
+          "title": "Chapter 09 - Curious Tale/Countess A.Glass",
           "id": 21
         },
         {
-          "start": 77868.628,
-          "end": 77885.67,
-          "title": "PART III - Cards on the Table",
+          "start": 50738.48,
+          "end": 51260.209,
+          "title": "Interlude - The Schoolmaster of Roses",
           "id": 22
         },
         {
-          "start": 77885.67,
-          "end": 81637.97,
-          "title": "Chapter 14 - Scourging the Sea of Brass",
+          "start": 51260.209,
+          "end": 54306.063,
+          "title": "Chapter 10 - Teeth Lessons",
           "id": 23
         },
         {
-          "start": 81637.97,
-          "end": 85775.952,
-          "title": "Chapter 15 - Between Brethren",
+          "start": 54306.063,
+          "end": 54685.57,
+          "title": "Interlude - The Tale of the Old Handball Players",
           "id": 24
         },
         {
-          "start": 85775.952,
-          "end": 92017.917,
-          "title": "Chapter 16 - Settling Accounts",
+          "start": 54685.57,
+          "end": 57801.758,
+          "title": "Chapter 11 - At the Court of Capa Raza",
           "id": 25
         },
         {
-          "start": 92017.917,
-          "end": 93283.009,
-          "title": "Epilogue - Red Seas under Red Skies",
+          "start": 57801.758,
+          "end": 58728.489,
+          "title": "Interlude - The Lady of the Long Silence",
           "id": 26
         },
         {
-          "start": 93283.009,
-          "end": 93346.98,
-          "title": "Afterword",
+          "start": 58728.489,
+          "end": 58742.212,
+          "title": "PART IV - Desperate Improvisation",
           "id": 27
         },
         {
-          "start": 93346.98,
-          "end": 93384.063129,
-          "title": "End Credits",
+          "start": 58742.212,
+          "end": 61145.64,
+          "title": "Chapter 12 - The Fat Priest from Tal Verrar",
           "id": 28
+        },
+        {
+          "start": 61145.64,
+          "end": 61478.057,
+          "title": "Interlude - The White Iron Conjurers",
+          "id": 29
+        },
+        {
+          "start": 61478.057,
+          "end": 65366.331,
+          "title": "Chapter 13 - Orchids and Assassins",
+          "id": 30
+        },
+        {
+          "start": 65366.331,
+          "end": 68712.954,
+          "title": "Chapter 14 - Three Invitations",
+          "id": 31
+        },
+        {
+          "start": 68712.954,
+          "end": 69102.817,
+          "title": "Interlude - The Daughters of Camorr",
+          "id": 32
+        },
+        {
+          "start": 69102.817,
+          "end": 72686.701,
+          "title": "Chapter 15 - Spiderbite",
+          "id": 33
+        },
+        {
+          "start": 72686.701,
+          "end": 73086.711,
+          "title": "Interlude - The Throne in Ashes",
+          "id": 34
+        },
+        {
+          "start": 73086.711,
+          "end": 80123.634,
+          "title": "Chapter 16 - Justice Is Red",
+          "id": 35
+        },
+        {
+          "start": 80123.634,
+          "end": 80177.295,
+          "title": "Interlude - A Minor Prophecy",
+          "id": 36
+        },
+        {
+          "start": 80177.295,
+          "end": 81389.006,
+          "title": "Epilogue - Falselight",
+          "id": 37
+        },
+        {
+          "start": 81389.006,
+          "end": 81423.743129,
+          "title": "End Credits",
+          "id": 38
         }
       ],
       "embeddedCoverArt": "mjpeg",
       "metaTags": {
-        "tagAlbum": "02 Red Seas under Red Skies",
+        "tagAlbum": "01 The Lies of Locke Lamora",
         "tagArtist": "Scott Lynch",
         "tagGenre": "Fantasy Crime",
-        "tagTitle": "Red Seas under Red Skies",
+        "tagTitle": "The Lies of Locke Lamora",
         "tagGrouping": "Gentleman Bastard",
         "tagTrack": "1/1",
         "tagAlbumArtist": "Scott Lynch (Gentleman Bastard)",
-        "tagDate": "2007",
+        "tagDate": "2006",
         "tagComposer": "Michael Page",
         "tagComment": "Unabridged",
-        "tagDescription": "After a brutal battle with the underworld that nearly destroyed him, Locke and his trusted sidekick, Jean, fled the island city of their birth and landed on the exotic shores of Tal Verrar to nurse their wounds. But even at this westernmost edge of civilization, they can’t rest for long - and are soon back to what they do best: stealing from the undeserving rich and pocketing the proceeds for themselves. This time, however, they have targeted the grandest prize of all: the Sinspire, the most exclusive and heavily guarded gambling house in the world.",
+        "tagDescription": "An orphan’s life is harsh - and often short - in the mysterious island city of Camorr. But young Locke Lamora dodges death and slavery, becoming a thief under the tutelage of a gifted con artist. As leader of the band of light-fingered brothers known as the Gentleman Bastards, Locke is soon infamous, fooling even the underworld’s most feared ruler. But in the shadows lurks someone still more ambitious and deadly. Faced with a bloody coup that threatens to destroy everyone and everything that holds meaning in his mercenary life, Locke vows to beat the enemy at his own brutal game.",
         "tagEncoder": "inAudible 1.97"
       },
       "mimeType": "audio/mp4",
-      "title": "Gentleman Bastard Book 2 - Red Seas under Red Skies.m4b",
+      "title": "Gentleman Bastard Book 1 - The Lies of Locke Lamora.m4b",
       "startOffset": 0,
-      "contentUrl": "/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615"
+      "contentUrl": "/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583"
     },
     "amazonToken": 1,
     "currentTrackIndex": 1,
-    "offsetInMilliseconds": 85775952,
+    "offsetInMilliseconds": 81389233.03813599,
     "nextStreamEnqueued": false,
-    "coverUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
-    "playUrl": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/file/4721615?token=<token>"
+    "coverUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
+    "playUrl": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>"
   }
 }

@@ -62,9 +62,35 @@ const scenarios = [
   },
   {
     name: 'device-buttons',
+    // Device buttons on an Echo Show arrive as PlaybackController events, which
+    // Alexa sends without session attributes. They only make sense once
+    // something is playing, so establish that first -- pressing them cold is
+    // covered separately by the two dedicated tests in skill.test.js.
+    //
+    // PlayCommandIssued emits a Play directive with an empty stream: its
+    // .addAudioPlayerPlayDirective() call has every argument commented out.
+    // Pinned by "KNOWN BUG: device Play button emits an empty audio stream",
+    // so exempted here rather than weakening the assertion everywhere.
+    expectMalformedStream: ['PlaybackController.PlayCommandIssued'],
     steps: [
-      { label: 'PlaybackController.PlayCommandIssued', make: () => A.playbackController('PlayCommandIssued') },
+      { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
+      { label: 'PlaybackController.PlayCommandIssued', make: (a, p) => A.playbackController('PlayCommandIssued', a, p) },
+      { label: 'PlaybackController.PauseCommandIssued', make: (a, p) => A.playbackController('PauseCommandIssued', a, p) },
       { label: 'PlaybackController.NextCommandIssued', make: (a, p) => A.playbackController('NextCommandIssued', a, p) },
+      { label: 'PlaybackController.PreviousCommandIssued', make: (a, p) => A.playbackController('PreviousCommandIssued', a, p) },
+    ],
+  },
+  {
+    name: 'audio-player-events',
+    // What Alexa sends while a book is actually playing. AudioPlayerEventHandler
+    // is ~90 lines that never ran under test, and it is what advances tracks and
+    // reports progress back to Audiobookshelf during real listening.
+    steps: [
+      { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
+      { label: 'AudioPlayer.PlaybackStarted', make: (a, p) => A.audioPlayer('PlaybackStarted', p || {}, a) },
+      { label: 'AudioPlayer.PlaybackNearlyFinished', make: (a, p) => A.audioPlayer('PlaybackNearlyFinished', p || {}, a) },
+      { label: 'AudioPlayer.PlaybackStopped', make: (a, p) => A.audioPlayer('PlaybackStopped', p || {}, a) },
+      { label: 'AudioPlayer.PlaybackFinished', make: (a, p) => A.audioPlayer('PlaybackFinished', p || {}, a) },
     ],
   },
   {
