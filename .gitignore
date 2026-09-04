@@ -3,3 +3,5 @@ lambda/config.js
 config.js
 .ask/
 .env
+
+.claude/
