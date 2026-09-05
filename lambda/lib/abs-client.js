@@ -76,12 +76,12 @@ function startUserPlaySession(libraryID, handlerInput) {
       deviceInfo: deviceInfo,
       forceDirectPlay: false,
       forceTranscode: false,
+      // Only what Alexa's AudioPlayer can actually decode. Claiming FLAC or
+      // AIFF invites ABS to direct-play a file the device then fails on.
       supportedMimeTypes: [
-        "audio/flac",
         "audio/mpeg",
         "audio/mp4",
-        "audio/aac",
-        "audio/x-aiff"
+        "audio/aac"
       ],
       mediaPlayer: "unknown"
     }
