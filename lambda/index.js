@@ -1528,7 +1528,24 @@ const AudioPlayerEventHandler = {
             attributes.nextStreamEnqueued = false
             updateLocalSessionAttributes(attributes)
           } else if (userPlaySession && currentBookTime !== undefined) {
-            if (closePlaybackProgress(userPlaySession, currentBookTime)) {
+            // A stream that failed did not play, so the offset it reports is
+            // not evidence the listener moved -- Alexa reports 0 for a stream
+            // it never started. Saving that closed a 22-hour audiobook at the
+            // beginning after a transient 502 from the media server.
+            //
+            // A failed stream can therefore only ever confirm the position
+            // already known, never an earlier one. The cost is that a backward
+            // seek whose stream never started keeps the pre-seek position,
+            // which the listener can simply repeat; the alternative loses their
+            // place in the book entirely.
+            const knownBookTime = Number(userPlaySession.currentTime);
+            const safeBookTime = Number.isFinite(knownBookTime)
+              ? Math.max(currentBookTime, knownBookTime)
+              : currentBookTime;
+            if (safeBookTime !== currentBookTime) {
+              console.log(`PlaybackFailed: ignoring a reported position of ${currentBookTime} behind the known ${safeBookTime}`)
+            }
+            if (closePlaybackProgress(userPlaySession, safeBookTime)) {
               clearAllMemory(handlerInput)
             } else if (attributes) {
               attributes.pendingClose = true;

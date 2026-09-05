@@ -617,6 +617,37 @@ describe('skill behaviour', () => {
       `listening time ${syncs[0].body.timeListened} exceeds the 45 seconds of book travelled`);
   });
 
+  // A transient 502 from the media server handed Alexa an HTML error page
+  // instead of audio. The device failed the stream and reported offset 0, and
+  // that 0 was written to ABS -- closing a 22-hour audiobook at the beginning
+  // and losing the listener's place.
+  test('a failed stream cannot rewind the book', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    const startedAt = parsePlaybackToken(player.token);
+    assert.ok(player.offsetInMilliseconds > 0,
+      'this fixture must start mid-book for the test to mean anything');
+    await srv.clearRequests();
+
+    // The device could not play the stream and reports nothing useful.
+    await invoke(skill, audioPlayer('PlaybackFailed', {
+      token: player.token,
+      offsetInMilliseconds: 0,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_INTERNAL_DEVICE_ERROR' },
+    }));
+
+    const writes = (await srv.getRequests()).filter((request) =>
+      /\/(sync|close)$/.test(request.url) || request.url.startsWith('/api/me/progress/'));
+    assert.ok(writes.length > 0, 'a failed stream should still settle the session');
+    for (const write of writes) {
+      assert.ok(write.body.currentTime > 0,
+        `a failed stream wrote currentTime=${write.body.currentTime}, sending the listener to the start of ${startedAt.libraryItemId}`);
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
