@@ -680,6 +680,49 @@ describe('skill behaviour', () => {
     }
   });
 
+  // Alexa reports an offset measured from the start of the track, so turning it
+  // into a book position needs to know where that track began. That used to come
+  // from the item's current track list, which is the wrong authority: it
+  // describes the book as it is now, not as the playing stream was built. The
+  // token carries it instead.
+  test('a book position comes from the stream token, not the item track list', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+
+    // Track 3 of Dune begins 3048.072s in per the item; pretend the stream was
+    // built when it began somewhere else, as a re-split of the book would do.
+    const relaidOut = {
+      ...dune,
+      audioTracks: dune.audioTracks.map((track) =>
+        (track.index === 3 ? { ...track, startOffset: 9999 } : track)),
+    };
+    const token = createPlaybackToken(relaidOut, 3);
+    assert.strictEqual(parsePlaybackToken(token).trackStart, 9999);
+
+    await srv.restartAbs();     // no play session: forces the sessionless path
+    try {
+      const cold = loadSkill();
+      await srv.clearRequests();
+      await invoke(cold, audioPlayer('PlaybackFailed', {
+        token,
+        offsetInMilliseconds: 61000,
+        playerActivity: 'IDLE',
+        error: { type: 'MEDIA_ERROR_INTERNAL_DEVICE_ERROR' },
+      }));
+
+      const progress = (await srv.getRequests()).filter((request) =>
+        request.method === 'PATCH' && request.url.startsWith('/api/me/progress/'));
+      assert.strictEqual(progress.length, 1);
+      assert.ok(Math.abs(progress[0].body.currentTime - (9999 + 61)) < 0.001,
+        `used ${progress[0].body.currentTime}; the token said the track starts at 9999`);
+      assert.strictEqual(progress[0].body.duration, dune.duration,
+        'the book duration should come from the token too');
+    } finally {
+      await srv.restoreAbsSessions();
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
