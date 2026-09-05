@@ -97,6 +97,26 @@ the session count unchanged, while open + sync `timeListened: 130` + close
 `timeListened: 0` produced a row reading 130 s. So listening time accumulates
 across syncs, and the close does not need to carry any of it.
 
+### Transcoding means HLS, and only HLS
+
+`POST /api/items/<id>/play` answers with `playMethod: 0` and the original file
+when it direct-plays, and `playMethod: 2` with
+`application/vnd.apple.mpegurl` pointing at `/hls/<id>/output.m3u8` when it
+transcodes. There is no third option — no way to ask for a plain MP3 stream.
+Both routes to a transcode land on HLS: setting `forceTranscode: true`, and
+declaring a `supportedMimeTypes` list the file does not match.
+
+Echo devices would not play the HLS stream, so the skill sets
+`forceDirectPlay: true`. That flag **overrides `supportedMimeTypes` entirely** —
+ABS hands over the original file whatever the declared list says, verified by
+asking for direct play while declaring only `audio/mpeg` for an `audio/mp4`
+file. The mime list is therefore advisory while that flag is set.
+
+The HLS playlist itself is served fine — `200`, valid `#EXTM3U`, 6-second
+segments, and no authentication required at all, so an unauthenticated URL
+handed to a device would fetch. Whatever stops Echo devices playing it is
+further along than fetching the playlist.
+
 ### `PATCH /api/me/progress/:libraryItemId` needs no session
 
 Idempotent, opens nothing, and creates no listening-history entry. It is the

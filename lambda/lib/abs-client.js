@@ -74,10 +74,16 @@ function startUserPlaySession(libraryID, handlerInput) {
     }
     let bodyParameters = {
       deviceInfo: deviceInfo,
-      forceDirectPlay: false,
+      // ABS has exactly one transcode target: HLS. Echo devices will not play
+      // the HLS stream it produces, so a transcode is never a useful answer
+      // here -- better to be handed the original file and fail loudly than to
+      // be handed a playlist that silently does nothing.
+      forceDirectPlay: true,
       forceTranscode: false,
-      // Only what Alexa's AudioPlayer can actually decode. Claiming FLAC or
-      // AIFF invites ABS to direct-play a file the device then fails on.
+      // Advisory only while forceDirectPlay is set, which overrides it: ABS
+      // direct-plays whatever the file is regardless of what is declared here.
+      // Kept accurate for the day that flag comes off. Alexa's AudioPlayer
+      // decodes these three and neither FLAC nor AIFF.
       supportedMimeTypes: [
         "audio/mpeg",
         "audio/mp4",
