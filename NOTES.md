@@ -108,27 +108,6 @@ Verified directly: a `PATCH` left the session count unchanged.
 Send it the same auth headers as every other call. A media URL authenticates
 with `?token=<api key>`; without it the server answers 401, with it 206.
 
-### A proxy in front of the server can fail the media path on its own
-
-Two failures seen, with different levels of certainty.
-
-**Rate limiting — confirmed.** Around 150 API requests in a few seconds drew a
-`403` from the proxy on *every* endpoint, media and unauthenticated cover art
-included, so it takes playback down and not just the API. It cleared by itself in
-minutes. The actual threshold was never measured: 61 requests spaced 350 ms apart
-did not trip it, 150 in a burst did, and the limit is somewhere in between. Do
-not read 350 ms as a safe rate — it is only a spacing that happened to work
-once. Stop on the first `403` rather than trusting any interval.
-
-**A 502 on the media endpoint — cause not established.** Once, a media URL
-returned a `502` with an HTML error page while the API kept answering `200`, and
-it recovered on its own. Alexa reports being handed that page as
-`MEDIA_ERROR_INTERNAL_DEVICE_ERROR`, which is indistinguishable from a device
-fault, so it is worth checking the URL directly before blaming the device. But a
-proxy returns `502` when the *origin* failed, and the server had been restarted
-several times that session, so this may have been the server rather than the
-proxy. One observation, not a diagnosis.
-
 ## Deploying
 
 Interaction-model builds are asynchronous and finish well after the deploy
