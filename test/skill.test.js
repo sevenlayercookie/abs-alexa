@@ -648,6 +648,38 @@ describe('skill behaviour', () => {
     }
   });
 
+  // Seen on a device: one PlaybackFailed correctly preserved the position, then
+  // a second arrived on a cold container a second later, took the sessionless
+  // path, and reset the book to zero anyway.
+  test('a sessionless fallback cannot rewind the book', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    const itemId = parsePlaybackToken(player.token).libraryItemId;
+
+    await srv.restartAbs();      // the session is gone, forcing the fallback
+    try {
+      const cold = loadSkill();
+      player.offsetInMilliseconds = 0;   // a stream that never played reports 0
+      await srv.clearRequests();
+      await invoke(cold, audioPlayer('PlaybackFailed', {
+        token: player.token,
+        offsetInMilliseconds: 0,
+        playerActivity: 'IDLE',
+        error: { type: 'MEDIA_ERROR_INTERNAL_DEVICE_ERROR' },
+      }));
+
+      const rewinds = (await srv.getRequests()).filter((request) =>
+        request.method === 'PATCH'
+        && request.url === `/api/me/progress/${itemId}`
+        && request.body.currentTime === 0);
+      assert.deepStrictEqual(rewinds, [],
+        'the fallback wrote currentTime=0 over a position ABS already held');
+    } finally {
+      await srv.restoreAbsSessions();
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],

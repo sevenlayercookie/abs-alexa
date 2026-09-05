@@ -314,6 +314,19 @@ function syncProgressWithoutSession(handlerInput) {
     const currentTime = Number(track.startOffset) + player.offsetInMilliseconds / 1000;
     if (!Number.isFinite(currentTime)) throw new Error('Could not derive a book position from the stream token');
 
+    // Without a play session there is no record of what this stream last
+    // reported, so a position behind the stored one cannot be told apart from a
+    // device that does not know where it was -- and a failed stream reports 0.
+    // A second PlaybackFailed arriving on a cold container took this path and
+    // reset a book to the beginning moments after the first had correctly
+    // preserved it. A deliberate seek backwards is written by the session path,
+    // which has the context to know it was deliberate.
+    const stored = Number(item?.userMediaProgress?.currentTime);
+    if (Number.isFinite(stored) && currentTime < stored) {
+      console.log(`Fallback progress sync: keeping the stored ${stored} seconds rather than moving back to ${currentTime}`);
+      return false;
+    }
+
     updateMediaProgress(token.libraryItemId, null, {
       currentTime,
       duration: Number(item.media.duration) || undefined,
