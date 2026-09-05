@@ -89,6 +89,12 @@ function replay(name) {
           }
         } catch { /* malformed fixtures are handled as misses below */ }
       }
+      // ABS only serves a play session while it is still open, so an id it no
+      // longer holds is a 404, not a missing fixture. Answering that way lets
+      // tests exercise recovery from an expired session.
+      if (!hit) {
+        hit = { status: 404, headers: { 'Content-Type': 'application/json' }, body: '{}' };
+      }
     }
 
     // Writes are blocked while recording and their response body is never

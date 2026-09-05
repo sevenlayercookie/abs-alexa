@@ -118,26 +118,20 @@ function getExistingUserPlaySession(sessionID) {
   }
 }
 
-function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = "", data) {
-  // Construct the URL based on the presence of episodeId
+// Idempotent: it records where the user is in a book without opening or
+// touching a play session, so it adds nothing to ABS listening history. That
+// makes it the safe way to save a position when the play session is gone.
+function updateMediaProgress(libraryItemId, episodeId, data) {
+  if (!libraryItemId) throw new Error('Cannot update media progress without a library item id');
   const url = episodeId
-      ? `${baseUrl}/api/me/progress/${libraryItemId}/${episodeId}`
-      : `${baseUrl}/api/me/progress/${libraryItemId}`;
+    ? `${SERVER_URL}/api/me/progress/${libraryItemId}/${episodeId}`
+    : `${SERVER_URL}/api/me/progress/${libraryItemId}`;
 
-  try {
-      // Make the PATCH request
-      const res = request('PATCH', url, {
-          json: data,
-          headers: {
-              'Content-Type': 'application/json',
-          },
-      });
-
-      // Parse and return the response
-      return JSON.parse(res.getBody('utf8'));
-  } catch (error) {
-      throw new Error(`Failed to update media progress: ${error.message}`);
-  }
+  // baseheaders carries the bearer token; without it ABS answers 401.
+  const res = request('PATCH', url, { headers: baseheaders, json: data });
+  console.log("updateMediaProgress - Response code: " + res.statusCode);
+  if (res.statusCode !== 200) throw new Error(`Failed to update media progress: HTTP ${res.statusCode}`);
+  return true;
 }
 
 function updateUserPlaySession(playSession, currentBookTime, timeListened) {

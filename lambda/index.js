@@ -214,6 +214,48 @@ function closePlaybackProgress(userPlaySession, currentBookTime) {
   }
 }
 
+// Last resort when no ABS play session can be recovered: a cold Lambda
+// container has no local state, and ABS only serves /api/session/:id while the
+// session is still open, so a callback arriving after ABS closed it used to
+// throw the position away. The stream token still names the book and the
+// track, which is enough to write media progress directly. That endpoint is
+// idempotent and opens no session, so unlike a replacement play session it
+// cannot leave a duplicate behind in ABS listening history.
+function syncProgressWithoutSession(handlerInput) {
+  const player = incomingPlayerState(handlerInput);
+  const token = player.token;
+  if (!token?.libraryItemId || !token.trackIndex || player.offsetInMilliseconds == null) {
+    console.log("Fallback progress sync: the stream token carries no position to save");
+    return false;
+  }
+  if (token.sessionId && recentlyClosedSessionIds.has(token.sessionId)) {
+    console.log("Fallback progress sync: this position was already saved when the session closed");
+    return false;
+  }
+  try {
+    const item = getItemById(token.libraryItemId, { include: ['progress'], expanded: 1 });
+    const tracks = item?.media?.tracks;
+    const track = Array.isArray(tracks)
+      ? tracks.find((candidate) => candidate.index == token.trackIndex)
+      : null;
+    // Without the track's start offset the device offset is meaningless, and
+    // guessing would overwrite a good position with a wrong one.
+    if (!track) throw new Error(`Library item has no track ${token.trackIndex}`);
+    const currentTime = Number(track.startOffset) + player.offsetInMilliseconds / 1000;
+    if (!Number.isFinite(currentTime)) throw new Error('Could not derive a book position from the stream token');
+
+    updateMediaProgress(token.libraryItemId, null, {
+      currentTime,
+      duration: Number(item.media.duration) || undefined,
+    });
+    console.log(`Fallback progress sync: saved ${currentTime} seconds to media progress for ${token.libraryItemId}`);
+    return true;
+  } catch (error) {
+    console.error(`Could not save progress without a play session: ${error.message}`);
+    return false;
+  }
+}
+
 function sameStreamToken(left, right) {
   return left != null && right != null && String(left) === String(right);
 }
@@ -385,7 +427,7 @@ const PlayAudioIntentHandler = {
         currentTime = mediaProgress.currentTime
         if (currentTime > userPlaySession.duration) { // validation
           currentTime = 0.0 // start at beginning
-          //updateMediaProgress(SERVER_URL, lastPlayedID, mediaProgress.episodeId, { currentTime: 0.0, duration: userPlaySession.duration })
+          //updateMediaProgress(lastPlayedID, mediaProgress.episodeId, { currentTime: 0.0, duration: userPlaySession.duration })
           syncPlaybackProgress(userPlaySession, 0.0, { timeListened: 0 })
         }
       }
@@ -1211,6 +1253,9 @@ const CancelAndStopIntentHandler = {
         }
       } else {
         console.log("CancelAndStopIntentHandler: no recoverable playback state")
+        // Stopping is the moment the position matters most, so fall back to
+        // media progress rather than losing where the user got to.
+        syncProgressWithoutSession(handlerInput)
       }
     } catch (error) {
       console.error(`CancelAndStopIntentHandler: could not close ABS session (${error.message})`)
@@ -1257,6 +1302,12 @@ const AudioPlayerEventHandler = {
       let audioResponse;
       if (!userPlaySession || offset == null || amazonToken == null) {
         console.log("userPlaySession, offset, or amazonToken was undefined; cannot sync progress");
+        // PlaybackStarted is the only event whose position was just written by
+        // the intent that started the stream; every other event reports a
+        // position that is only known here and must not be dropped.
+        if (audioPlayerEventName !== 'PlaybackStarted') {
+          syncProgressWithoutSession(handlerInput);
+        }
       } else {
         currentBookTime = calculateCurrentTime(userPlaySession, offset, amazonToken);
       }

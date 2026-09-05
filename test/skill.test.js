@@ -410,6 +410,59 @@ describe('skill behaviour', () => {
       'a stream with no PlaybackStarted confirmation must not accrue listening time');
   });
 
+  // Reproduces a CloudWatch trace: a cold container received PlaybackFailed,
+  // the ABS session named by the stream token had already been closed (HTTP
+  // 404), and the position the device reported was discarded.
+  test('a cold container saves progress when the ABS session is gone', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    // A session id ABS no longer holds open, as after a server restart or an
+    // idle timeout.
+    const token = createPlaybackToken(
+      { libraryItemId: dune.libraryItemId, id: 'a-session-abs-has-forgotten' }, 1);
+    await srv.clearRequests();
+
+    // No session attributes and no prior turn: this skill instance has never
+    // seen this stream, exactly like a fresh Lambda container.
+    await invoke(skill, audioPlayer('PlaybackFailed', {
+      token,
+      offsetInMilliseconds: 754000,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_INTERNAL_DEVICE_ERROR' },
+    }));
+
+    const requests = await srv.getRequests();
+    const progress = requests.filter((request) =>
+      request.method === 'PATCH' && request.url.startsWith('/api/me/progress/'));
+    const replacementSessions = requests.filter((request) =>
+      request.method === 'POST' && /\/api\/items\/[^/]+\/play$/.test(request.url));
+
+    assert.strictEqual(progress.length, 1,
+      'the device-reported position must reach ABS even with no play session');
+    assert.strictEqual(progress[0].url, `/api/me/progress/${dune.libraryItemId}`);
+    assert.ok(Math.abs(progress[0].body.currentTime - 754) < 0.001);
+    assert.deepStrictEqual(replacementSessions, [],
+      'saving progress must not open a play session and duplicate listening history');
+  });
+
+  test('closing a session suppresses the fallback for the same stream', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    await invoke(skill, intent('AMAZON.StopIntent', {}, {}, true, player));
+    await srv.clearRequests();
+
+    // The same container, but the session is closed: a late callback for that
+    // stream has nothing new to say and must not rewrite progress.
+    await invoke(skill, audioPlayer('PlaybackStopped', player));
+
+    const progress = (await srv.getRequests()).filter((request) =>
+      request.method === 'PATCH' && request.url.startsWith('/api/me/progress/'));
+    assert.deepStrictEqual(progress, [],
+      'a callback for a session this container just closed must not sync again');
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
