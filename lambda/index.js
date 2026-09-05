@@ -303,15 +303,23 @@ function syncProgressWithoutSession(handlerInput) {
     return false;
   }
   try {
+    // The stream's own token is the better authority on where this track begins:
+    // it describes the layout the stream was actually built from. Falling back
+    // to the item's current track list is for tokens minted before the token
+    // carried it, and is wrong if the book has since been re-split.
     const item = getItemById(token.libraryItemId, { include: ['progress'], expanded: 1 });
-    const tracks = item?.media?.tracks;
-    const track = Array.isArray(tracks)
-      ? tracks.find((candidate) => candidate.index == token.trackIndex)
-      : null;
-    // Without the track's start offset the device offset is meaningless, and
-    // guessing would overwrite a good position with a wrong one.
-    if (!track) throw new Error(`Library item has no track ${token.trackIndex}`);
-    const currentTime = Number(track.startOffset) + player.offsetInMilliseconds / 1000;
+    let trackStart = token.trackStart;
+    if (trackStart === null) {
+      const tracks = item?.media?.tracks;
+      const track = Array.isArray(tracks)
+        ? tracks.find((candidate) => candidate.index == token.trackIndex)
+        : null;
+      // Without the track's start offset the device offset is meaningless, and
+      // guessing would overwrite a good position with a wrong one.
+      if (!track) throw new Error(`Library item has no track ${token.trackIndex}`);
+      trackStart = Number(track.startOffset);
+    }
+    const currentTime = Number(trackStart) + player.offsetInMilliseconds / 1000;
     if (!Number.isFinite(currentTime)) throw new Error('Could not derive a book position from the stream token');
 
     // Without a play session there is no record of what this stream last
@@ -329,7 +337,7 @@ function syncProgressWithoutSession(handlerInput) {
 
     updateMediaProgress(token.libraryItemId, null, {
       currentTime,
-      duration: Number(item.media.duration) || undefined,
+      duration: token.bookDuration ?? (Number(item.media.duration) || undefined),
     });
     console.log(`Fallback progress sync: saved ${currentTime} seconds to media progress for ${token.libraryItemId}`);
     return true;
