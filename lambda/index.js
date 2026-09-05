@@ -856,6 +856,11 @@ const PlayBookIntentHandler = {
         previousState.trackIndex
       )
       closePlaybackProgress(previousState.userPlaySession, previousBookTime)
+    } else {
+      // The outgoing book's ABS session could not be recovered, but the device
+      // is still reporting where it had got to. Switching books is the last
+      // moment that position exists anywhere.
+      syncProgressWithoutSession(handlerInput)
     }
     clearAllMemory(handlerInput)
 
@@ -993,6 +998,7 @@ const PauseAudioIntentHandler = {
 
         retainPlaybackStateLocally(handlerInput, sessionAttributes)
       } else {
+        console.log("PauseAudioIntentHandler: no ABS session to sync; saving the position directly")
         syncProgressWithoutSession(handlerInput)
       }
       return handlerInput.responseBuilder

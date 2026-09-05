@@ -536,6 +536,35 @@ describe('skill behaviour', () => {
     }
   });
 
+  // Seen in a device trace: switching books after an ABS restart logged
+  // "ABS session unavailable" and went straight to the search, so the outgoing
+  // book's position was never written anywhere.
+  test('switching books saves the outgoing position when its session is gone', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    const outgoingId = parsePlaybackToken(player.token).libraryItemId;
+
+    await srv.restartAbs();
+    try {
+      const cold = loadSkill();
+      player.offsetInMilliseconds += 120000;
+      await srv.clearRequests();
+      const switched = await invoke(cold,
+        intent('PlayBookIntent', { title: 'the lies of locke lamora' }, {}, true, player));
+      assertWellFormedStream(playDirective(switched), 'the replacement book');
+
+      const progress = (await srv.getRequests()).filter((request) =>
+        request.method === 'PATCH'
+        && request.url === `/api/me/progress/${outgoingId}`);
+      assert.strictEqual(progress.length, 1,
+        'the outgoing book position must be saved before the new one starts');
+      assert.ok(progress[0].body.currentTime > 0);
+    } finally {
+      await srv.restoreAbsSessions();
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
