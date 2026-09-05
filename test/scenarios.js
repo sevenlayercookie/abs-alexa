@@ -67,11 +67,6 @@ const scenarios = [
     // something is playing, so establish that first -- pressing them cold is
     // covered separately by the two dedicated tests in skill.test.js.
     //
-    // PlayCommandIssued emits a Play directive with an empty stream: its
-    // .addAudioPlayerPlayDirective() call has every argument commented out.
-    // Pinned by "KNOWN BUG: device Play button emits an empty audio stream",
-    // so exempted here rather than weakening the assertion everywhere.
-    expectMalformedStream: ['PlaybackController.PlayCommandIssued'],
     steps: [
       { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
       { label: 'PlaybackController.PlayCommandIssued', make: (a, p) => A.playbackController('PlayCommandIssued', a, p) },

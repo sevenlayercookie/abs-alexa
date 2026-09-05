@@ -23,7 +23,8 @@ function assertWellFormedStream(directive, label) {
   assert.ok(typeof s.url === 'string' && s.url.length > 0, `${label}: stream has no url`);
   assert.match(s.url, /\/api\/items\/[0-9a-f-]+\/file\//, `${label}: url is not an Audiobookshelf item file`);
   assert.match(s.url, /[?&]token=/, `${label}: url carries no auth token`);
-  assert.ok(s.token !== undefined && s.token !== null, `${label}: stream has no token`);
+  assert.ok(typeof s.token === 'string' && s.token.length > 0,
+    `${label}: stream token must be a non-empty string`);
   assert.ok(Number.isFinite(s.offsetInMilliseconds),
     `${label}: offsetInMilliseconds is ${s.offsetInMilliseconds}, not a number`);
   assert.ok(s.offsetInMilliseconds >= 0, `${label}: negative offset ${s.offsetInMilliseconds}`);

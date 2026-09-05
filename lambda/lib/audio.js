@@ -73,7 +73,9 @@ function getCurrentChapterByBookTime(currentBookTime, playSession) {
   try {
     const chapters = playSession.chapters
     for (let i = 0; i < chapters.length; i++) {
-      if (currentBookTime >= chapters[i].start && currentBookTime <= chapters[i].end) {
+      const isLastChapter = i === chapters.length - 1
+      if (currentBookTime >= chapters[i].start
+        && (currentBookTime < chapters[i].end || (isLastChapter && currentBookTime <= chapters[i].end))) {
         return chapters[i];
       }
     }

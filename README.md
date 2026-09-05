@@ -10,10 +10,10 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 3. Place to host the skill (either with Alexa-hosted Lambda function or self-hosted)
 
 ## Features:
-- Play last played audiobook ("Alexa, play)
-- Play audiobook by title (e.g., "Alexa, play *A Game of Thrones* by George R.R. Martin" or "Alexa, play *Hitchhiker's Guide to the Galaxy*")
-- Seek within a book (e.g., "Alexa, skip forward 2 minutes")
-- Skip to the next/previous chapter (e.g., "Alexa, go back a chapter")
+- Play the last played audiobook or select one by title
+- Seek forward or backward by a duration through an invocation-qualified
+  custom command
+- Move to the next or previous chapter with name-free playback controls
 - Progress tracking (listening sessions will be saved on the Audiobookshelf server)
 - attempts to resolve the book and author name requested using Amazon resolution services
 - performs an an API "search" that is built-in to ABS
@@ -31,18 +31,75 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
 5) Save and deploy the skill
 6) If using Alexa-hosted, go to the 'Test' tab of Developer Console, and enable skill testing for 'Development'
 
-## Usage:
-- Once installed, call the skill using the invocation name you chose (e.g. "Alexa, Audiobook shelf"
-- Then:
-  - "Play": either resumes currently playing book, or plays your last listened to audiobook
-  - "Pause": pauses audio and updates ABS server on progress
-  - "Stop/close/cancel": closes the ABS listening session and closes the Alexa skill session
-  - "Play A Game Of Thrones" - attempts to find any book matching this title and plays it
-  - "Play A Game Of Thrones by George R.R. Martin" - plays the matching book written by the stated author
-  - "Next/Previous": Goes to next/previous chapter
-  - "Go forward/back X minutes/seconds/hours": Goes forward or back X number of seconds, minutes, or hours
-- Though there are some useful intents, I find that the most reliable way of using the skill is to just say "Play" to resume last listened to audiobook
-  - "Play" is a built-in intent, which Alexa tends to execute more reliably
+## Usage
+
+The examples below use `a. b. s.` as the invocation name. Substitute the
+invocation name configured for your copy of the skill.
+
+Alexa treats an active custom-skill conversation and long-form audio playback
+as two different modes. When this skill returns an `AudioPlayer.Play`
+directive, it must end the conversational session so Alexa can play the
+stream. While the stream is playing, Alexa sends only its built-in playback
+intents to the skill without an invocation name. Custom intents must open a
+new skill session.
+
+### Commands that require the skill invocation name
+
+These are custom intents. Use a one-shot invocation, or open the skill first
+and say the command as a second turn.
+
+| Action | One-shot example | After `Alexa, open a. b. s.` |
+|---|---|---|
+| Play the last listened-to book | `Alexa, ask a. b. s. to play the last book` | `Play the last book` |
+| Play a book by title | `Alexa, ask a. b. s. to play The Lies of Locke Lamora` | `Play The Lies of Locke Lamora` |
+| Narrow a title by author | `Alexa, ask a. b. s. to play A Game of Thrones by George R. R. Martin` | `Play A Game of Thrones by George R. R. Martin` |
+| Seek forward by a duration | `Alexa, ask a. b. s. to go forward twenty minutes` | `Go forward twenty minutes` |
+| Seek backward by a duration | `Alexa, ask a. b. s. to go back five minutes` | `Go back five minutes` |
+| Ask for help | `Alexa, ask a. b. s. for help` | `Help` |
+
+Alexa's global media router can intercept phrases such as `skip forward`,
+`fast forward`, and `go forward` before it opens a custom skill—even when the
+invocation name is present. A typical platform-generated response is
+"skipping ahead isn't supported for that audiobook." If a one-shot seek is
+intercepted, the reliable fallback is:
+
+1. `Alexa, pause.`
+2. `Alexa, open a. b. s.`
+3. `Go forward twenty minutes.`
+
+Once `a. b. s.` has responded to the launch request, the seek phrase is
+evaluated inside this skill's interaction model instead of Alexa's global
+media model.
+
+### Name-free commands during audio playback
+
+When this skill is currently playing—or was the most recent skill to play—use
+these built-in Alexa commands without saying `a. b. s.`:
+
+| Utterance | Behavior |
+|---|---|
+| `Alexa, pause` | Stops playback and saves the current Audiobookshelf position. |
+| `Alexa, resume` / `Alexa, continue` | Resumes the last stream. |
+| `Alexa, next` | Moves to the next audiobook chapter. |
+| `Alexa, previous` / `Alexa, go back` | Moves to the beginning of the current chapter, or to the previous chapter when already near its beginning. |
+| `Alexa, cancel` | Stops playback and closes the Audiobookshelf listening session. |
+
+The play, pause, next, and previous buttons on supported devices use the same
+playback-control paths.
+
+`Alexa, stop` has special AudioPlayer behavior: while audio is playing or this
+was the most recent audio skill, Alexa can send `AMAZON.PauseIntent` rather
+than `AMAZON.StopIntent`. It will stop the sound, but it might preserve the
+Audiobookshelf listening session for a later resume. Use `cancel` when the
+intent is to close the listening session.
+
+Bare duration commands are **not** name-free playback controls. For example,
+`Alexa, skip forward twenty minutes` may be interpreted as `AMAZON.NextIntent`
+with the duration discarded, or Alexa may reject it without invoking this
+skill. Use an invocation-qualified or two-turn custom command instead.
+
+Loop, shuffle, repeat, and start-over requests are recognized but are not
+currently implemented; the skill declines them without interrupting playback.
 
 ## Development:
 
@@ -64,13 +121,26 @@ handlers, which is exactly what the ASK SDK's `.lambda()` produces.
 ```bash
 npm install          # test tooling (repo root)
 npm install --prefix lambda   # the skill's own dependencies
-npm test             # 16 tests, ~0.3s, no server or device needed
+npm test             # offline tests, no server or device needed
 npm run lint
 ```
 
 `npm test` replays recorded Audiobookshelf responses from `test/fixtures/`, so
 it needs no network. See [test/README.md](test/README.md) for how to re-record
 them and what the tests do and do not cover.
+
+### Playback state without DynamoDB
+
+Audiobookshelf is the durable source of truth for listening progress and open
+play sessions. Alexa stream tokens contain the ABS item id, play-session id,
+and track index, so a new Alexa conversational session or a cold Lambda can
+reload the session from ABS. Module memory is only an account-scoped speed
+cache; correctness does not depend on it. This keeps deployment simple and
+avoids storing the large ABS play-session object in Alexa session attributes.
+
+DynamoDB is therefore not required for current playback controls. It may still
+be useful later for skill-specific preferences or state that Audiobookshelf
+does not own.
 
 CI runs both commands on Node 20 and 22 for every push.
 
@@ -142,11 +212,8 @@ is project configuration and should be committed.
 - ABS-Alexa initially required creating dynamic RSS feeds. However, authentication via API in URL allows for direct play on Echo devices. RSS feeds are no longer required.
 
 ## Known Issues:
-- Alexa Skills have many limitations. Most bugs relate to Alexa losing memory of session details or forgetting that the skill is running.
-- Some requests may require the user to restart the Alexa session after an intent is executed.
-- This is particularly true with certain custom intents, such as:
-  - Seeking intents (e.g., "Go backwards 5 minutes")
-  - Playing a book by title (e.g., "Play *A Game of Thrones*")
+- Alexa can take several seconds to begin a large audiobook stream after the
+  skill returns its Play directive.
 - If book is not initially found using ABS API search function, the skill then pulls all books in user's library and performs a fuzzy search
   - on large libraries, this may take a long time (I have tested it on 1000 book library and it completes search in 1-3 seconds)
 - This skill is set to only search libraries that are set as "audiobook only" -- if you have audiobooks in any other kind of library, they will not be searched
@@ -155,7 +222,8 @@ is project configuration and should be committed.
 ## To Do:
 - [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
     - This is easy to achieve using Express.JS, but I have not yet included this in the repository.
-- [ ] Consider implementing persistent attributes to give Alexa a longer "memory" (store play sessions in a local database)
+- [ ] Consider persistent storage only for future skill-owned preferences that
+      cannot be reconstructed from the Alexa stream token and Audiobookshelf
 - [ ] Add other intents, such as:
   - [ ] "Start the book over"
   - [ ] "Go to chapter 12"

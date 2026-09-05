@@ -12,29 +12,28 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 
 const LAMBDA = path.join(__dirname, '..', 'lambda');
-const CONFIG = path.join(LAMBDA, 'config.js');
 
 function load(env, { withConfigFile }) {
-  const existed = fs.existsSync(CONFIG);
-  const saved = existed ? fs.readFileSync(CONFIG) : null;
+  const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'abs-config-test-'));
+  const lib = path.join(sandbox, 'lib');
+  fs.mkdirSync(lib);
+  fs.copyFileSync(path.join(LAMBDA, 'lib', 'settings.js'), path.join(lib, 'settings.js'));
   if (withConfigFile) {
-    fs.writeFileSync(CONFIG,
+    fs.writeFileSync(path.join(sandbox, 'config.js'),
       "module.exports = { ABS_API_KEY: 'from-file', SERVER_URL: 'https://file.example' };\n");
-  } else if (existed) {
-    fs.rmSync(CONFIG);
   }
   try {
     const out = execFileSync(process.execPath, ['-e',
       "const s=require('./lib/settings');" +
       "console.log(JSON.stringify({key:s.ABS_API_KEY,url:s.SERVER_URL,ua:s.USER_AGENT}));"],
-      { cwd: LAMBDA, env: { PATH: process.env.PATH, ...env }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+      { cwd: sandbox, env: { PATH: process.env.PATH, ...env }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     return JSON.parse(out.trim().split('\n').pop());
   } finally {
-    if (saved !== null) fs.writeFileSync(CONFIG, saved);
-    else if (fs.existsSync(CONFIG)) fs.rmSync(CONFIG);
+    fs.rmSync(sandbox, { recursive: true, force: true });
   }
 }
 

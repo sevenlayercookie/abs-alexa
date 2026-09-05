@@ -101,6 +101,12 @@ function searchBookWithAbsAPI(bookTitle) {
   return results;
 }
 
+function firstBookFromAbsSearch(searchResults) {
+  return searchResults
+    .filter(result => result && Array.isArray(result.book))
+    .reduce((match, result) => match || result.book[0], null)
+}
+
 function amazonCrossmatch(titleResolutions, authorResolutions, accessToken) {
   let checkedTitles = [] // avoid redundant checks
   let validAuthors = []// authors that have matching titles
@@ -163,11 +169,10 @@ function searchByTitleOnly(
   if (APIsearch) {
     console.log("Performing ABS API search for '" + bookTitle + "'")
     const absSearchResults = searchBookWithAbsAPI(bookTitle)
-    if (absSearchResults[0].book.length > 0) {
-      const firstMatchingBook = absSearchResults[0].book[0] //just take the first item
+    const firstMatchingBook = firstBookFromAbsSearch(absSearchResults)
+    if (firstMatchingBook) {
       // const firstMatchingBook = bookResults.find(book => book.matchKey === "title"); DEFUNCT NOW that matchKey was removed
       console.log("Matched a book using ABS search API!")
-      //absSearchResults[0].book[0].libraryItem.media.metadata.title
       return firstMatchingBook.libraryItem
     }
     else {
@@ -201,4 +206,5 @@ function searchByTitleOnly(
   return null; // return null if all search methods fail
 }
 
-module.exports = { getEntityData, fuzzyMatch, fuzzyStringMatch, searchBookWithAbsAPI, amazonCrossmatch, searchByTitleOnly };
+module.exports = { getEntityData, fuzzyMatch, fuzzyStringMatch, searchBookWithAbsAPI,
+  firstBookFromAbsSearch, amazonCrossmatch, searchByTitleOnly };

@@ -10,11 +10,19 @@ const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const { scenarios } = require('./scenarios');
 const { startServer } = require('./helpers/server-process');
-const { loadSkill, invoke, intent, playbackController, playerStateFrom } = require('./helpers/alexa');
+const { loadSkill, invoke, intent, audioPlayer, playbackController, playerStateFrom, asUser } = require('./helpers/alexa');
 const { matchSnapshot } = require('./helpers/snapshot');
 const { playDirective, assertWellFormedStream, assertNotErrorResponse } = require('./helpers/assertions');
+const { parsePlaybackToken } = require('../lambda/lib/playback-token');
 const fs = require('fs');
 const path = require('path');
+
+function recordedPlaySession(itemId) {
+  const cassette = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'abs.json'), 'utf8'));
+  const entry = cassette[`POST /api/items/${itemId}/play`];
+  assert.ok(entry, `no recorded play session for ${itemId}`);
+  return typeof entry.body === 'string' ? JSON.parse(entry.body) : entry.body;
+}
 
 describe('skill behaviour', () => {
   let srv;
@@ -39,6 +47,11 @@ describe('skill behaviour', () => {
 
   after(async () => { if (srv) await srv.close(); });
 
+  test('system playback requests are modeled without conversational sessions', () => {
+    assert.strictEqual(audioPlayer('PlaybackStarted').session, undefined);
+    assert.strictEqual(playbackController('PlayCommandIssued').session, undefined);
+  });
+
   for (const scenario of scenarios) {
     test(scenario.name, async () => {
       // one skill instance per scenario: models a warm Lambda container across
@@ -57,6 +70,14 @@ describe('skill behaviour', () => {
         const play = playDirective(res);
         if (play && !(scenario.expectMalformedStream || []).includes(step.label)) {
           assertWellFormedStream(play, label);
+          if (((res.response || {}).outputSpeech)) {
+            assert.strictEqual(res.response.shouldEndSession, true,
+              `${label}: a voice intent that starts audio must end the conversational session`);
+            assert.ok(JSON.stringify(res).length < 8192,
+              `${label}: response should not carry the full ABS play session`);
+            assert.strictEqual(res.sessionAttributes?.userPlaySession, undefined,
+              `${label}: ended session should not return transient playback state`);
+          }
         }
         if (!(scenario.expectErrors || []).includes(step.label)) assertNotErrorResponse(res, label);
 
@@ -68,15 +89,7 @@ describe('skill behaviour', () => {
     });
   }
 
-  // The device Play/Next buttons on an Echo Show arrive as PlaybackController
-  // events, which Alexa sends WITHOUT session attributes. The handler therefore
-  // reads module-level state that outlives the conversation -- see the comment
-  // at PlaybackControllerHandler in lambda/index.js.
-  //
-  // That state is load-bearing, not accidental: replacing localSessionAttributes
-  // with attributesManager would break the device buttons outright. This test
-  // pins the dependency so the rewrite cannot remove it silently.
-  test('device Play button depends on state outliving the conversation', async () => {
+  test('device Play button needs a loaded stream when no state can be recovered', async () => {
     const playDirective = (res) =>
       ((res && res.response && res.response.directives) || []).find((d) => d.type === 'AudioPlayer.Play');
 
@@ -96,32 +109,121 @@ describe('skill behaviour', () => {
       'the device Play button relies on state outliving the conversation');
   });
 
-  // KNOWN DEFECT, pinned deliberately.
-  //
-  // PlayCommandIssued builds chapter title, cover art and background metadata
-  // and then calls .addAudioPlayerPlayDirective() with every argument commented
-  // out, so Alexa receives a Play directive with an empty stream: no url, no
-  // token, no offset. Pressing Play on a device with screen controls therefore
-  // cannot resume anything.
-  //
-  // Confirmed pre-existing: the same empty stream comes out of the code as it
-  // was before the strict-mode commit, so it is not a refactoring artifact.
-  //
-  // This asserts the broken behaviour on purpose, so a rewrite cannot change it
-  // without someone noticing. When the directive is given its arguments back,
-  // this test SHOULD fail -- update it then.
-  test('KNOWN BUG: device Play button emits an empty audio stream', async () => {
+  test('device Play button emits a complete resumable stream', async () => {
     const warm = loadSkill();
     const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));
     const res = await invoke(warm,
       playbackController('PlayCommandIssued', undefined, playerStateFrom(first)));
     const play = ((res.response && res.response.directives) || [])
       .find((d) => d.type === 'AudioPlayer.Play');
-    const stream = play.audioItem.stream;
-    assert.strictEqual(stream.url, undefined,
-      'if this now has a url, the bug was fixed -- update this test');
-    assert.strictEqual(stream.token, undefined, 'token is also dropped');
-    assert.strictEqual(stream.offsetInMilliseconds, undefined, 'offset is also dropped');
+    assertWellFormedStream(play, 'device Play button');
+    assert.strictEqual(play.playBehavior, 'REPLACE_ALL');
+  });
+
+  test('seek and device chapter controls cross multi-track boundaries correctly', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+
+    const forward = await invoke(skill,
+      intent('GoForwardXTimeIntent', { time: 'PT2M' },
+        { userPlaySession: dune }, false,
+        { token: 2, offsetInMilliseconds: 1200000 }));
+    let stream = assertWellFormedStream(playDirective(forward), 'multi-track forward seek');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 3);
+    assert.ok(Math.abs(stream.offsetInMilliseconds - 65880) < 0.001);
+
+    const restartChapter = await invoke(skill,
+      playbackController('PreviousCommandIssued', undefined, playerStateFrom(forward)));
+    stream = assertWellFormedStream(playDirective(restartChapter), 'multi-track previous chapter');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 3);
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+
+    const previousChapter = await invoke(skill,
+      playbackController('PreviousCommandIssued', undefined,
+        { token: 3, offsetInMilliseconds: 0 }));
+    stream = assertWellFormedStream(playDirective(previousChapter), 'multi-track prior chapter');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 2);
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+
+    const nextChapter = await invoke(skill,
+      playbackController('NextCommandIssued', undefined, playerStateFrom(previousChapter)));
+    stream = assertWellFormedStream(playDirective(nextChapter), 'multi-track next chapter');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 3);
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+
+    const back = await invoke(skill,
+      intent('GoBackXTimeIntent', { time: 'PT1M' },
+        { userPlaySession: dune }, false,
+        { token: 2, offsetInMilliseconds: 30000 }));
+    stream = assertWellFormedStream(playDirective(back), 'multi-track backward seek');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 1);
+    assert.ok(Math.abs(stream.offsetInMilliseconds - 1763952) < 0.001);
+  });
+
+  test('play failures reach the global error response', async () => {
+    const skill = loadSkill();
+    const malformedAttributes = { userPlaySession: { currentTime: 0 } };
+    const res = await invoke(skill,
+      intent('PlayLastIntent', {}, malformedAttributes, false));
+
+    assert.match(
+      (((res.response || {}).outputSpeech || {}).ssml || ''),
+      /trouble doing what you asked/i);
+  });
+
+  test('pause still stops playback when progress cannot be recovered', async () => {
+    const skill = loadSkill();
+    const malformedAttributes = { userPlaySession: null, offsetInMilliseconds: 0 };
+    const res = await invoke(skill,
+      intent('AMAZON.PauseIntent', {}, malformedAttributes, false,
+        { token: 1, offsetInMilliseconds: 0 }));
+
+    assert.ok(((res.response || {}).directives || [])
+      .some((directive) => directive.type === 'AudioPlayer.Stop'));
+    assert.doesNotMatch(
+      (((res.response || {}).outputSpeech || {}).ssml || ''),
+      /trouble doing what you asked/i);
+  });
+
+  test('voice and device controls recover after a cold Lambda start', async () => {
+    const warm = loadSkill();
+    const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));
+    const player = { ...playerStateFrom(first), offsetInMilliseconds: 0 };
+
+    const coldForNext = loadSkill();
+    const next = await invoke(coldForNext,
+      intent('AMAZON.NextIntent', {}, {}, true, player));
+    const nextStream = assertWellFormedStream(playDirective(next), 'cold-start next');
+    assert.strictEqual(parsePlaybackToken(nextStream.token).libraryItemId,
+      parsePlaybackToken(player.token).libraryItemId);
+
+    const coldForPause = loadSkill();
+    const pause = await invoke(coldForPause,
+      intent('AMAZON.PauseIntent', {}, {}, true, player));
+    assert.ok(((pause.response || {}).directives || [])
+      .some((directive) => directive.type === 'AudioPlayer.Stop'));
+
+    const coldForButton = loadSkill();
+    const button = await invoke(coldForButton,
+      playbackController('PlayCommandIssued', undefined, player));
+    assertWellFormedStream(playDirective(button), 'cold-start device Play');
+  });
+
+  test('warm playback state is isolated by Alexa user', async () => {
+    const skill = loadSkill();
+    const first = await invoke(skill,
+      asUser(intent('PlayLastIntent', {}, {}, true), 'amzn1.ask.account.USER_A'));
+    const firstPlayer = { ...playerStateFrom(first), offsetInMilliseconds: 0 };
+
+    const second = await invoke(skill,
+      asUser(intent('PlayLastIntent', {}, {}, true), 'amzn1.ask.account.USER_B'));
+    assert.match((second.response.outputSpeech || {}).ssml || '', /Playing/i,
+      'the second user must open their own ABS session, not silently resume the first user cache');
+
+    const recoveredFirst = await invoke(skill,
+      asUser(intent('AMAZON.NextIntent', {}, {}, true, firstPlayer), 'amzn1.ask.account.USER_A'));
+    assertWellFormedStream(playDirective(recoveredFirst), 'first user after second user playback');
   });
 
   test('every request was served from a fixture', async () => {

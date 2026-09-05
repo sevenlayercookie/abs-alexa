@@ -104,7 +104,7 @@ describe('live: every implemented intent', { skip: why }, () => {
     assert.ok(typeof s.url === 'string' && s.url.startsWith('http'), `${label}: stream url missing`);
     assert.match(s.url, /\/api\/items\/[0-9a-f-]+\/file\//, `${label}: url is not an ABS item file`);
     assert.match(s.url, /[?&]token=/, `${label}: url carries no auth token`);
-    assert.ok(s.token !== undefined && s.token !== null, `${label}: no stream token`);
+    assert.ok(typeof s.token === 'string' && s.token.length > 0, `${label}: no string stream token`);
     assert.ok(Number.isFinite(s.offsetInMilliseconds) && s.offsetInMilliseconds >= 0,
       `${label}: offset is not a sane number (${s.offsetInMilliseconds})`);
 
@@ -185,6 +185,72 @@ describe('live: every implemented intent', { skip: why }, () => {
     const r = await invoke(A.intent('AMAZON.NextIntent', {}, attrs, false, p2 || player));
     assert.doesNotMatch(speech(r), /trouble doing what you asked/i,
       'next in the final chapter should not hit the generic error handler');
+  });
+
+  test('controls recover from the stream token after a cold Lambda start', async () => {
+    const first = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const player = { ...A.playerStateFrom(first), offsetInMilliseconds: 0 };
+
+    const invokeCold = async (envelope) => {
+      skill = A.loadSkill();
+      const response = await invoke(envelope);
+      assert.strictEqual(response.sessionAttributes?.userPlaySession, undefined,
+        'cold-start response must not depend on returned Alexa session attributes');
+      return response;
+    };
+
+    const next = await invokeCold(A.intent('AMAZON.NextIntent', {}, {}, true, player));
+    await assertPlayable(play(next), 'cold-start NextIntent');
+
+    const previousPlayer = { ...A.playerStateFrom(next), offsetInMilliseconds: 0 };
+    const previous = await invokeCold(
+      A.intent('AMAZON.PreviousIntent', {}, {}, true, previousPlayer));
+    await assertPlayable(play(previous), 'cold-start PreviousIntent');
+
+    const forward = await invokeCold(
+      A.intent('GoForwardXTimeIntent', { time: 'PT2M' }, {}, true, player));
+    await assertPlayable(play(forward), 'cold-start GoForwardXTimeIntent');
+
+    const backward = await invokeCold(
+      A.intent('GoBackXTimeIntent', { time: 'PT30S' }, {}, true, A.playerStateFrom(forward)));
+    await assertPlayable(play(backward), 'cold-start GoBackXTimeIntent');
+
+    const paused = await invokeCold(A.intent('AMAZON.PauseIntent', {}, {}, true, player));
+    assert.ok(stop(paused), 'cold-start pause should emit AudioPlayer.Stop');
+
+    const devicePlay = await invokeCold(
+      A.playbackController('PlayCommandIssued', undefined, player));
+    await assertPlayable(play(devicePlay), 'cold-start device Play');
+
+    const deviceNext = await invokeCold(
+      A.playbackController('NextCommandIssued', undefined, player));
+    await assertPlayable(play(deviceNext), 'cold-start device Next');
+
+    const devicePrevious = await invokeCold(
+      A.playbackController('PreviousCommandIssued', undefined,
+        { ...A.playerStateFrom(deviceNext), offsetInMilliseconds: 0 }));
+    await assertPlayable(play(devicePrevious), 'cold-start device Previous');
+
+    const devicePause = await invokeCold(
+      A.playbackController('PauseCommandIssued', undefined, player));
+    assert.ok(stop(devicePause), 'cold-start device Pause should emit AudioPlayer.Stop');
+  });
+
+  test('active playback survives SessionEndedRequest', async () => {
+    skill = A.loadSkill();
+    const first = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const player = A.playerStateFrom(first);
+
+    const ended = await invoke(A.sessionEnded('ERROR', {}, {
+      ...player,
+      playerActivity: 'PLAYING'
+    }));
+    assert.ok(ended, 'active SessionEndedRequest returned no response');
+
+    // No session attributes and no player token are supplied here. This can
+    // succeed only if SessionEndedRequest retained the warm playback state.
+    const resumed = await invoke(A.playbackController('PlayCommandIssued'));
+    await assertPlayable(play(resumed), 'device Play after active SessionEndedRequest');
   });
 
   // --- intents that must stop audio -----------------------------------------

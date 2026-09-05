@@ -4,6 +4,7 @@
 const path = require('path');
 const fs = require('fs');
 const SKILL = path.join(__dirname, '..', '..', 'lambda', 'index.js');
+const SETTINGS = path.join(__dirname, '..', '..', 'lambda', 'lib', 'settings.js');
 const MODEL = path.join(__dirname, '..', '..', 'skill-package', 'interactionModels', 'custom', 'en-US.json');
 
 // Alexa sends every slot declared for an intent, with `value` absent when the
@@ -84,12 +85,17 @@ const intent = (name, slots = {}, attrs, newSession = false, player = null) =>
 // context.AudioPlayer.
 const audioPlayer = (event, extra = {}, attrs) => {
   const req = { type: `AudioPlayer.${event}`, token: 'TEST_TOKEN', offsetInMilliseconds: 0, ...extra };
-  return withRequest(req, attrs, false,
+  const envelope = withRequest(req, attrs, false,
     { token: req.token, offsetInMilliseconds: req.offsetInMilliseconds });
+  delete envelope.session;
+  return envelope;
 };
 
-const playbackController = (event, attrs, player) =>
-  withRequest({ type: `PlaybackController.${event}` }, attrs, false, player);
+const playbackController = (event, attrs, player) => {
+  const envelope = withRequest({ type: `PlaybackController.${event}` }, attrs, false, player);
+  delete envelope.session;
+  return envelope;
+};
 
 // Pulls the token/offset out of a previous AudioPlayer.Play directive, so a
 // follow-up device-button event carries what a real Echo would report.
@@ -100,13 +106,43 @@ const playerStateFrom = (res) => {
   return { token: stream.token, offsetInMilliseconds: stream.offsetInMilliseconds, playerActivity: 'PLAYING' };
 };
 
-const sessionEnded = (reason = 'USER_INITIATED', attrs) =>
-  withRequest({ type: 'SessionEndedRequest', reason }, attrs);
+const sessionEnded = (reason = 'USER_INITIATED', attrs, player = null) =>
+  withRequest({ type: 'SessionEndedRequest', reason }, attrs, false, player);
+
+function asUser(envelope, userId) {
+  envelope.context.System.user.userId = userId;
+  if (envelope.session?.user) envelope.session.user.userId = userId;
+  return envelope;
+}
 
 // Load a fresh copy of the skill. Module-level state in index.js persists for
 // the life of a Lambda container, so a fresh require models a cold start;
 // reusing the returned skill models a warm one.
 function loadSkill() {
+  // Skill behaviour tests provide explicit test configuration and exercise
+  // settings.js separately in config.test.js. Stub the resolved settings here
+  // so a developer's ignored lambda/config.js cannot affect or be modified by
+  // the offline suite.
+  const serverUrl = process.env.SERVER_URL;
+  const apiKey = process.env.ABS_API_KEY;
+  require.cache[require.resolve(SETTINGS)] = {
+    id: SETTINGS,
+    filename: SETTINGS,
+    loaded: true,
+    exports: {
+      ABS_API_KEY: apiKey,
+      SERVER_URL: serverUrl,
+      USER_AGENT: process.env.USER_AGENT || 'AlexaSkill',
+      BACKGROUND_URL: process.env.BACKGROUND_URL,
+      CFAccessClientId: process.env.CFAccessClientId,
+      CFAccessClientSecret: process.env.CFAccessClientSecret,
+      baseheaders: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + apiKey,
+      },
+      resolveBackgroundUrl: (coverUrl) => process.env.BACKGROUND_URL || coverUrl,
+    },
+  };
   delete require.cache[require.resolve(SKILL)];
   return require(SKILL);
 }
@@ -128,4 +164,5 @@ function invoke(skill, envelope) {
   });
 }
 
-module.exports = { launch, intent, audioPlayer, playbackController, playerStateFrom, sessionEnded, loadSkill, invoke };
+module.exports = { launch, intent, audioPlayer, playbackController, playerStateFrom,
+  sessionEnded, asUser, loadSkill, invoke };

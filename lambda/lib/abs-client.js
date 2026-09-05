@@ -82,38 +82,41 @@ function startUserPlaySession(libraryID, handlerInput) {
 
 
     res = request('POST', SERVER_URL + `/api/items/${libraryID}/play`, { headers: baseheaders, json: bodyParameters });
+    if (res.statusCode !== 200) {
+      throw new Error(`Failed to start play session: HTTP ${res.statusCode}`);
+    }
 
     let data = JSON.parse(res.getBody('utf8'));
 
     return data;
   } catch (error) {
-    console.log(res)
-    console.error('Error retrieving play session:', error);
+    console.error('Error retrieving play session:', error.message);
     throw error;
   }
 }
 
 function getExistingUserPlaySession(sessionID) {
-  let res;
   try {
     console.log("getExistingUserPlaySession")
-    res = request('GET', SERVER_URL + `/api/session/${sessionID}`, { headers: baseheaders });
+    const res = request('GET', SERVER_URL + `/api/session/${encodeURIComponent(sessionID)}`, { headers: baseheaders });
+    if (res.statusCode !== 200) {
+      throw new Error(`Failed to fetch play session: HTTP ${res.statusCode}`);
+    }
     let data = JSON.parse(res.getBody('utf8'));
 
     return data;
   } catch (error) {
-    console.log(res)
-    console.error('Error retrieving play session:', error);
+    console.error('Error retrieving play session:', error.message);
     throw error;
   }
 }
 
 function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = "", data) {
   // Construct the URL based on the presence of episodeId
-  const url = episodeId 
-      ? `${baseUrl}/api/me/progress/${libraryItemId}/${episodeId}` 
+  const url = episodeId
+      ? `${baseUrl}/api/me/progress/${libraryItemId}/${episodeId}`
       : `${baseUrl}/api/me/progress/${libraryItemId}`;
-  
+
   try {
       // Make the PATCH request
       const res = request('PATCH', url, {
@@ -173,11 +176,11 @@ function updateUserPlaySession(playSession, currentBookTime) {
     }
     if (res.statusCode == 404) {
       console.log("updateUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
-      throw new Error(`Failed to sync play session: ${res.statusCode} ${res.body.toString()}`);
+      throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
     }
     if (res.statusCode == 500) {
       console.log("updateUserPlaySession - ABS: Internal Server Error:There was an error syncing the session.");
-      throw new Error(`updateUserPlaySession - Failed to sync play session: ${res.statusCode} ${res.body.toString()}`);
+      throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
     }
     return // docs say this returns playSession, but not in my experience
 
@@ -187,8 +190,7 @@ function updateUserPlaySession(playSession, currentBookTime) {
     //return playSession;
 
   } catch (error) {
-    console.log(res)
-    console.error('updateUserPlaySession - Error updating play session:', error);
+    console.error('updateUserPlaySession - Error updating play session:', error.message);
     return
   }
 }
@@ -241,13 +243,13 @@ function closeUserPlaySession(userPlaySession, currentBookTime) {
     }
     if (res.statusCode == 404) {
       console.log("closeUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
-      throw new Error(`closeUserPlaySession - Failed to close play session: ${res.statusCode} ${res.body.toString()}`);
+      throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
     }
     if (res.statusCode !== 200) {
-      throw new Error(`closeUserPlaySession - Failed to close play session: ${res.statusCode} ${res.body.toString()}`);
+      throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
     }
   } catch (error) {
-    console.error('closeUserPlaySession - Error closing play session:', error);
+    console.error('closeUserPlaySession - Error closing play session:', error.message);
     return
   }
 }
@@ -377,9 +379,14 @@ function getAuthor(authorID) {
   }
 }
 
+function buildLibrarySearchUrl(query, libraryID) {
+  return `${SERVER_URL}/api/libraries/${encodeURIComponent(libraryID)}/search?q=${encodeURIComponent(query)}`;
+}
+
 function searchFor(query, libraryID) {
   try {
-    let res = request('GET', `${SERVER_URL}/api/libraries/${libraryID}/search?q=${query}`, { headers: baseheaders });
+    const url = buildLibrarySearchUrl(query, libraryID);
+    let res = request('GET', url, { headers: baseheaders });
     let data = JSON.parse(res.getBody('utf8'));
     return data;
   } catch (error) {
@@ -388,4 +395,7 @@ function searchFor(query, libraryID) {
   }
 }
 
-module.exports = { getLastPlayedLibraryItem, getItemById, startUserPlaySession, getExistingUserPlaySession, updateMediaProgress, updateUserPlaySession, closeUserPlaySession, getCoverUrl, getLibraryFilterData, getAllLibraries, getAllAudiobooks, getLibraryItems, getAuthor, searchFor };
+module.exports = { getLastPlayedLibraryItem, getItemById, startUserPlaySession,
+  getExistingUserPlaySession, updateMediaProgress, updateUserPlaySession,
+  closeUserPlaySession, getCoverUrl, getLibraryFilterData, getAllLibraries,
+  getAllAudiobooks, getLibraryItems, getAuthor, buildLibrarySearchUrl, searchFor };

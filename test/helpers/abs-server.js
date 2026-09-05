@@ -35,7 +35,26 @@ function replay(name) {
   const cassette = loadCassette(name);
   const misses = [];
   const server = http.createServer((req, res) => {
-    const hit = cassette[keyFor(req.method, req.url)];
+    let hit = cassette[keyFor(req.method, req.url)];
+
+    // A play-session response recorded from POST /items/:id/play is also what
+    // ABS returns from GET /session/:id. Synthesize that lookup so cold-start
+    // recovery can be tested without depending on an expired live session.
+    const sessionMatch = req.method === 'GET' && req.url.match(/^\/api\/session\/([^/?]+)$/);
+    if (!hit && sessionMatch) {
+      const wantedId = decodeURIComponent(sessionMatch[1]);
+      for (const [key, entry] of Object.entries(cassette)) {
+        if (!/^POST \/api\/items\/[^/]+\/play$/.test(key)) continue;
+        try {
+          const body = typeof entry.body === 'string' ? JSON.parse(entry.body) : entry.body;
+          if (body?.id === wantedId) {
+            hit = { status: 200, headers: { 'Content-Type': 'application/json' }, body };
+            break;
+          }
+        } catch { /* malformed fixtures are handled as misses below */ }
+      }
+    }
+
     if (!hit) {
       misses.push(keyFor(req.method, req.url));
       res.writeHead(599, { 'Content-Type': 'application/json' });
