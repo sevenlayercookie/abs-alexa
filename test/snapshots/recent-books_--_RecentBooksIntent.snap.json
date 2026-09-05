@@ -3,7 +3,7 @@
   "response": {
     "outputSpeech": {
       "type": "SSML",
-      "ssml": "<speak>You&apos;ve most recently listened to: The Lies of Locke Lamora by Scott Lynch; Gentleman Bastard Book 2 - Red Seas under Red Skies by Scott Lynch; The Butcher&apos;s Masquerade by Matt Dinniman.</speak>"
+      "ssml": "<speak>You&apos;ve most recently listened to: The Lies of Locke Lamora by Scott Lynch; Gentleman Bastard Book 2 - Red Seas under Red Skies by Scott Lynch; and The Butcher&apos;s Masquerade by Matt Dinniman.</speak>"
     },
     "shouldEndSession": true
   },

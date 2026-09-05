@@ -270,6 +270,8 @@ describe('skill behaviour', () => {
 
     assert.match(spoken, /most recently listened to/i);
     for (const book of expected) assert.ok(spoken.includes(book), `missing recent book: ${book}`);
+    assert.ok(spoken.includes(`; and ${expected[expected.length - 1]}`),
+      'Alexa should say "and" before the final book');
     assert.ok(expected.every((book, index) =>
       index === 0 || spoken.indexOf(expected[index - 1]) < spoken.indexOf(book)),
     'recent books should retain the ordering returned by Audiobookshelf');

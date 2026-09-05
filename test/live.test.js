@@ -314,6 +314,13 @@ describe('live: every implemented intent', { skip: why }, () => {
         .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       assert.ok(spoken.includes(escapedTitle), `RecentBooksIntent omitted ${title}`);
     }
+    if (expected.length > 1) {
+      const escapedLastTitle = expected[expected.length - 1]
+        .replace(/&/g, '&amp;').replace(/'/g, '&apos;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      assert.ok(spoken.includes(`; and ${escapedLastTitle}`),
+        'RecentBooksIntent should say "and" before the final book');
+    }
   });
 
   test('FallbackIntent responds without throwing', async () => {

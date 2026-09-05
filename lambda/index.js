@@ -12,6 +12,7 @@ const { getRecentLibraryItems, getLastPlayedLibraryItem, getItemById, startUserP
   getLibraryFilterData, getAllLibraries, getAllAudiobooks, getLibraryItems, getAuthor,
   searchFor } = require('./lib/abs-client');
 const { createPlaybackToken, parsePlaybackToken } = require('./lib/playback-token');
+const { formatSpokenList } = require('./lib/speech');
 //const { SsmlUtils } = require('ask-sdk-core');
 
 let closedPlaySession = false
@@ -218,7 +219,8 @@ const RecentBooksIntentHandler = {
         ? `${metadata.title} by ${metadata.authorName}`
         : metadata.title;
     });
-    const speakOutput = `You've most recently listened to: ${descriptions.join('; ')}.`;
+    const spokenList = formatSpokenList(descriptions);
+    const speakOutput = `You've most recently listened to: ${spokenList}.`;
 
     return handlerInput.responseBuilder
       .speak(sanitizeForSSML(speakOutput))
