@@ -1,0 +1,12 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>You&apos;ve most recently listened to: The Lies of Locke Lamora by Scott Lynch; Gentleman Bastard Book 2 - Red Seas under Red Skies by Scott Lynch; The Butcher&apos;s Masquerade by Matt Dinniman.</speak>"
+    },
+    "shouldEndSession": true
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

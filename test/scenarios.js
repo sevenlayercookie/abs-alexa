@@ -30,6 +30,10 @@ const scenarios = [
     steps: [{ label: 'AMAZON.ResumeIntent', make: () => A.intent('AMAZON.ResumeIntent', {}, {}, true) }],
   },
   {
+    name: 'recent-books',
+    steps: [{ label: 'RecentBooksIntent', make: () => A.intent('RecentBooksIntent', {}, {}, true) }],
+  },
+  {
     name: 'play-book-by-title',
     steps: [{ label: 'PlayBookIntent title only', make: () => A.intent('PlayBookIntent', { title: 'the lies of locke lamora' }, {}, true) }],
   },
@@ -100,8 +104,11 @@ const scenarios = [
     steps: [{ label: 'PlayBookIntent unknown title', make: () => A.intent('PlayBookIntent', { title: 'a book that does not exist anywhere' }, {}, true) }],
   },
   {
-    name: 'unhandled-intent-falls-back',
-    steps: [{ label: 'GoToChapterX (no handler)', make: () => A.intent('GoToChapterX', { chapterNumber: '3' }, {}, true) }],
+    name: 'go-to-chapter',
+    steps: [
+      { label: 'PlayLastIntent', make: () => A.intent('PlayLastIntent', {}, {}, true) },
+      { label: 'GoToChapterX chapter 3', make: (a, p) => A.intent('GoToChapterX', { chapterNumber: '3' }, a, false, p) },
+    ],
   },
   {
     name: 'session-ended',

@@ -152,6 +152,15 @@ describe('skill behaviour', () => {
     assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 3);
     assert.strictEqual(stream.offsetInMilliseconds, 0);
 
+    const numberedChapter = await invoke(skill,
+      intent('GoToChapterX', { chapterNumber: '7' },
+        { userPlaySession: dune }, false,
+        { token: 1, offsetInMilliseconds: 0 }));
+    stream = assertWellFormedStream(playDirective(numberedChapter), 'multi-track numbered chapter');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 7);
+    assert.ok(Math.abs(stream.offsetInMilliseconds - 28462.5) < 0.001);
+    assert.match(numberedChapter.response.outputSpeech.ssml, /chapter 7/i);
+
     const back = await invoke(skill,
       intent('GoBackXTimeIntent', { time: 'PT1M' },
         { userPlaySession: dune }, false,
@@ -186,6 +195,22 @@ describe('skill behaviour', () => {
       /trouble doing what you asked/i);
   });
 
+  test('numbered chapter navigation validates the requested chapter', async () => {
+    const skill = loadSkill();
+    const first = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(first);
+
+    const missing = await invoke(skill,
+      intent('GoToChapterX', {}, {}, true, player));
+    assert.strictEqual(playDirective(missing), undefined);
+    assert.match(missing.response.outputSpeech.ssml, /between 1 and/i);
+
+    const outOfRange = await invoke(skill,
+      intent('GoToChapterX', { chapterNumber: '999999' }, {}, true, player));
+    assert.strictEqual(playDirective(outOfRange), undefined);
+    assert.match(outOfRange.response.outputSpeech.ssml, /between 1 and/i);
+  });
+
   test('voice and device controls recover after a cold Lambda start', async () => {
     const warm = loadSkill();
     const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));
@@ -196,6 +221,14 @@ describe('skill behaviour', () => {
       intent('AMAZON.NextIntent', {}, {}, true, player));
     const nextStream = assertWellFormedStream(playDirective(next), 'cold-start next');
     assert.strictEqual(parsePlaybackToken(nextStream.token).libraryItemId,
+      parsePlaybackToken(player.token).libraryItemId);
+
+    const coldForChapter = loadSkill();
+    const chapter = await invoke(coldForChapter,
+      intent('GoToChapterX', { chapterNumber: '3' }, {}, true, player));
+    const chapterStream = assertWellFormedStream(
+      playDirective(chapter), 'cold-start numbered chapter');
+    assert.strictEqual(parsePlaybackToken(chapterStream.token).libraryItemId,
       parsePlaybackToken(player.token).libraryItemId);
 
     const coldForPause = loadSkill();
@@ -224,6 +257,24 @@ describe('skill behaviour', () => {
     const recoveredFirst = await invoke(skill,
       asUser(intent('AMAZON.NextIntent', {}, {}, true, firstPlayer), 'amzn1.ask.account.USER_A'));
     assertWellFormedStream(playDirective(recoveredFirst), 'first user after second user playback');
+  });
+
+  test('RecentBooksIntent lists the three most recently listened-to books in order', async () => {
+    const r = await invoke(loadSkill(), intent('RecentBooksIntent', {}, {}, true));
+    const spoken = r.response.outputSpeech.ssml;
+    const expected = [
+      'The Lies of Locke Lamora by Scott Lynch',
+      'Gentleman Bastard Book 2 - Red Seas under Red Skies by Scott Lynch',
+      'The Butcher&apos;s Masquerade by Matt Dinniman',
+    ];
+
+    assert.match(spoken, /most recently listened to/i);
+    for (const book of expected) assert.ok(spoken.includes(book), `missing recent book: ${book}`);
+    assert.ok(expected.every((book, index) =>
+      index === 0 || spoken.indexOf(expected[index - 1]) < spoken.indexOf(book)),
+    'recent books should retain the ordering returned by Audiobookshelf');
+    assert.strictEqual(r.response.shouldEndSession, true);
+    assert.strictEqual(playDirective(r), undefined);
   });
 
   test('every request was served from a fixture', async () => {

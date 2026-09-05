@@ -6,18 +6,26 @@ const request = require('sync-request');
 const { SERVER_URL, ABS_API_KEY, baseheaders } = require('./settings');
 const { calculateCurrentTime } = require('./audio');
 
-function getLastPlayedLibraryItem() {
+function getRecentLibraryItems(limit = 3) {
   try {
-    let res = request('GET', `${SERVER_URL}/api/me/items-in-progress`, { headers: baseheaders });
+    const requestedLimit = Number.isInteger(limit) && limit > 0 ? limit : 3;
+    let res = request('GET', `${SERVER_URL}/api/me/items-in-progress?limit=${requestedLimit}`, { headers: baseheaders });
+    if (res.statusCode !== 200) {
+      throw new Error(`Failed to fetch recent library items: HTTP ${res.statusCode}`);
+    }
     let data = JSON.parse(res.getBody('utf8'));
-
-    let mostRecentProgressUpdatedItem = data.libraryItems[0] // this should be the most recent (ABS automatically sorts)
-    return mostRecentProgressUpdatedItem;
+    const libraryItems = Array.isArray(data.libraryItems) ? data.libraryItems : [];
+    return libraryItems
+      .filter(item => item?.media?.metadata?.title)
+      .slice(0, requestedLimit);
   } catch (error) {
-    console.error('Error during getLastPlayedLibraryItem:', error);
+    console.error('Error during getRecentLibraryItems:', error);
     throw error;
   }
+}
 
+function getLastPlayedLibraryItem() {
+  return getRecentLibraryItems(1)[0];
 }
 
 function getItemById(id, options = {}) {
@@ -395,7 +403,7 @@ function searchFor(query, libraryID) {
   }
 }
 
-module.exports = { getLastPlayedLibraryItem, getItemById, startUserPlaySession,
+module.exports = { getRecentLibraryItems, getLastPlayedLibraryItem, getItemById, startUserPlaySession,
   getExistingUserPlaySession, updateMediaProgress, updateUserPlaySession,
   closeUserPlaySession, getCoverUrl, getLibraryFilterData, getAllLibraries,
   getAllAudiobooks, getLibraryItems, getAuthor, buildLibrarySearchUrl, searchFor };

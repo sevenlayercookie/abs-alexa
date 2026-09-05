@@ -108,6 +108,17 @@
           ]
         },
         {
+          "slots": [],
+          "name": "RecentBooksIntent",
+          "samples": [
+            "What am I listening to",
+            "What have I been listening to lately",
+            "What have I listened to recently",
+            "What are my recent books",
+            "List my recently listened to books"
+          ]
+        },
+        {
           "name": "AMAZON.PauseIntent",
           "samples": []
         },

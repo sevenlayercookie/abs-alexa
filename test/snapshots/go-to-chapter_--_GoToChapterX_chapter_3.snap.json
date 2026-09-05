@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "response": {
+    "outputSpeech": {
+      "type": "SSML",
+      "ssml": "<speak>Going to chapter 3.</speak>"
+    },
+    "directives": [
+      {
+        "type": "AudioPlayer.Play",
+        "playBehavior": "REPLACE_ALL",
+        "audioItem": {
+          "stream": {
+            "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/file/39190583?token=<token>",
+            "token":"<token>",
+            "offsetInMilliseconds": 4599153
+          },
+          "metadata": {
+            "title": "PART I - Ambition",
+            "subtitle": "The Lies of Locke Lamora",
+            "art": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
+                  "widthPixels": 512,
+                  "heightPixels": 512
+                }
+              ]
+            },
+            "backgroundImage": {
+              "sources": [
+                {
+                  "url": "http://127.0.0.1:<port>/api/items/95b7a24b-62e2-438a-ad9c-c41b991a7a32/cover",
+                  "widthPixels": 1600,
+                  "heightPixels": 900
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "shouldEndSession": true
+  },
+  "userAgent": "ask-node/<ver> Node/<ver> AlexaSkill",
+  "sessionAttributes": {}
+}

@@ -143,7 +143,7 @@ describe('live: every implemented intent', { skip: why }, () => {
 
   // --- navigation, which needs an established session ------------------------
 
-  test('next, previous and seek all return playable streams in a session', async () => {
+  test('chapter navigation and seek all return playable streams in a session', async () => {
     let attrs = {}, player = null;
     const step = async (label, env) => {
       const r = await invoke(env);
@@ -165,6 +165,11 @@ describe('live: every implemented intent', { skip: why }, () => {
 
     const prev = await step('previous', A.intent('AMAZON.PreviousIntent', {}, attrs, false, player));
     await assertPlayable(play(prev), 'PreviousIntent');
+
+    const chapter = await step(
+      'chapter', A.intent('GoToChapterX', { chapterNumber: '3' }, attrs, false, player));
+    await assertPlayable(play(chapter), 'GoToChapterX');
+    assert.match(speech(chapter), /chapter 3/i);
 
     const fwd = await step('forward', A.intent('GoForwardXTimeIntent', { time: 'PT2M' }, attrs, false, player));
     await assertPlayable(play(fwd), 'GoForwardXTimeIntent');
@@ -210,6 +215,10 @@ describe('live: every implemented intent', { skip: why }, () => {
     const forward = await invokeCold(
       A.intent('GoForwardXTimeIntent', { time: 'PT2M' }, {}, true, player));
     await assertPlayable(play(forward), 'cold-start GoForwardXTimeIntent');
+
+    const chapter = await invokeCold(
+      A.intent('GoToChapterX', { chapterNumber: '3' }, {}, true, player));
+    await assertPlayable(play(chapter), 'cold-start GoToChapterX');
 
     const backward = await invokeCold(
       A.intent('GoBackXTimeIntent', { time: 'PT30S' }, {}, true, A.playerStateFrom(forward)));
@@ -285,6 +294,28 @@ describe('live: every implemented intent', { skip: why }, () => {
     assert.ok(speech(r).length > 0, 'help should say something');
   });
 
+  test('RecentBooksIntent lists up to three books from the live recent-listening feed', async () => {
+    const recentResponse = await fetch(`${cred.url}/api/me/items-in-progress?limit=3`, {
+      headers: absHeaders(),
+    });
+    assert.ok(recentResponse.ok, `recent-listening feed returned HTTP ${recentResponse.status}`);
+    const recentData = await recentResponse.json();
+    const expected = (recentData.libraryItems || [])
+      .filter((item) => item?.media?.metadata?.title)
+      .slice(0, 3)
+      .map((item) => item.media.metadata.title);
+
+    const r = await invoke(A.intent('RecentBooksIntent', {}, {}, true));
+    const spoken = speech(r);
+    assert.doesNotMatch(spoken, /trouble doing what you asked/i);
+    assert.strictEqual(play(r), undefined);
+    for (const title of expected) {
+      const escapedTitle = title.replace(/&/g, '&amp;').replace(/'/g, '&apos;')
+        .replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      assert.ok(spoken.includes(escapedTitle), `RecentBooksIntent omitted ${title}`);
+    }
+  });
+
   test('FallbackIntent responds without throwing', async () => {
     const r = await invoke(A.intent('AMAZON.FallbackIntent', {}, {}, true));
     assert.ok(speech(r).length > 0);
@@ -305,9 +336,13 @@ describe('live: every implemented intent', { skip: why }, () => {
     assert.doesNotMatch(speech(r), /trouble doing what you asked/i);
   });
 
-  test('GoToChapterX has no handler and falls back cleanly', async () => {
-    const r = await invoke(A.intent('GoToChapterX', { chapterNumber: '3' }, {}, true));
-    assert.match(speech(r), /can't do that yet/i);
+  test('GoToChapterX rejects an out-of-range chapter cleanly', async () => {
+    const first = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const r = await invoke(A.intent('GoToChapterX', { chapterNumber: '999999' }, {}, true,
+      A.playerStateFrom(first)));
+    assert.strictEqual(play(r), undefined);
+    assert.match(speech(r), /between 1 and/i);
+    assert.doesNotMatch(speech(r), /trouble doing what you asked/i);
   });
 
   // --- device and playback events -------------------------------------------

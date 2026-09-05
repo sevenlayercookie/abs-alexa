@@ -53,8 +53,10 @@ and say the command as a second turn.
 | Play the last listened-to book | `Alexa, ask a. b. s. to play the last book` | `Play the last book` |
 | Play a book by title | `Alexa, ask a. b. s. to play The Lies of Locke Lamora` | `Play The Lies of Locke Lamora` |
 | Narrow a title by author | `Alexa, ask a. b. s. to play A Game of Thrones by George R. R. Martin` | `Play A Game of Thrones by George R. R. Martin` |
+| List the three most recently listened-to books | `Alexa, ask a. b. s. what have I been listening to lately` | `What am I listening to?` |
 | Seek forward by a duration | `Alexa, ask a. b. s. to go forward twenty minutes` | `Go forward twenty minutes` |
 | Seek backward by a duration | `Alexa, ask a. b. s. to go back five minutes` | `Go back five minutes` |
+| Go to a numbered chapter | `Alexa, ask a. b. s. to go to chapter twelve` | `Go to chapter twelve` |
 | Ask for help | `Alexa, ask a. b. s. for help` | `Help` |
 
 Alexa's global media router can intercept phrases such as `skip forward`,
@@ -226,4 +228,3 @@ is project configuration and should be committed.
       cannot be reconstructed from the Alexa stream token and Audiobookshelf
 - [ ] Add other intents, such as:
   - [ ] "Start the book over"
-  - [ ] "Go to chapter 12"

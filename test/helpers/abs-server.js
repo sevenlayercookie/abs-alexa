@@ -29,6 +29,17 @@ function saveCassette(name, data) {
   fs.writeFileSync(fileFor(name), JSON.stringify(data, null, 2) + '\n');
 }
 
+const WRITE_ENDPOINTS = [
+  /^\/api\/session\/[^/]+\/sync$/,
+  /^\/api\/session\/[^/]+\/close$/,
+  /^\/api\/me\/progress\//,
+];
+
+const isWrite = (url) => {
+  const p = url.split('?')[0];
+  return WRITE_ENDPOINTS.some((re) => re.test(p));
+};
+
 // Serve recorded interactions; unknown requests fail loudly rather than
 // silently returning something plausible.
 function replay(name) {
@@ -36,6 +47,21 @@ function replay(name) {
   const misses = [];
   const server = http.createServer((req, res) => {
     let hit = cassette[keyFor(req.method, req.url)];
+
+    // Older cassettes recorded the default 25-item response. Reuse and trim
+    // that response when production asks ABS to return a smaller recent list.
+    const recentMatch = req.method === 'GET'
+      && req.url.match(/^\/api\/me\/items-in-progress\?limit=(\d+)$/);
+    if (!hit && recentMatch) {
+      const recorded = cassette['GET /api/me/items-in-progress'];
+      if (recorded) {
+        const body = typeof recorded.body === 'string' ? JSON.parse(recorded.body) : recorded.body;
+        hit = {
+          ...recorded,
+          body: { ...body, libraryItems: (body.libraryItems || []).slice(0, Number(recentMatch[1])) },
+        };
+      }
+    }
 
     // A play-session response recorded from POST /items/:id/play is also what
     // ABS returns from GET /session/:id. Synthesize that lookup so cold-start
@@ -55,6 +81,13 @@ function replay(name) {
       }
     }
 
+    // Writes are blocked while recording and their response body is never
+    // consumed by the skill. Treat every matching play-session id the same so
+    // adding a test does not require a meaningless id-specific fixture.
+    if (!hit && isWrite(req.url)) {
+      hit = { status: 200, headers: { 'Content-Type': 'application/json' }, body: '{}' };
+    }
+
     if (!hit) {
       misses.push(keyFor(req.method, req.url));
       res.writeHead(599, { 'Content-Type': 'application/json' });
@@ -71,17 +104,6 @@ function replay(name) {
 // for real would overwrite the position in whatever books are in progress.
 // They are answered with a canned success instead, which is what the skill
 // checks for anyway (it only looks at statusCode).
-const WRITE_ENDPOINTS = [
-  /^\/api\/session\/[^/]+\/sync$/,
-  /^\/api\/session\/[^/]+\/close$/,
-  /^\/api\/me\/progress\//,
-];
-
-const isWrite = (url) => {
-  const p = url.split('?')[0];
-  return WRITE_ENDPOINTS.some((re) => re.test(p));
-};
-
 // Proxy to the real server, recording as we go.
 function record(name, upstream, apiKey) {
   const cassette = loadCassette(name);

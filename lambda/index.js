@@ -7,7 +7,7 @@ const { calculateCurrentTime, getCurrentTrackByBookTime, getCurrentTrackIndexByB
 const { timers, timestamps, clearTimers, resetTimestamps } = require('./lib/timers');
 const { getEntityData, fuzzyMatch, fuzzyStringMatch, searchBookWithAbsAPI, amazonCrossmatch,
   searchByTitleOnly } = require('./lib/search');
-const { getLastPlayedLibraryItem, getItemById, startUserPlaySession, getExistingUserPlaySession,
+const { getRecentLibraryItems, getLastPlayedLibraryItem, getItemById, startUserPlaySession, getExistingUserPlaySession,
   updateMediaProgress, updateUserPlaySession, closeUserPlaySession, getCoverUrl,
   getLibraryFilterData, getAllLibraries, getAllAudiobooks, getLibraryItems, getAuthor,
   searchFor } = require('./lib/abs-client');
@@ -193,6 +193,36 @@ const LaunchRequestHandler = {
     return handlerInput.responseBuilder
       .speak(speakOutput)
       .reprompt(speakOutput)
+      .getResponse();
+  }
+};
+
+const RecentBooksIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && Alexa.getIntentName(handlerInput.requestEnvelope) === 'RecentBooksIntent';
+  },
+  handle(handlerInput) {
+    const recentBooks = getRecentLibraryItems(3);
+
+    if (!recentBooks.length) {
+      return handlerInput.responseBuilder
+        .speak(sanitizeForSSML("You haven't listened to any audiobooks recently."))
+        .withShouldEndSession(true)
+        .getResponse();
+    }
+
+    const descriptions = recentBooks.map((book) => {
+      const metadata = book.media.metadata;
+      return metadata.authorName
+        ? `${metadata.title} by ${metadata.authorName}`
+        : metadata.title;
+    });
+    const speakOutput = `You've most recently listened to: ${descriptions.join('; ')}.`;
+
+    return handlerInput.responseBuilder
+      .speak(sanitizeForSSML(speakOutput))
+      .withShouldEndSession(true)
       .getResponse();
   }
 };
@@ -856,6 +886,60 @@ const NextIntentHandler = {
       )
       .withShouldEndSession(true)
       .getResponse();
+  }
+}
+
+const GoToChapterXIntentHandler = {
+  canHandle(handlerInput) {
+    return Alexa.getRequestType(handlerInput.requestEnvelope) === 'IntentRequest'
+      && Alexa.getIntentName(handlerInput.requestEnvelope) === 'GoToChapterX';
+  },
+  async handle(handlerInput) {
+    const state = recoverPlaybackState(handlerInput)
+    if (!state) return noActivePlaybackResponse(handlerInput)
+
+    const { attributes: sessionAttributes, userPlaySession } = state
+    const chapters = Array.isArray(userPlaySession.chapters) ? userPlaySession.chapters : []
+    const rawChapterNumber = handlerInput.requestEnvelope.request.intent.slots.chapterNumber?.value
+    const chapterNumber = Number(rawChapterNumber)
+
+    if (chapters.length === 0) {
+      retainPlaybackStateLocally(handlerInput, sessionAttributes)
+      return handlerInput.responseBuilder
+        .speak(sanitizeForSSML('This audiobook does not include chapter information.'))
+        .withShouldEndSession(true)
+        .getResponse()
+    }
+
+    if (!Number.isInteger(chapterNumber) || chapterNumber < 1 || chapterNumber > chapters.length) {
+      retainPlaybackStateLocally(handlerInput, sessionAttributes)
+      return handlerInput.responseBuilder
+        .speak(sanitizeForSSML(
+          `Please choose a chapter between 1 and ${chapters.length}.`))
+        .withShouldEndSession(true)
+        .getResponse()
+    }
+
+    const targetChapter = chapters[chapterNumber - 1]
+    const newBookTime = targetChapter.start
+    updateUserPlaySession(userPlaySession, newBookTime)
+    const playback = applyBookTimeToAttributes(
+      sessionAttributes, userPlaySession, newBookTime)
+    retainPlaybackStateLocally(handlerInput, sessionAttributes)
+
+    console.log(`GoToChapterX: chapter ${chapterNumber} starts at ${newBookTime} seconds`)
+    return handlerInput.responseBuilder
+      .speak(sanitizeForSSML(`Going to chapter ${chapterNumber}.`))
+      .addAudioPlayerPlayDirective(
+        'REPLACE_ALL',
+        playback.playUrl,
+        playback.streamToken,
+        playback.offsetInMilliseconds,
+        null,
+        buildPlaybackMetadata(userPlaySession, newBookTime)
+      )
+      .withShouldEndSession(true)
+      .getResponse()
   }
 }
 
@@ -1637,11 +1721,13 @@ const ErrorHandler = {
 exports.handler = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
+    RecentBooksIntentHandler,
     PlayAudioIntentHandler,
     PlayBookIntentHandler,
     PauseAudioIntentHandler,
     PreviousIntentHandler,
     NextIntentHandler,
+    GoToChapterXIntentHandler,
     GoForwardXTimeIntentHandler,
     GoBackXTimeIntentHandler,
     UnsupportedAudioIntentHandler,
