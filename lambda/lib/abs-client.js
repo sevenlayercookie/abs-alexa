@@ -3,8 +3,7 @@
 // arguments and return parsed responses.
 
 const request = require('sync-request');
-const { SERVER_URL, ABS_API_KEY, baseheaders } = require('./settings');
-const { calculateCurrentTime } = require('./audio');
+const { SERVER_URL, baseheaders } = require('./settings');
 
 function getRecentLibraryItems(limit = 3) {
   try {
@@ -141,125 +140,45 @@ function updateMediaProgress(baseUrl = SERVER_URL, libraryItemId, episodeId = ""
   }
 }
 
-function updateUserPlaySession(playSession, currentBookTime) {
-  let res;
-  try {
-    // currentTime = calculateCurrentTime(playSession, currentTrackOffsetMS, currentToken)
+function updateUserPlaySession(playSession, currentBookTime, timeListened) {
+  if (!playSession?.id) throw new Error('Cannot sync an invalid play session');
+  if (!Number.isFinite(Number(currentBookTime))) throw new Error('Cannot sync an invalid playback position');
 
-    if (!playSession) {
-      console.log("updateUserPlaySession: Empty userPlaySession")
-      return 1
-    }
-
-    const playSessionID = playSession.id
-    if (!playSessionID) {
-      console.log("updateUserPlaySession: Invalid userPlaySessionID")
-      return 1
-    }
-    // Ensure currentBookTime is a float and not null
-    if (currentBookTime == null || isNaN(currentBookTime)) {
-      console.log("updateUserPlaySession: Invalid currentBookTime");
-      return 2;
-    }
-
-    currentBookTime = parseFloat(currentBookTime);
-    const timeListened = (Date.now() - playSession.updatedAt) / 1000
-
-    const body = JSON.stringify({
-      currentTime: currentBookTime,
-      // duration:
-      timeListened: timeListened
-      // !!! if I want ABS to save session, have to return timeListened
-      // timeListened = number of seconds since last update
-      // duration = length of currently playing item....
-    });
-
-    // update user play session
-    console.log("Update ABS play session for book: " + playSession.mediaMetadata.title);
-
-    res = request('POST', SERVER_URL + `/api/session/${playSessionID}/sync`, { headers: baseheaders, body: body });
-    console.log("updateUserPlaySession - Response code: " + res.statusCode);
-    if (res.statusCode == 200) {
-      console.log("updateUserPlaySession - Successfully synced play session with ABS");
-    }
-    if (res.statusCode == 404) {
-      console.log("updateUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
-      throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
-    }
-    if (res.statusCode == 500) {
-      console.log("updateUserPlaySession - ABS: Internal Server Error:There was an error syncing the session.");
-      throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
-    }
-    return // docs say this returns playSession, but not in my experience
-
-    //let playSession = JSON.parse(res.getBody('utf8')); this doesn't seem to return the session...
-    // let playbackURL = data.audioTracks[0].contentUrl
-
-    //return playSession;
-
-  } catch (error) {
-    console.error('updateUserPlaySession - Error updating play session:', error.message);
-    return
-  }
+  const payload = {
+    currentTime: Number(currentBookTime),
+    timeListened: Math.max(0, Number(timeListened) || 0),
+    duration: playSession.duration,
+  };
+  console.log("Update ABS play session for book: " + playSession.mediaMetadata.title);
+  const res = request('POST', SERVER_URL + `/api/session/${playSession.id}/sync`, {
+    headers: { 'Content-Type': 'application/json', ...baseheaders },
+    json: payload,
+  });
+  console.log("updateUserPlaySession - Response code: " + res.statusCode);
+  if (res.statusCode !== 200) throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
+  console.log("updateUserPlaySession - Successfully synced play session with ABS");
+  return true;
 }
 
-function closeUserPlaySession(userPlaySession, currentBookTime) {
-  try {
-    //const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
-    //currentTime = calculateCurrentTime(playSession, currentTrackOffsetMS, currentToken)
+function closeUserPlaySession(userPlaySession, currentBookTime, timeListened) {
+  if (!userPlaySession?.id) throw new Error('Cannot close an invalid play session');
+  if (!Number.isFinite(Number(currentBookTime))) throw new Error('Cannot close at an invalid playback position');
 
-    if (!userPlaySession) {
-      console.log("closeUserPlaySession: Empty userPlaySession")
-      return 1
-    }
-    const userPlaySessionID = userPlaySession.id
-
-
-    if (!userPlaySessionID) {
-      console.log("closeUserPlaySession: Invalid userPlaySessionID")
-      return 1
-    }
-
-    // Ensure currentBookTime is a float and not null
-    if (currentBookTime == null || isNaN(currentBookTime)) {
-      console.log("closeUserPlaySession: Invalid currentBookTime");
-      return 2;
-    }
-
-    currentBookTime = parseFloat(currentBookTime);
-
-    const timeListened = (Date.now() - userPlaySession.updatedAt) / 1000
-
-    const body = JSON.stringify({
-      currentTime: currentBookTime,
-      // duration:
-      timeListened: timeListened
-      // !!! if I want ABS to save session, have to return timeListened
-      // timeListened = time (in seconds) since last update
-    });
-
-
-
-    const apiUrl = SERVER_URL + `/api/session/${userPlaySessionID}/close`
-    console.log("Close ABS play session for book: " + userPlaySession.mediaMetadata.title);
-    let res = request('POST', apiUrl, { headers: baseheaders, body: body });
-    console.log("closeUserPlaySession - Response code: " + res.statusCode);
-
-    if (res.statusCode == 200) {
-      console.log("closeUserPlaySession - Successfully synced and closed play session with ABS");
-      return 0;
-    }
-    if (res.statusCode == 404) {
-      console.log("closeUserPlaySession - ABS: No listening session with the provided ID is open, or the session belongs to another user.");
-      throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
-    }
-    if (res.statusCode !== 200) {
-      throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
-    }
-  } catch (error) {
-    console.error('closeUserPlaySession - Error closing play session:', error.message);
-    return
-  }
+  const payload = {
+    currentTime: Number(currentBookTime),
+    timeListened: Math.max(0, Number(timeListened) || 0),
+    duration: userPlaySession.duration,
+  };
+  const apiUrl = SERVER_URL + `/api/session/${userPlaySession.id}/close`;
+  console.log("Close ABS play session for book: " + userPlaySession.mediaMetadata.title);
+  const res = request('POST', apiUrl, {
+    headers: { 'Content-Type': 'application/json', ...baseheaders },
+    json: payload,
+  });
+  console.log("closeUserPlaySession - Response code: " + res.statusCode);
+  if (res.statusCode !== 200) throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
+  console.log("closeUserPlaySession - Successfully synced and closed play session with ABS");
+  return true;
 }
 
 function getCoverUrl(libraryItemId) {

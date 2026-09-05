@@ -13,7 +13,7 @@ const { startServer } = require('./helpers/server-process');
 const { loadSkill, invoke, intent, audioPlayer, playbackController, playerStateFrom, asUser } = require('./helpers/alexa');
 const { matchSnapshot } = require('./helpers/snapshot');
 const { playDirective, assertWellFormedStream, assertNotErrorResponse } = require('./helpers/assertions');
-const { parsePlaybackToken } = require('../lambda/lib/playback-token');
+const { createPlaybackToken, parsePlaybackToken } = require('../lambda/lib/playback-token');
 const fs = require('fs');
 const path = require('path');
 
@@ -277,6 +277,137 @@ describe('skill behaviour', () => {
     'recent books should retain the ordering returned by Audiobookshelf');
     assert.strictEqual(r.response.shouldEndSession, true);
     assert.strictEqual(playDirective(r), undefined);
+  });
+
+  test('a seek saves the old position and commits the destination only after playback starts', async () => {
+    const skill = loadSkill();
+    const first = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const oldPlayer = playerStateFrom(first);
+    oldPlayer.offsetInMilliseconds += 5000;
+    await invoke(skill, audioPlayer('PlaybackStarted', oldPlayer));
+    await srv.clearRequests();
+
+    const chapter = await invoke(skill,
+      intent('GoToChapterX', { chapterNumber: '3' }, {}, true, oldPlayer));
+    const newPlayer = playerStateFrom(chapter);
+    assert.notStrictEqual(newPlayer.token, oldPlayer.token,
+      'a replacement within the same audio file still needs a unique token');
+    let writes = (await srv.getRequests()).filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/sync$/.test(request.url));
+
+    assert.strictEqual(writes.length, 1, 'navigation should first save exactly one outgoing position');
+    assert.ok(Math.abs(writes[0].body.currentTime - 81394.233038136) < 0.001);
+    assert.strictEqual(writes[0].body.duration, 81423.743129);
+    assert.ok(writes[0].body.timeListened >= 0);
+
+    // REPLACE_ALL reports a stop for the old stream. That callback must not
+    // overwrite the already-saved outgoing position.
+    await invoke(skill, audioPlayer('PlaybackStopped', oldPlayer));
+    writes = (await srv.getRequests()).filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/sync$/.test(request.url));
+    assert.strictEqual(writes.length, 1, 'the expected old-stream stop should be deduplicated');
+
+    await invoke(skill, audioPlayer('PlaybackStarted', newPlayer));
+    writes = (await srv.getRequests()).filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/sync$/.test(request.url));
+    assert.strictEqual(writes.length, 2, 'confirmed replacement playback should commit the destination');
+    assert.ok(Math.abs(writes[1].body.currentTime - 4599.153) < 0.001);
+    assert.strictEqual(writes[1].body.timeListened, 0,
+      'seeking must not count skipped time as listened time');
+
+    // Also cover the defensive ordering: a delayed old stop arriving after
+    // replacement playback began is distinguishable by its unique token.
+    await invoke(skill, audioPlayer('PlaybackStopped', oldPlayer));
+    writes = (await srv.getRequests()).filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/sync$/.test(request.url));
+    assert.strictEqual(writes.length, 2, 'a late old-stream stop must not undo the confirmed seek');
+  });
+
+  test('stop closes once and its PlaybackStopped callback cannot reopen or resync the session', async () => {
+    const skill = loadSkill();
+    const first = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(first);
+    player.offsetInMilliseconds += 7000;
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    await srv.clearRequests();
+
+    const stopped = await invoke(skill,
+      intent('AMAZON.StopIntent', {}, {}, true, player));
+    assert.ok(((stopped.response || {}).directives || [])
+      .some((directive) => directive.type === 'AudioPlayer.Stop'));
+    await invoke(skill, audioPlayer('PlaybackStopped', player));
+
+    const requests = await srv.getRequests();
+    const closes = requests.filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/close$/.test(request.url));
+    const syncs = requests.filter((request) =>
+      request.method === 'POST' && /\/api\/session\/[^/]+\/sync$/.test(request.url));
+    const replacementSessions = requests.filter((request) =>
+      request.method === 'POST' && /\/api\/items\/[^/]+\/play$/.test(request.url));
+
+    assert.strictEqual(closes.length, 1);
+    assert.ok(Math.abs(closes[0].body.currentTime - 81396.233038136) < 0.001);
+    assert.strictEqual(closes[0].body.duration, 81423.743129);
+    assert.ok(closes[0].body.timeListened >= 0);
+    assert.deepStrictEqual(syncs, [], 'the callback after a successful close must not sync again');
+    assert.deepStrictEqual(replacementSessions, [], 'a status callback must never open a replacement session');
+  });
+
+  test('a failed queued stream saves and preserves the stream that is still playing', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+    const currentToken = createPlaybackToken(dune, 1);
+    const currentPlayer = {
+      token: currentToken,
+      offsetInMilliseconds: 120000,
+      playerActivity: 'PLAYING',
+    };
+
+    const nearlyFinished = await invoke(skill,
+      audioPlayer('PlaybackNearlyFinished', currentPlayer,
+        { userPlaySession: dune }));
+    const queued = playDirective(nearlyFinished)?.audioItem?.stream;
+    assert.ok(queued, 'expected the next Dune track to be enqueued');
+    await srv.clearRequests();
+
+    await invoke(skill, audioPlayer('PlaybackFailed', {
+      token: queued.token,
+      offsetInMilliseconds: 0,
+      error: { type: 'MEDIA_ERROR_SERVICE_UNAVAILABLE' },
+      currentPlaybackState: currentPlayer,
+    }));
+
+    const requests = await srv.getRequests();
+    const syncs = requests.filter((request) => /\/sync$/.test(request.url));
+    const closes = requests.filter((request) => /\/close$/.test(request.url));
+    assert.strictEqual(syncs.length, 1);
+    assert.ok(Math.abs(syncs[0].body.currentTime - 120) < 0.001,
+      'the playing stream position, not the failed queued stream, should be saved');
+    assert.deepStrictEqual(closes, [], 'failure of a queued stream must not close active playback');
+  });
+
+  test('unconfirmed playback adds no listening time, and a failed book search keeps it open', async () => {
+    const skill = loadSkill();
+    await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    await srv.clearRequests();
+
+    const missing = await invoke(skill,
+      intent('PlayBookIntent', { title: 'a book that does not exist anywhere' }, {}, true));
+    assert.strictEqual(playDirective(missing), undefined);
+    let closes = (await srv.getRequests()).filter((request) => /\/close$/.test(request.url));
+    assert.deepStrictEqual(closes, [], 'an unsuccessful replacement search must not close playback');
+
+    const stillResumable = await invoke(skill, playbackController('PlayCommandIssued'));
+    assertWellFormedStream(playDirective(stillResumable), 'playback after failed replacement search');
+    await srv.clearRequests();
+
+    await invoke(skill,
+      intent('PlayBookIntent', { title: 'the lies of locke lamora' }, {}, true));
+    closes = (await srv.getRequests()).filter((request) => /\/close$/.test(request.url));
+    assert.strictEqual(closes.length, 1, 'a valid replacement should close the outgoing session once');
+    assert.strictEqual(closes[0].body.timeListened, 0,
+      'a stream with no PlaybackStarted confirmation must not accrue listening time');
   });
 
   test('every request was served from a fixture', async () => {

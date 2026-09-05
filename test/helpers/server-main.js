@@ -22,6 +22,11 @@ const { replay, record, listen } = require('./abs-server');
     // them asynchronously would race with the assertion that reads them.
     process.on('message', (m) => {
       if (m === 'get-misses') process.send({ type: 'misses', list: r.misses.slice() });
+      if (m === 'get-requests') process.send({ type: 'requests', list: r.requests.slice() });
+      if (m === 'clear-requests') {
+        r.requests.length = 0;
+        process.send({ type: 'requests-cleared' });
+      }
     });
   }
 

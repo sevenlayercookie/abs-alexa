@@ -18,6 +18,7 @@ const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const path = require('path');
 const A = require('./helpers/alexa');
+const { parsePlaybackToken } = require('../lambda/lib/playback-token');
 
 const BOOK = process.env.BOOK_TITLE || 'the lies of locke lamora';
 
@@ -176,6 +177,47 @@ describe('live: every implemented intent', { skip: why }, () => {
 
     const back = await step('back', A.intent('GoBackXTimeIntent', { time: 'PT30S' }, attrs, false, player));
     await assertPlayable(play(back), 'GoBackXTimeIntent');
+  });
+
+  test('ABS progress follows confirmed playback and is not overwritten by replacement stop events', async () => {
+    skill = A.loadSkill();
+    const first = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const oldPlayer = A.playerStateFrom(first);
+    await invoke(A.audioPlayer('PlaybackStarted', oldPlayer));
+
+    const chapter = await invoke(A.intent(
+      'GoToChapterX', { chapterNumber: '3' }, {}, true, oldPlayer));
+    const newPlayer = A.playerStateFrom(chapter);
+    assert.notStrictEqual(newPlayer.token, oldPlayer.token,
+      'same-file replacement playback should have a distinct token');
+    const token = parsePlaybackToken(newPlayer.token);
+    assert.ok(token?.libraryItemId && token?.sessionId, 'playback token lacks ABS recovery data');
+
+    // This is the order Alexa produces for REPLACE_ALL: old stream stops, then
+    // replacement starts. Only PlaybackStarted confirms that the seek happened.
+    await invoke(A.audioPlayer('PlaybackStopped', oldPlayer));
+    await invoke(A.audioPlayer('PlaybackStarted', newPlayer));
+    await invoke(A.audioPlayer('PlaybackStopped', oldPlayer));
+
+    const confirmed = await fetch(`${cred.url}/api/me/progress/${token.libraryItemId}`, {
+      headers: absHeaders(),
+    });
+    assert.ok(confirmed.ok, `progress lookup returned HTTP ${confirmed.status}`);
+    const confirmedProgress = await confirmed.json();
+    assert.ok(Math.abs(confirmedProgress.currentTime - 4599.153) < 1,
+      `ABS stored ${confirmedProgress.currentTime}s instead of chapter 3 at 4599.153s`);
+
+    const stopped = await invoke(A.intent('AMAZON.StopIntent', {}, {}, true, newPlayer));
+    assert.ok(stop(stopped), 'stop should emit AudioPlayer.Stop');
+    await invoke(A.audioPlayer('PlaybackStopped', newPlayer));
+
+    const afterStop = await fetch(`${cred.url}/api/me/progress/${token.libraryItemId}`, {
+      headers: absHeaders(),
+    });
+    assert.ok(afterStop.ok, `post-stop progress lookup returned HTTP ${afterStop.status}`);
+    const stoppedProgress = await afterStop.json();
+    assert.ok(Math.abs(stoppedProgress.currentTime - 4599.153) < 1,
+      `the stop callback moved ABS progress to ${stoppedProgress.currentTime}s`);
   });
 
   test('next in the final chapter declines instead of throwing', async () => {

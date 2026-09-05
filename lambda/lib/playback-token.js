@@ -1,8 +1,9 @@
 'use strict';
 
+const crypto = require('crypto');
 const PREFIX = 'abs1.';
 
-function createPlaybackToken(playSession, trackIndex) {
+function createPlaybackToken(playSession, trackIndex, playbackId = null) {
   if (!playSession?.libraryItemId) throw new Error('Playback token requires a library item id');
   if (!Number.isInteger(Number(trackIndex)) || Number(trackIndex) < 1) {
     throw new Error(`Playback token requires a positive track index, received ${trackIndex}`);
@@ -11,7 +12,8 @@ function createPlaybackToken(playSession, trackIndex) {
   const payload = {
     i: playSession.libraryItemId,
     s: playSession.id || null,
-    t: Number(trackIndex)
+    t: Number(trackIndex),
+    ...(playbackId ? { p: playbackId } : {})
   };
   return PREFIX + Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
 }
@@ -34,11 +36,16 @@ function parsePlaybackToken(token) {
       version: 1,
       libraryItemId: payload.i,
       sessionId: payload.s || null,
-      trackIndex: payload.t
+      trackIndex: payload.t,
+      playbackId: typeof payload.p === 'string' ? payload.p : null
     };
   } catch {
     return null;
   }
 }
 
-module.exports = { createPlaybackToken, parsePlaybackToken };
+function createPlaybackInstanceToken(playSession, trackIndex) {
+  return createPlaybackToken(playSession, trackIndex, crypto.randomBytes(9).toString('base64url'));
+}
+
+module.exports = { createPlaybackToken, createPlaybackInstanceToken, parsePlaybackToken };

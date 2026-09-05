@@ -45,7 +45,17 @@ const isWrite = (url) => {
 function replay(name) {
   const cassette = loadCassette(name);
   const misses = [];
-  const server = http.createServer((req, res) => {
+  const requests = [];
+  const server = http.createServer(async (req, res) => {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const rawBody = Buffer.concat(chunks).toString('utf8');
+    let body = rawBody;
+    if (rawBody && (req.headers['content-type'] || '').includes('application/json')) {
+      try { body = JSON.parse(rawBody); } catch { /* keep malformed JSON visible */ }
+    }
+    requests.push({ method: req.method, url: req.url, body });
+
     let hit = cassette[keyFor(req.method, req.url)];
 
     // Older cassettes recorded the default 25-item response. Reuse and trim
@@ -96,7 +106,7 @@ function replay(name) {
     res.writeHead(hit.status, hit.headers || { 'Content-Type': 'application/json' });
     res.end(typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body));
   });
-  return { server, misses, cassette };
+  return { server, misses, requests, cassette };
 }
 
 // Endpoints that would modify the user's library are never forwarded. The
