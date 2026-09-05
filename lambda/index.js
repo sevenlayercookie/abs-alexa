@@ -172,14 +172,21 @@ function noActivePlaybackResponse(handlerInput) {
     .getResponse();
 }
 
+// Only time this container actually watched a stream play counts. The clock
+// starts when Alexa confirms playback and is stamped on the session object, so
+// it exists only while that container is warm.
+//
+// Falling back to the session's updatedAt looked like a reasonable guess and is
+// not: a session recovered from ABS carries whatever timestamp ABS last wrote,
+// which can be hours old, and the difference was reported as listening time.
+// That put a 15975-second entry -- four and a half hours -- into listening
+// history for a book that had been playing for seconds. Reporting nothing is
+// wrong by at most the length of one interval; guessing was wrong by hours.
 function elapsedListeningSeconds(userPlaySession) {
   if (userPlaySession?.alexaPlaybackConfirmed === false) return 0;
   const listeningStartedAt = Number(userPlaySession?.alexaListeningStartedAt);
-  if (Number.isFinite(listeningStartedAt)) {
-    return Math.max(0, (Date.now() - listeningStartedAt) / 1000);
-  }
-  const updatedAt = Number(userPlaySession?.updatedAt);
-  return Number.isFinite(updatedAt) ? Math.max(0, (Date.now() - updatedAt) / 1000) : 0;
+  if (!Number.isFinite(listeningStartedAt)) return 0;
+  return Math.max(0, (Date.now() - listeningStartedAt) / 1000);
 }
 
 // The position matters more than the session bookkeeping around it. Media

@@ -565,6 +565,32 @@ describe('skill behaviour', () => {
     }
   });
 
+  // ABS listening history held a 15975-second entry -- four and a half hours --
+  // for a book that had been playing for seconds. A session recovered from ABS
+  // carries ABS's own updatedAt, and the age of that timestamp was being
+  // reported as time the user spent listening.
+  test('a session recovered from ABS reports no invented listening time', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+    // As ABS would return it: last touched hours ago, and never confirmed
+    // playing by this container.
+    dune.updatedAt = Date.now() - 4.5 * 60 * 60 * 1000;
+    delete dune.alexaListeningStartedAt;
+    delete dune.alexaPlaybackConfirmed;
+    await srv.clearRequests();
+
+    await invoke(skill, audioPlayer('PlaybackStopped', {
+      token: createPlaybackToken(dune, 1),
+      offsetInMilliseconds: 30000,
+    }, { userPlaySession: dune }));
+
+    const syncs = (await srv.getRequests()).filter((request) => /\/sync$/.test(request.url));
+    assert.strictEqual(syncs.length, 1);
+    assert.strictEqual(syncs[0].body.timeListened, 0,
+      'listening time this container never observed must not be invented');
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
