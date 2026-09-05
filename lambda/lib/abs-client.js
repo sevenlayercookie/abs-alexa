@@ -152,7 +152,8 @@ function updateUserPlaySession(playSession, currentBookTime, timeListened) {
     timeListened: Math.max(0, Number(timeListened) || 0),
     duration: playSession.duration,
   };
-  console.log("Update ABS play session for book: " + playSession.mediaMetadata.title);
+  console.log("Update ABS play session for book: " + playSession.mediaMetadata.title
+    + ` (currentTime=${payload.currentTime}, timeListened=${payload.timeListened})`);
   const res = request('POST', SERVER_URL + `/api/session/${playSession.id}/sync`, {
     headers: { 'Content-Type': 'application/json', ...baseheaders },
     json: payload,
@@ -173,7 +174,8 @@ function closeUserPlaySession(userPlaySession, currentBookTime, timeListened) {
     duration: userPlaySession.duration,
   };
   const apiUrl = SERVER_URL + `/api/session/${userPlaySession.id}/close`;
-  console.log("Close ABS play session for book: " + userPlaySession.mediaMetadata.title);
+  console.log("Close ABS play session for book: " + userPlaySession.mediaMetadata.title
+    + ` (currentTime=${payload.currentTime}, timeListened=${payload.timeListened})`);
   const res = request('POST', apiUrl, {
     headers: { 'Content-Type': 'application/json', ...baseheaders },
     json: payload,
