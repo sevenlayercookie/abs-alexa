@@ -498,6 +498,44 @@ describe('skill behaviour', () => {
     }
   });
 
+  // Reproduces a device trace: "Alexa, stop" reached a cold container after an
+  // ABS restart. Recovery could not find the session, so it opened a
+  // replacement purely to record a position -- exactly the duplicate entry in
+  // ABS listening history this work set out to remove.
+  test('pausing on a cold container saves the position without opening a session', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    const itemId = parsePlaybackToken(player.token).libraryItemId;
+
+    await srv.restartAbs();
+    try {
+      // A fresh container: nothing but the stream token survives.
+      const cold = loadSkill();
+      player.offsetInMilliseconds += 120000;
+      await srv.clearRequests();
+      const paused = await invoke(cold, intent('AMAZON.PauseIntent', {}, {}, true, player));
+
+      assert.ok(((paused.response || {}).directives || [])
+        .some((directive) => directive.type === 'AudioPlayer.Stop'),
+        'pausing must still stop the device');
+
+      const requests = await srv.getRequests();
+      const progress = requests.filter((request) =>
+        request.method === 'PATCH' && request.url.startsWith('/api/me/progress/'));
+      const newSessions = requests.filter((request) =>
+        request.method === 'POST' && /\/api\/items\/[^/]+\/play$/.test(request.url));
+
+      assert.strictEqual(progress.length, 1, 'the paused position must still reach ABS');
+      assert.strictEqual(progress[0].url, `/api/me/progress/${itemId}`);
+      assert.ok(progress[0].body.currentTime > 0);
+      assert.deepStrictEqual(newSessions, [],
+        'recording a paused position must not open a play session');
+    } finally {
+      await srv.restoreAbsSessions();
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],

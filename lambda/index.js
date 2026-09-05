@@ -976,7 +976,12 @@ const PauseAudioIntentHandler = {
   },
   async handle(handlerInput) {
     try {
-      const state = recoverPlaybackState(handlerInput)
+      // Pausing only has to save a position; it never starts audio. The seek
+      // handlers below can justify opening a replacement ABS session because
+      // they need its tracks to build the next stream, but doing that here
+      // just to record a position leaves a spurious second entry in ABS
+      // listening history.
+      const state = recoverPlaybackState(handlerInput, { allowSessionReplacement: false })
       if (state && state.offsetInMilliseconds !== null) {
         const { attributes: sessionAttributes, userPlaySession,
           offsetInMilliseconds, trackIndex } = state
@@ -987,6 +992,8 @@ const PauseAudioIntentHandler = {
         sessionAttributes.supersededStreamPositionSynced = currentPositionSynced
 
         retainPlaybackStateLocally(handlerInput, sessionAttributes)
+      } else {
+        syncProgressWithoutSession(handlerInput)
       }
       return handlerInput.responseBuilder
         .addAudioPlayerStopDirective()
