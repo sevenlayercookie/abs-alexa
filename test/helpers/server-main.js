@@ -27,6 +27,10 @@ const { replay, record, listen } = require('./abs-server');
         r.requests.length = 0;
         process.send({ type: 'requests-cleared' });
       }
+      if (m === 'forget-sessions' || m === 'remember-sessions') {
+        r.setSessionsForgotten(m === 'forget-sessions');
+        process.send({ type: 'sessions-forgotten' });
+      }
     });
   }
 

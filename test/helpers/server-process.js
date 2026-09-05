@@ -40,11 +40,19 @@ function startServer(mode, name = 'abs', upstream, apiKey) {
       'get-requests', 'requests', 'timed out reading captured requests');
     const clearRequests = () => requestReply(
       'clear-requests', 'requests-cleared', 'timed out clearing captured requests');
+    // Model an ABS restart: every play session it was holding is gone. Always
+    // pair it with restoreAbsSessions() so the state cannot leak into the
+    // tests that run after it.
+    const restartAbs = () => requestReply(
+      'forget-sessions', 'sessions-forgotten', 'timed out forgetting play sessions');
+    const restoreAbsSessions = () => requestReply(
+      'remember-sessions', 'sessions-forgotten', 'timed out restoring play sessions');
 
     child.on('message', (m) => {
       if (m.type === 'ready') {
         clearTimeout(timer);
-        resolve({ port: m.port, getMisses, getRequests, clearRequests, close });
+        resolve({ port: m.port, getMisses, getRequests, clearRequests,
+          restartAbs, restoreAbsSessions, close });
       }
     });
     child.on('error', reject);

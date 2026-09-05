@@ -463,6 +463,41 @@ describe('skill behaviour', () => {
       'a callback for a session this container just closed must not sync again');
   });
 
+  // Reproduces a device trace: playback started normally, ABS was restarted
+  // two minutes in, and the sync and close that followed both returned 404
+  // because ABS no longer held the session. Recovery succeeded here -- the
+  // container was warm and still had the play session object -- so the
+  // no-session fallback never ran and the position was lost.
+  test('an ABS restart mid-playback still saves the position', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+
+    await srv.restartAbs();
+    try {
+      player.offsetInMilliseconds += 120000;
+      // "Alexa, stop" reaches an AudioPlayer skill as AMAZON.PauseIntent.
+      await invoke(skill, intent('AMAZON.PauseIntent', {}, {}, true, player));
+      await srv.clearRequests();
+      await invoke(skill, audioPlayer('PlaybackFinished', player));
+
+      const requests = await srv.getRequests();
+      const progress = requests.filter((request) =>
+        request.method === 'PATCH' && request.url.startsWith('/api/me/progress/'));
+      const sessionWrites = requests.filter((request) =>
+        /\/api\/session\/[^/]+\/(sync|close)$/.test(request.url));
+
+      assert.strictEqual(progress.length, 1,
+        'a book position must reach ABS even after the play session is gone');
+      assert.ok(progress[0].body.currentTime > 0);
+      assert.deepStrictEqual(sessionWrites, [],
+        'once ABS has 404ed a session, later events must not retry writes to it');
+    } finally {
+      await srv.restoreAbsSessions();
+    }
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],

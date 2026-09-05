@@ -182,36 +182,87 @@ function elapsedListeningSeconds(userPlaySession) {
   return Number.isFinite(updatedAt) ? Math.max(0, (Date.now() - updatedAt) / 1000) : 0;
 }
 
-function syncPlaybackProgress(userPlaySession, currentBookTime,
-  { timeListened, continueListening = false } = {}) {
+// The position matters more than the session bookkeeping around it. Media
+// progress needs no session, so it still lands when ABS has forgotten the one
+// this stream was opened under -- after an ABS restart, say. It records no
+// listening time, so it is a fallback rather than the primary path.
+function saveProgressWithoutSession(userPlaySession, currentBookTime) {
+  if (!userPlaySession?.libraryItemId) return false;
   try {
-    const listened = timeListened ?? elapsedListeningSeconds(userPlaySession);
-    updateUserPlaySession(userPlaySession, currentBookTime, listened);
-    userPlaySession.currentTime = currentBookTime;
-    userPlaySession.updatedAt = Date.now();
-    userPlaySession.alexaPlaybackConfirmed = continueListening;
-    userPlaySession.alexaListeningStartedAt = continueListening ? Date.now() : null;
+    updateMediaProgress(userPlaySession.libraryItemId, null, {
+      currentTime: Number(currentBookTime),
+      duration: Number(userPlaySession.duration) || undefined,
+    });
+    console.log(`Saved ${currentBookTime} seconds to media progress for ${userPlaySession.libraryItemId}`);
     return true;
   } catch (error) {
-    console.error(`Could not sync ABS playback progress: ${error.message}`);
+    console.error(`Could not save media progress: ${error.message}`);
     return false;
   }
 }
 
-function closePlaybackProgress(userPlaySession, currentBookTime) {
-  try {
-    closeUserPlaySession(
-      userPlaySession, currentBookTime, elapsedListeningSeconds(userPlaySession));
-    rememberClosedSession(userPlaySession.id)
-    userPlaySession.currentTime = currentBookTime;
-    userPlaySession.updatedAt = Date.now();
-    userPlaySession.alexaPlaybackConfirmed = false;
-    userPlaySession.alexaListeningStartedAt = null;
-    return true;
-  } catch (error) {
-    console.error(`Could not close ABS playback session: ${error.message}`);
-    return false;
+// A 404 means ABS no longer has this play session and never will again, so
+// every later write for it would fail the same way. Remember that and go
+// straight to media progress instead of paying for a doomed round trip on
+// every subsequent event.
+function absSessionIsGone(userPlaySession, error) {
+  if (error.statusCode !== 404) return false;
+  console.log("ABS no longer has this play session; falling back to media progress");
+  userPlaySession.absSessionMissing = true;
+  return true;
+}
+
+function syncPlaybackProgress(userPlaySession, currentBookTime,
+  { timeListened, continueListening = false } = {}) {
+  let saved = false;
+  if (userPlaySession?.absSessionMissing) {
+    saved = saveProgressWithoutSession(userPlaySession, currentBookTime);
+  } else {
+    try {
+      const listened = timeListened ?? elapsedListeningSeconds(userPlaySession);
+      updateUserPlaySession(userPlaySession, currentBookTime, listened);
+      saved = true;
+    } catch (error) {
+      console.error(`Could not sync ABS playback progress: ${error.message}`);
+      if (absSessionIsGone(userPlaySession, error)) {
+        saved = saveProgressWithoutSession(userPlaySession, currentBookTime);
+      }
+    }
   }
+  if (!saved) return false;
+  userPlaySession.currentTime = currentBookTime;
+  userPlaySession.updatedAt = Date.now();
+  userPlaySession.alexaPlaybackConfirmed = continueListening;
+  userPlaySession.alexaListeningStartedAt = continueListening ? Date.now() : null;
+  return true;
+}
+
+function closePlaybackProgress(userPlaySession, currentBookTime) {
+  let closed = false;
+  if (userPlaySession?.absSessionMissing) {
+    closed = saveProgressWithoutSession(userPlaySession, currentBookTime);
+  } else {
+    try {
+      closeUserPlaySession(
+        userPlaySession, currentBookTime, elapsedListeningSeconds(userPlaySession));
+      closed = true;
+    } catch (error) {
+      console.error(`Could not close ABS playback session: ${error.message}`);
+      // A session ABS has forgotten is already as closed as it can get. Save
+      // the position and report success, so callers clear their state instead
+      // of queuing a retry that can only 404 again.
+      if (absSessionIsGone(userPlaySession, error)) {
+        closed = saveProgressWithoutSession(userPlaySession, currentBookTime);
+      }
+    }
+  }
+  if (!closed) return false;
+  rememberClosedSession(userPlaySession.id)
+  userPlaySession.currentTime = currentBookTime;
+  userPlaySession.updatedAt = Date.now();
+  userPlaySession.alexaPlaybackConfirmed = false;
+  userPlaySession.alexaListeningStartedAt = null;
+  return true;
 }
 
 // Last resort when no ABS play session can be recovered: a cold Lambda

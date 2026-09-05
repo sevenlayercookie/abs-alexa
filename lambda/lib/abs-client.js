@@ -102,6 +102,15 @@ function startUserPlaySession(libraryID, handlerInput) {
   }
 }
 
+// ABS answers 404 for a play session it no longer holds, which callers treat
+// differently from a transient failure: the session cannot come back, so
+// retrying it is pointless.
+function httpError(message, statusCode) {
+  const error = new Error(`${message}: HTTP ${statusCode}`);
+  error.statusCode = statusCode;
+  return error;
+}
+
 function getExistingUserPlaySession(sessionID) {
   try {
     console.log("getExistingUserPlaySession")
@@ -149,7 +158,7 @@ function updateUserPlaySession(playSession, currentBookTime, timeListened) {
     json: payload,
   });
   console.log("updateUserPlaySession - Response code: " + res.statusCode);
-  if (res.statusCode !== 200) throw new Error(`Failed to sync play session: HTTP ${res.statusCode}`);
+  if (res.statusCode !== 200) throw httpError(`Failed to sync play session`, res.statusCode);
   console.log("updateUserPlaySession - Successfully synced play session with ABS");
   return true;
 }
@@ -170,7 +179,7 @@ function closeUserPlaySession(userPlaySession, currentBookTime, timeListened) {
     json: payload,
   });
   console.log("closeUserPlaySession - Response code: " + res.statusCode);
-  if (res.statusCode !== 200) throw new Error(`Failed to close play session: HTTP ${res.statusCode}`);
+  if (res.statusCode !== 200) throw httpError(`Failed to close play session`, res.statusCode);
   console.log("closeUserPlaySession - Successfully synced and closed play session with ABS");
   return true;
 }

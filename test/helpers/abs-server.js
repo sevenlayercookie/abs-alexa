@@ -46,6 +46,11 @@ function replay(name) {
   const cassette = loadCassette(name);
   const misses = [];
   const requests = [];
+  // ABS keeps play sessions in memory. Restarting it drops every one, and each
+  // later sync, close or lookup for them answers 404. forgetSessions() models
+  // that restart.
+  const forgotten = { sessions: false };
+  const isSessionEndpoint = (url) => /^\/api\/session\/[^/]+(\/(sync|close))?$/.test(url.split('?')[0]);
   const server = http.createServer(async (req, res) => {
     const chunks = [];
     for await (const chunk of req) chunks.push(chunk);
@@ -55,6 +60,11 @@ function replay(name) {
       try { body = JSON.parse(rawBody); } catch { /* keep malformed JSON visible */ }
     }
     requests.push({ method: req.method, url: req.url, body });
+
+    if (forgotten.sessions && isSessionEndpoint(req.url)) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      return res.end('{}');
+    }
 
     let hit = cassette[keyFor(req.method, req.url)];
 
@@ -112,7 +122,10 @@ function replay(name) {
     res.writeHead(hit.status, hit.headers || { 'Content-Type': 'application/json' });
     res.end(typeof hit.body === 'string' ? hit.body : JSON.stringify(hit.body));
   });
-  return { server, misses, requests, cassette };
+  return {
+    server, misses, requests, cassette,
+    setSessionsForgotten: (value) => { forgotten.sessions = value; },
+  };
 }
 
 // Endpoints that would modify the user's library are never forwarded. The
