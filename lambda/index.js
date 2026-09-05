@@ -172,21 +172,32 @@ function noActivePlaybackResponse(handlerInput) {
     .getResponse();
 }
 
-// Only time this container actually watched a stream play counts. The clock
-// starts when Alexa confirms playback and is stamped on the session object, so
-// it exists only while that container is warm.
+// How long the user has been listening since the last time this was reported.
 //
-// Falling back to the session's updatedAt looked like a reasonable guess and is
-// not: a session recovered from ABS carries whatever timestamp ABS last wrote,
-// which can be hours old, and the difference was reported as listening time.
-// That put a 15975-second entry -- four and a half hours -- into listening
-// history for a book that had been playing for seconds. Reporting nothing is
-// wrong by at most the length of one interval; guessing was wrong by hours.
-function elapsedListeningSeconds(userPlaySession) {
+// The clock we trust is alexaListeningStartedAt, stamped when Alexa confirms
+// playback -- but it lives on the session object, so only a warm container has
+// it. A cold one falls back to the session's updatedAt, which is ABS's own
+// timestamp and is usually close, because our last sync is what set it.
+//
+// Usually. It put a 15975-second entry -- four and a half hours -- into
+// listening history for a book that had played for seconds, against a session
+// ABS had not touched since the previous day.
+//
+// So bound it by the book itself: you cannot listen to more of a book than you
+// moved through. That leaves a good estimate intact and collapses a stale
+// timestamp to nothing, because a stale one comes with no matching progress.
+function elapsedListeningSeconds(userPlaySession, currentBookTime) {
   if (userPlaySession?.alexaPlaybackConfirmed === false) return 0;
   const listeningStartedAt = Number(userPlaySession?.alexaListeningStartedAt);
-  if (!Number.isFinite(listeningStartedAt)) return 0;
-  return Math.max(0, (Date.now() - listeningStartedAt) / 1000);
+  const trusted = Number.isFinite(listeningStartedAt);
+  const since = trusted ? listeningStartedAt : Number(userPlaySession?.updatedAt);
+  if (!Number.isFinite(since)) return 0;
+  const elapsed = Math.max(0, (Date.now() - since) / 1000);
+
+  const advanced = Number(currentBookTime) - Number(userPlaySession?.currentTime);
+  // With no position to check it against, only our own clock is worth trusting.
+  if (!Number.isFinite(advanced)) return trusted ? elapsed : 0;
+  return Math.min(elapsed, Math.max(0, advanced));
 }
 
 // The position matters more than the session bookkeeping around it. Media
@@ -226,7 +237,7 @@ function syncPlaybackProgress(userPlaySession, currentBookTime,
     saved = saveProgressWithoutSession(userPlaySession, currentBookTime);
   } else {
     try {
-      const listened = timeListened ?? elapsedListeningSeconds(userPlaySession);
+      const listened = timeListened ?? elapsedListeningSeconds(userPlaySession, currentBookTime);
       updateUserPlaySession(userPlaySession, currentBookTime, listened);
       saved = true;
     } catch (error) {
@@ -251,7 +262,8 @@ function closePlaybackProgress(userPlaySession, currentBookTime) {
   } else {
     try {
       closeUserPlaySession(
-        userPlaySession, currentBookTime, elapsedListeningSeconds(userPlaySession));
+        userPlaySession, currentBookTime,
+        elapsedListeningSeconds(userPlaySession, currentBookTime));
       closed = true;
     } catch (error) {
       console.error(`Could not close ABS playback session: ${error.message}`);

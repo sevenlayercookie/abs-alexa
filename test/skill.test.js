@@ -568,8 +568,10 @@ describe('skill behaviour', () => {
   // ABS listening history held a 15975-second entry -- four and a half hours --
   // for a book that had been playing for seconds. A session recovered from ABS
   // carries ABS's own updatedAt, and the age of that timestamp was being
-  // reported as time the user spent listening.
-  test('a session recovered from ABS reports no invented listening time', async () => {
+  // reported as time the user spent listening. Listening time is now bounded by
+  // the distance actually travelled through the book, so a stale timestamp
+  // cannot inflate it past what the position can justify.
+  test('a stale session timestamp cannot inflate listening time', async () => {
     const skill = loadSkill();
     const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
     delete dune.libraryItem;
@@ -587,8 +589,32 @@ describe('skill behaviour', () => {
 
     const syncs = (await srv.getRequests()).filter((request) => /\/sync$/.test(request.url));
     assert.strictEqual(syncs.length, 1);
-    assert.strictEqual(syncs[0].body.timeListened, 0,
-      'listening time this container never observed must not be invented');
+    // The session sat at 0 and the device is 30 seconds in, so 30 seconds is
+    // all the listening the position can account for -- not the 16200 the
+    // stale timestamp suggests.
+    assert.strictEqual(syncs[0].body.timeListened, 30,
+      'listening time must be capped by the progress made through the book');
+  });
+
+  test('listening time never exceeds the progress made through the book', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    await srv.clearRequests();
+
+    // A cold container has none of the timing this one recorded, so it has to
+    // infer the interval; it must still not claim more than the position moved.
+    const cold = loadSkill();
+    player.offsetInMilliseconds += 45000;
+    await invoke(cold, audioPlayer('PlaybackStopped', player));
+
+    const syncs = (await srv.getRequests()).filter((request) => /\/sync$/.test(request.url));
+    assert.strictEqual(syncs.length, 1, 'a real listening interval must still be reported');
+    assert.ok(syncs[0].body.timeListened > 0,
+      'a cold container must not silently drop a real listening interval');
+    assert.ok(syncs[0].body.timeListened <= 45,
+      `listening time ${syncs[0].body.timeListened} exceeds the 45 seconds of book travelled`);
   });
 
   test('every request was served from a fixture', async () => {
