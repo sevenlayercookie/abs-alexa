@@ -87,6 +87,7 @@ function isUsablePlaySession(value) {
   return Boolean(value?.libraryItemId && value?.id && Array.isArray(value.audioTracks) && value.audioTracks.length);
 }
 
+// Direct audio stream URLs for Audiobookshelf or abs-transcode-proxy.
 function buildAudioUrl(contentUrl, { startTime = null } = {}) {
   const separator = contentUrl.includes('?') ? '&' : '?';
   if (USE_PROXY) {

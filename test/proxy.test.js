@@ -16,7 +16,7 @@ function recordedPlaySession(itemId) {
   return typeof entry.body === 'string' ? JSON.parse(entry.body) : entry.body;
 }
 
-describe('proxy mode playback', () => {
+describe('proxy mode playback (abs-transcode-proxy)', () => {
   let srv;
 
   before(async () => {
