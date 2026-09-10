@@ -25,11 +25,25 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
    - **Environment variables** (recommended): set `ABS_API_KEY` and `SERVER_URL`. On Alexa-hosted, use the 'Code' tab of the Developer Console.
    - **Config file**: `cd lambda && cp config.example.js config.js`, then edit it. `config.js` is gitignored, so your key is never committed — do not rename or force-add it.
 
-   Optional: `USER_AGENT`, `BACKGROUND_URL` (background art for screen devices; defaults to the current book's cover), and `CFAccessClientId` / `CFAccessClientSecret` for servers behind Cloudflare Access.
+   Optional: `USER_AGENT`, `BACKGROUND_URL` (background art for screen devices; defaults to the current book's cover), `CFAccessClientId` / `CFAccessClientSecret` for servers behind Cloudflare Access, and `USE_PROXY` (or `PROXY_MODE`: set to `true` when routing through a transcoding reverse proxy; defaults to `false`).
 3) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 4) Set your skill invocation name and build the skill
 5) Save and deploy the skill
 6) If using Alexa-hosted, go to the 'Test' tab of Developer Console, and enable skill testing for 'Development'
+
+### Transcoding Proxy Mode
+
+If your Audiobookshelf server is fronted by an on-the-fly transcoding reverse proxy (such as a lightweight Go proxy providing on-the-fly FFmpeg transcoding to uniform MP3 streams for Echo devices), enable proxy mode:
+
+- Set `USE_PROXY: true` (or `PROXY_MODE: true`) via environment variable or in `config.js`.
+- Set `SERVER_URL` to your proxy's URL instead of directly to Audiobookshelf.
+
+When enabled:
+- Standard ABS API calls are forwarded transparently through the proxy.
+- Audio stream URLs are generated with `proxyTranscode=true`, `startTime=<seconds>`, and `token=<ABS_API_KEY>`.
+- AudioPlayer directives specify stream offset 0, allowing the proxy and FFmpeg to seek server-side.
+- Scrubbing and seeking (skipping forward/backward or chapter jumps) issue replacement directives with updated `startTime` offsets.
+- Absolute listening progress is tracked accurately across stream instances and cold Lambda container restarts.
 
 ## Usage
 

@@ -17,19 +17,19 @@ const path = require('path');
 
 const LAMBDA = path.join(__dirname, '..', 'lambda');
 
-function load(env, { withConfigFile }) {
+function load(env, { withConfigFile, configFileContent } = {}) {
   const sandbox = fs.mkdtempSync(path.join(os.tmpdir(), 'abs-config-test-'));
   const lib = path.join(sandbox, 'lib');
   fs.mkdirSync(lib);
   fs.copyFileSync(path.join(LAMBDA, 'lib', 'settings.js'), path.join(lib, 'settings.js'));
   if (withConfigFile) {
     fs.writeFileSync(path.join(sandbox, 'config.js'),
-      "module.exports = { ABS_API_KEY: 'from-file', SERVER_URL: 'https://file.example' };\n");
+      configFileContent || "module.exports = { ABS_API_KEY: 'from-file', SERVER_URL: 'https://file.example' };\n");
   }
   try {
     const out = execFileSync(process.execPath, ['-e',
       "const s=require('./lib/settings');" +
-      "console.log(JSON.stringify({key:s.ABS_API_KEY,url:s.SERVER_URL,ua:s.USER_AGENT}));"],
+      "console.log(JSON.stringify({key:s.ABS_API_KEY,url:s.SERVER_URL,ua:s.USER_AGENT,proxy:s.USE_PROXY,proxyMode:s.PROXY_MODE}));"],
       { cwd: sandbox, env: { PATH: process.env.PATH, ...env }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
     return JSON.parse(out.trim().split('\n').pop());
   } finally {
@@ -42,6 +42,8 @@ describe('configuration resolution', () => {
     const c = load({}, { withConfigFile: true });
     assert.strictEqual(c.key, 'from-file');
     assert.strictEqual(c.url, 'https://file.example');
+    assert.strictEqual(c.proxy, false);
+    assert.strictEqual(c.proxyMode, false);
   });
 
   test('environment overrides config.js', () => {
@@ -54,6 +56,28 @@ describe('configuration resolution', () => {
     const c = load({ ABS_API_KEY: 'k', SERVER_URL: 'https://e' }, { withConfigFile: false });
     assert.strictEqual(c.key, 'k');
     assert.strictEqual(c.ua, 'AlexaSkill');
+    assert.strictEqual(c.proxy, false);
+  });
+
+  test('enables proxy mode via USE_PROXY env variable', () => {
+    const c = load({ ABS_API_KEY: 'k', SERVER_URL: 'https://e', USE_PROXY: 'true' }, { withConfigFile: false });
+    assert.strictEqual(c.proxy, true);
+    assert.strictEqual(c.proxyMode, true);
+  });
+
+  test('enables proxy mode via PROXY_MODE alias env variable', () => {
+    const c = load({ ABS_API_KEY: 'k', SERVER_URL: 'https://e', PROXY_MODE: '1' }, { withConfigFile: false });
+    assert.strictEqual(c.proxy, true);
+    assert.strictEqual(c.proxyMode, true);
+  });
+
+  test('enables proxy mode via config.js', () => {
+    const c = load({}, {
+      withConfigFile: true,
+      configFileContent: "module.exports = { ABS_API_KEY: 'k', SERVER_URL: 'https://e', USE_PROXY: true };\n"
+    });
+    assert.strictEqual(c.proxy, true);
+    assert.strictEqual(c.proxyMode, true);
   });
 
   test('fails loudly when neither source supplies credentials', () => {

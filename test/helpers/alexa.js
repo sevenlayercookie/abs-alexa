@@ -125,6 +125,15 @@ function loadSkill() {
   // the offline suite.
   const serverUrl = process.env.SERVER_URL;
   const apiKey = process.env.ABS_API_KEY;
+  const parseBool = (val) => {
+    if (typeof val === 'boolean') return val;
+    if (typeof val === 'string') {
+      const s = val.trim().toLowerCase();
+      return s === 'true' || s === '1' || s === 'yes';
+    }
+    return Boolean(val);
+  };
+  const useProxy = parseBool(process.env.USE_PROXY ?? process.env.PROXY_MODE ?? false);
   require.cache[require.resolve(SETTINGS)] = {
     id: SETTINGS,
     filename: SETTINGS,
@@ -136,6 +145,8 @@ function loadSkill() {
       BACKGROUND_URL: process.env.BACKGROUND_URL,
       CFAccessClientId: process.env.CFAccessClientId,
       CFAccessClientSecret: process.env.CFAccessClientSecret,
+      USE_PROXY: useProxy,
+      PROXY_MODE: useProxy,
       baseheaders: {
         'Content-Type': 'application/json',
         Authorization: 'Bearer ' + apiKey,

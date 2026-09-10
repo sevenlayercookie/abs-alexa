@@ -21,6 +21,13 @@ module.exports = {
     // Leave unset to use the cover of the book currently playing.
     // BACKGROUND_URL: 'https://example.com/background.jpg',
 
+    // Optional. Enable transcode proxy mode for all requests.
+    // When enabled, change SERVER_URL above to your proxy URL instead of
+    // pointing directly at Audiobookshelf. Audio file requests will include
+    // proxyTranscode=true and startTime=<seconds>, enabling on-the-fly
+    // transcoding to CBR 64 kbps MP3 with server-side seeking.
+    // USE_PROXY: false,
+
     // Optional. Only needed if your server sits behind Cloudflare Access.
     // CFAccessClientId: 'xxxxxxxxx.access',
     // CFAccessClientSecret: 'xxxxxxxx'

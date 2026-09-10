@@ -2,7 +2,7 @@
 // Pure helpers: time, track and chapter arithmetic, plus speech sanitising.
 // Nothing here touches configuration, the network, or skill state.
 
-function calculateCurrentTime(playSession, currentTrackOffset, currentToken) {
+function calculateCurrentTime(playSession, currentTrackOffset, currentToken, startTime = null) {
   try {
 
 
@@ -13,7 +13,8 @@ function calculateCurrentTime(playSession, currentTrackOffset, currentToken) {
       return 0.0; // Return a default value if no track is found
     }
 
-    let currentTime = currentTrack.startOffset + currentTrackOffset / 1000;
+    const streamStart = Number.isFinite(Number(startTime)) ? Number(startTime) : 0.0;
+    let currentTime = currentTrack.startOffset + streamStart + currentTrackOffset / 1000;
 
     // Ensure the result is a non-null float
     return (typeof currentTime === 'number' && !isNaN(currentTime)) ? parseFloat(currentTime) : 0.0;

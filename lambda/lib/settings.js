@@ -17,6 +17,20 @@ const USER_AGENT = cfg('USER_AGENT', 'AlexaSkill');
 const BACKGROUND_URL = cfg('BACKGROUND_URL');
 const CFAccessClientId = cfg('CFAccessClientId');
 const CFAccessClientSecret = cfg('CFAccessClientSecret');
+
+function parseBoolean(val, fallback = false) {
+  if (val === undefined || val === null) return fallback;
+  if (typeof val === 'boolean') return val;
+  if (typeof val === 'string') {
+    const s = val.trim().toLowerCase();
+    return s === 'true' || s === '1' || s === 'yes';
+  }
+  return Boolean(val);
+}
+
+const USE_PROXY = parseBoolean(cfg('USE_PROXY', cfg('PROXY_MODE', false)));
+const PROXY_MODE = USE_PROXY;
+
 if (!ABS_API_KEY || !SERVER_URL) {
   throw new Error('Missing required configuration: set ABS_API_KEY and SERVER_URL in the environment or config.js (see config.example.js).');
 }
@@ -37,4 +51,5 @@ function resolveBackgroundUrl(coverUrl) {
 }
 
 module.exports = { ABS_API_KEY, SERVER_URL, USER_AGENT, BACKGROUND_URL,
-  CFAccessClientId, CFAccessClientSecret, baseheaders, resolveBackgroundUrl };
+  CFAccessClientId, CFAccessClientSecret, USE_PROXY, PROXY_MODE,
+  baseheaders, resolveBackgroundUrl };

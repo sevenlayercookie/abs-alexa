@@ -16,7 +16,8 @@ describe('playback stream tokens', () => {
       trackIndex: 7,
       playbackId: null,
       trackStart: null,
-      bookDuration: null
+      bookDuration: null,
+      startTime: null
     });
   });
 
@@ -36,9 +37,34 @@ describe('playback stream tokens', () => {
     const parsed = parsePlaybackToken(createPlaybackToken(session, 3));
     assert.strictEqual(parsed.trackStart, 7200);
     assert.strictEqual(parsed.bookDuration, 10800);
+    assert.strictEqual(parsed.startTime, null);
     // 20 minutes into track 3 is 2h20m into the book, and nothing but the
     // token was needed to say so.
     assert.strictEqual(parsed.trackStart + 1200, 8400);
+  });
+
+  test('carries proxy stream startTime when provided', () => {
+    const session = {
+      libraryItemId: 'item-123',
+      id: 'session-456',
+      duration: 10800,
+      audioTracks: [
+        { index: 1, startOffset: 0, duration: 3600 },
+        { index: 2, startOffset: 3600, duration: 3600 },
+      ],
+    };
+    const token = createPlaybackToken(session, 2, 'custom-id', 150.5);
+    const parsed = parsePlaybackToken(token);
+    assert.strictEqual(parsed.trackIndex, 2);
+    assert.strictEqual(parsed.playbackId, 'custom-id');
+    assert.strictEqual(parsed.trackStart, 3600);
+    assert.strictEqual(parsed.startTime, 150.5);
+
+    const instanceToken = createPlaybackInstanceToken(session, 2, 42);
+    const parsedInstance = parsePlaybackToken(instanceToken);
+    assert.strictEqual(parsedInstance.trackIndex, 2);
+    assert.ok(parsedInstance.playbackId);
+    assert.strictEqual(parsedInstance.startTime, 42);
   });
 
   test('stays well inside the 1024-character token limit Alexa enforces', () => {
@@ -58,6 +84,7 @@ describe('playback stream tokens', () => {
     assert.strictEqual(parsed.trackStart, null,
       'a caller must be able to tell "unknown" from "starts at zero"');
     assert.strictEqual(parsed.bookDuration, null);
+    assert.strictEqual(parsed.startTime, null);
   });
 
   test('gives each playback directive a unique self-describing token', () => {
@@ -75,6 +102,7 @@ describe('playback stream tokens', () => {
         playbackId: true,
         trackStart: null,
         bookDuration: null,
+        startTime: null,
       });
   });
 
@@ -86,7 +114,8 @@ describe('playback stream tokens', () => {
       trackIndex: 3,
       playbackId: null,
       trackStart: null,
-      bookDuration: null
+      bookDuration: null,
+      startTime: null
     });
   });
 

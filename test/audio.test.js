@@ -5,6 +5,7 @@ const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
 const {
+  calculateCurrentTime,
   getCurrentTrackByBookTime,
   getCurrentChapterByBookTime,
   getTrackAndOffsetFromBookTime,
@@ -29,6 +30,20 @@ describe('multi-track playback arithmetic', () => {
 
     assert.strictEqual(result.currentTrack, secondTrack);
     assert.strictEqual(result.goalOffset, 42000);
+  });
+
+  test('calculates current book time without proxy startTime', () => {
+    const session = multiTrackSession();
+    const secondTrack = session.audioTracks[1];
+    const computed = calculateCurrentTime(session, 15000, secondTrack.index);
+    assert.strictEqual(computed, secondTrack.startOffset + 15);
+  });
+
+  test('calculates current book time with proxy startTime', () => {
+    const session = multiTrackSession();
+    const secondTrack = session.audioTracks[1];
+    const computed = calculateCurrentTime(session, 15000, secondTrack.index, 120);
+    assert.strictEqual(computed, secondTrack.startOffset + 120 + 15);
   });
 
   test('finds the correct track on both sides of a track boundary', () => {
