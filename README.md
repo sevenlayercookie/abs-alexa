@@ -26,6 +26,12 @@ This is an Alexa Skill that can be used to control your personal Audiobookshelf 
    - **Config file**: `cd lambda && cp config.example.js config.js`, then edit it. `config.js` is gitignored, so your key is never committed — do not rename or force-add it.
 
    Optional: `USER_AGENT`, `BACKGROUND_URL` (background art for screen devices; defaults to the current book's cover), `CFAccessClientId` / `CFAccessClientSecret` for servers behind Cloudflare Access, and `USE_PROXY` (or `PROXY_MODE`: set to `true` when routing through `abs-transcode-proxy`; defaults to `false`).
+   `SERVER_URL` must be **HTTPS**, with a certificate from a public CA. Alexa refuses to
+   play audio from a plain-HTTP URL, from an IP address, or from a self-signed or
+   private-CA certificate, and reports it only as a generic playback failure. A
+   reverse proxy that terminates TLS (Caddy, nginx, Cloudflare Tunnel) in front of
+   Audiobookshelf satisfies this; a LAN address such as `http://192.168.1.10:13378`
+   does not, even though the API calls themselves would work.
 3) Follow the instructions here: https://developer.amazon.com/en-US/docs/alexa/hosted-skills/alexa-hosted-skills-git-import.html#import
 4) Set your skill invocation name and build the skill
 5) Save and deploy the skill
@@ -38,12 +44,30 @@ If your Audiobookshelf server is fronted by `abs-transcode-proxy` (a lightweight
 - Set `USE_PROXY: true` (or `PROXY_MODE: true`) via environment variable or in `config.js`.
 - Set `SERVER_URL` to your `abs-transcode-proxy` URL instead of directly to Audiobookshelf.
 
+The HTTPS requirement above applies to the proxy, not just to Audiobookshelf: it is now
+the host Alexa fetches audio from. `abs-transcode-proxy` listens on plain HTTP port 8080
+by default, so put it behind the same TLS termination your Audiobookshelf server already
+uses — pointing `SERVER_URL` at `http://your-server:8080` will fail to play.
+
+Raise the proxy's `MAX_STREAMS` above its default of 4. One Echo can hold two slots at
+once (the stream it is playing plus the next track it has prefetched), each seek opens a
+new stream, and a stream's FFmpeg worker is only released when the device actually
+disconnects. Once the workers are all busy the proxy returns `503`, which reaches the
+skill as a failed stream.
+
 When enabled:
 - Standard ABS API calls are forwarded transparently through `abs-transcode-proxy`.
 - Audio stream URLs are generated with `proxyTranscode=true`, `startTime=<seconds>`, and `token=<ABS_API_KEY>`.
 - AudioPlayer directives specify stream offset 0, allowing `abs-transcode-proxy` and FFmpeg to seek server-side.
 - Scrubbing and seeking (skipping forward/backward or chapter jumps) issue replacement directives with updated `startTime` offsets.
 - Absolute listening progress is tracked accurately across stream instances and cold Lambda container restarts.
+- A stream that fails with a server error — the proxy's `503` when every worker is busy, or a transient `502` from a reverse proxy in front of it — is retried at the same position up to twice before the skill gives up, rather than being treated as the end of the book.
+- A finished track advances the book even when Alexa never sends `PlaybackNearlyFinished`. Transcoded streams declare no length, so the device cannot always anticipate the end and prefetch the next track.
+
+Two things to be aware of in proxy mode:
+
+- **Seeking costs a re-probe.** The proxy probes the source file before it starts encoding, so every skip, chapter jump and resume pays that cost before the first byte of audio. On a long single-file `.m4b` with a large or trailing `moov` atom this is noticeable — the very files this skill uses the proxy for. Nothing in the skill can avoid it; it is inherent to asking for a fresh transcode at a new offset.
+- **Transcoding is CPU work.** Every concurrent stream is an FFmpeg process on the proxy host.
 
 ## Usage
 
