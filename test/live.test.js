@@ -113,9 +113,22 @@ describe('live: every implemented intent', { skip: why }, () => {
     assert.ok([200, 206].includes(res.status), `${label}: stream returned HTTP ${res.status}`);
     const ct = res.headers.get('content-type') || '';
     assert.match(ct, /^(audio|video|application\/octet-stream)/, `${label}: content-type was "${ct}"`);
-    const bytes = Buffer.from(await res.arrayBuffer());
-    assert.ok(bytes.length > 0, `${label}: stream returned no bytes`);
-    return { url: s.url, offset: s.offsetInMilliseconds, bytes: bytes.length, ct };
+    // Read a short prefix and hang up. A transcoded stream declares no length
+    // and ignores byte ranges -- it simply keeps producing audio until the book
+    // ends -- so buffering the whole response would pull down an entire book.
+    const reader = res.body.getReader();
+    let bytes = 0;
+    try {
+      while (bytes < 2048) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        bytes += value.length;
+      }
+    } finally {
+      await reader.cancel().catch(() => {});
+    }
+    assert.ok(bytes > 0, `${label}: stream returned no bytes`);
+    return { url: s.url, offset: s.offsetInMilliseconds, bytes, ct };
   }
 
   // --- intents that must produce playable audio ------------------------------
@@ -235,7 +248,15 @@ describe('live: every implemented intent', { skip: why }, () => {
   });
 
   test('controls recover from the stream token after a cold Lambda start', async () => {
-    const first = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    const started = await invoke(A.intent('PlayBookIntent', { title: BOOK }, {}, true));
+    // Move to a known chapter rather than trusting wherever the book was left.
+    // A preceding test parks it in the final chapter, where "next" correctly
+    // declines. Forcing offsetInMilliseconds to 0 below hides that in direct
+    // mode, because the offset is the whole position -- but in proxy mode the
+    // position lives in the stream token's startTime and survives the override,
+    // exactly as it is supposed to.
+    const first = await invoke(A.intent('GoToChapterX', { chapterNumber: '3' }, {},
+      true, A.playerStateFrom(started)));
     const player = { ...A.playerStateFrom(first), offsetInMilliseconds: 0 };
 
     const invokeCold = async (envelope) => {
