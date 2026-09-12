@@ -1444,6 +1444,10 @@ const AudioPlayerEventHandler = {
               delete attributes.supersededStreamPositionSynced;
             }
             attributes.nextStreamEnqueued = false;
+            // A stream that reached the device retires whatever retry budget
+            // was spent getting there.
+            delete attributes.playbackRetryCount;
+            delete attributes.retryingStreamToken;
             updateLocalSessionAttributes(attributes);
           }
           break;
@@ -1459,14 +1463,30 @@ const AudioPlayerEventHandler = {
               attributes.nextStreamEnqueued = false;
               updateLocalSessionAttributes(attributes);
             }
-          } else { // if no stream enqueued, then likely the end of the book. Close the play session
-            if (userPlaySession && currentBookTime !== undefined
-              && closePlaybackProgress(userPlaySession, currentBookTime)) {
-              console.log("PlaybackFinished: synced and closed the ABS session")
-              clearAllMemory(handlerInput);
-            } else if (attributes) {
-              attributes.pendingClose = true;
-              updateLocalSessionAttributes(attributes);
+          } else {
+            // Nothing was enqueued. Usually that is the end of the book -- but
+            // it is also what a missed PlaybackNearlyFinished looks like, and
+            // that event is not guaranteed: a transcoded stream declares no
+            // length, so the device cannot always tell where the end is, and a
+            // cold container loses the flag even when the enqueue did happen.
+            // Closing the session in those cases strands the listener partway
+            // through, so advance by hand whenever a next track still exists.
+            const nextTrack = currentBookTime !== undefined
+              ? userPlaySession?.audioTracks.find((track) => track.index == amazonToken + 1)
+              : undefined;
+            if (nextTrack) {
+              audioResponse = advanceToNextTrack(
+                handlerInput, attributes, userPlaySession, nextTrack, streamToken);
+            }
+            if (!audioResponse) {
+              if (userPlaySession && currentBookTime !== undefined
+                && closePlaybackProgress(userPlaySession, currentBookTime)) {
+                console.log("PlaybackFinished: synced and closed the ABS session")
+                clearAllMemory(handlerInput);
+              } else if (attributes) {
+                attributes.pendingClose = true;
+                updateLocalSessionAttributes(attributes);
+              }
             }
           }
           break;
@@ -1569,6 +1589,9 @@ const AudioPlayerEventHandler = {
             if (safeBookTime !== currentBookTime) {
               console.log(`PlaybackFailed: ignoring a reported position of ${currentBookTime} behind the known ${safeBookTime}`)
             }
+            audioResponse = await retryFailedStream(
+              handlerInput, attributes, userPlaySession, safeBookTime, failedRequest)
+            if (audioResponse) break;
             if (closePlaybackProgress(userPlaySession, safeBookTime)) {
               clearAllMemory(handlerInput)
             } else if (attributes) {
@@ -1657,6 +1680,88 @@ function buildPlaybackMetadata(userPlaySession, bookTime) {
     backgroundImage: {
       sources: [{ url: resolveBackgroundUrl(coverUrl), widthPixels: 1600, heightPixels: 900 }]
     }
+  }
+}
+
+// Start the track after the one that just finished, from its beginning.
+// REPLACE_ALL rather than ENQUEUE: by the time a stream reports finished the
+// device queue is empty, and re-issuing a track the device somehow still had
+// queued lands on the same audio at the same position, so a lost enqueue flag
+// costs at most a brief gap rather than a wrong position.
+function advanceToNextTrack(handlerInput, attributes, userPlaySession, nextTrack, previousToken) {
+  try {
+    const boundaryBookTime = Number(nextTrack.startOffset);
+    if (!Number.isFinite(boundaryBookTime)) return null;
+    const positionSynced = syncPlaybackProgress(
+      userPlaySession, boundaryBookTime, { continueListening: true });
+    const playback = applyBookTimeToAttributes(attributes, userPlaySession, boundaryBookTime);
+    preparePlaybackTransition(attributes, playback, previousToken, positionSynced);
+    updateLocalSessionAttributes(attributes);
+    console.log(`PlaybackFinished: nothing was enqueued; advancing to track ${playback.currentTrackIndex}`);
+    return handlerInput.responseBuilder
+      .addAudioPlayerPlayDirective(
+        "REPLACE_ALL",
+        playback.playUrl,
+        playback.streamToken,
+        playback.offsetInMilliseconds,
+        null,
+        buildPlaybackMetadata(userPlaySession, boundaryBookTime)
+      )
+      .getResponse();
+  } catch (error) {
+    console.error(`Could not advance to the next track: ${error.message}`);
+    return null;
+  }
+}
+
+// abs-transcode-proxy answers 503 with `Retry-After: 1` once every transcoding
+// worker is busy, and a reverse proxy in front of ABS can return a transient
+// 502. Both reach the skill as a failed stream, which would otherwise close the
+// book over a condition that clears by itself within seconds.
+const RETRYABLE_PLAYBACK_ERRORS = new Set([
+  'MEDIA_ERROR_SERVICE_UNAVAILABLE',
+  'MEDIA_ERROR_INTERNAL_SERVER_ERROR'
+]);
+const MAX_PLAYBACK_RETRIES = 2;
+// Long enough to respect the proxy's Retry-After, short enough to stay well
+// inside the time Alexa allows a skill to answer an AudioPlayer event.
+const PLAYBACK_RETRY_DELAY_MS = 1100;
+
+async function retryFailedStream(handlerInput, attributes, userPlaySession, bookTime, failedRequest) {
+  const errorType = failedRequest.error?.type;
+  if (!RETRYABLE_PLAYBACK_ERRORS.has(errorType)) return null;
+  // The count belongs to the stream that failed, so a failure somewhere else in
+  // the book starts over rather than inheriting an old budget. A cold container
+  // loses it, but retries are seconds apart and a container stays warm across
+  // them, so the bound holds in practice.
+  const attempts = sameStreamToken(attributes.retryingStreamToken, failedRequest.token)
+    ? Number(attributes.playbackRetryCount) || 0
+    : 0;
+  if (attempts >= MAX_PLAYBACK_RETRIES) {
+    console.log(`PlaybackFailed: ${errorType} persisted through ${attempts} retries; giving up`);
+    return null;
+  }
+  try {
+    await new Promise((resolve) => setTimeout(resolve, PLAYBACK_RETRY_DELAY_MS));
+    const playback = applyBookTimeToAttributes(attributes, userPlaySession, bookTime);
+    preparePlaybackTransition(attributes, playback, failedRequest.token, false);
+    attributes.playbackRetryCount = attempts + 1;
+    attributes.retryingStreamToken = playback.streamToken;
+    updateLocalSessionAttributes(attributes);
+    console.log(`PlaybackFailed: ${errorType}; retry ${attempts + 1} of ${MAX_PLAYBACK_RETRIES} at ${bookTime} seconds`);
+    return handlerInput.responseBuilder
+      .addAudioPlayerPlayDirective(
+        "REPLACE_ALL",
+        playback.playUrl,
+        playback.streamToken,
+        playback.offsetInMilliseconds,
+        null,
+        buildPlaybackMetadata(userPlaySession, bookTime)
+      )
+      .getResponse();
+  } catch (error) {
+    console.error(`Could not retry the failed stream: ${error.message}`);
+    return null;
   }
 }
 

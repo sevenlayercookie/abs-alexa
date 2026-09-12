@@ -201,6 +201,68 @@ describe('proxy mode playback (abs-transcode-proxy)', () => {
     assert.strictEqual(queuedToken.startTime, 0);
   });
 
+  // A transcoded stream carries no Content-Length, Xing header or byte ranges,
+  // so the device has no way to know where the end is and PlaybackNearlyFinished
+  // may never arrive. Advancing on PlaybackFinished is what keeps a multi-file
+  // book going in proxy mode.
+  test('a finished track advances to the next one with startTime 0 when nothing was enqueued', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+    const track = dune.audioTracks[0];
+    await srv.clearRequests();
+
+    const finished = await invoke(skill, audioPlayer('PlaybackFinished', {
+      token: createPlaybackToken(dune, 1, 'inst-proxy-finished', 0),
+      offsetInMilliseconds: track.duration * 1000,
+      playerActivity: 'PLAYING',
+    }, { userPlaySession: dune }));
+
+    const play = playDirective(finished);
+    assert.ok(play, 'expected the next Dune track to replace the finished one');
+    assert.strictEqual(play.playBehavior, 'REPLACE_ALL');
+    const stream = play.audioItem.stream;
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+    assert.match(stream.url, /proxyTranscode=true/);
+    assert.match(stream.url, /startTime=0(&|$)/);
+
+    const token = parsePlaybackToken(stream.token);
+    assert.strictEqual(token.trackIndex, 2);
+    assert.strictEqual(token.startTime, 0);
+
+    const closes = (await srv.getRequests()).filter((r) => /\/close$/.test(r.url));
+    assert.deepStrictEqual(closes, [], 'more tracks remain; the session must stay open');
+  });
+
+  test('a busy proxy is retried rather than treated as the end of the book', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    await srv.clearRequests();
+
+    // abs-transcode-proxy answers 503 Retry-After: 1 once MAX_STREAMS workers
+    // are busy; the device reports that as MEDIA_ERROR_SERVICE_UNAVAILABLE.
+    const failed = await invoke(skill, audioPlayer('PlaybackFailed', {
+      token: player.token,
+      offsetInMilliseconds: 0,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_SERVICE_UNAVAILABLE' },
+    }));
+
+    const play = playDirective(failed);
+    assert.ok(play, 'a busy proxy should be retried');
+    const stream = play.audioItem.stream;
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+    assert.match(stream.url, /proxyTranscode=true/);
+    // The retry resumes the position the failed stream never reached.
+    assert.match(stream.url, /startTime=81389\.233/);
+    assert.strictEqual(parsePlaybackToken(stream.token).startTime, 81389.233038136);
+
+    const closes = (await srv.getRequests()).filter((r) => /\/close$/.test(r.url));
+    assert.deepStrictEqual(closes, [], 'a retryable failure must not close the session');
+  });
+
   test('PlaybackController PlayCommandIssued starts stream at directive offset 0 with proxy transcode', async () => {
     const warm = loadSkill();
     const first = await invoke(warm, intent('PlayLastIntent', {}, {}, true));

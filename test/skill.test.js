@@ -723,6 +723,127 @@ describe('skill behaviour', () => {
     }
   });
 
+  // PlaybackNearlyFinished is the only thing that advances a multi-file book,
+  // and it is not guaranteed to arrive: a stream with no declared length gives
+  // the device nothing to anticipate the end from, and a cold container loses
+  // the enqueue flag even when the event did arrive. Both used to end the book
+  // at the end of track one.
+  test('a finished track with nothing enqueued advances instead of closing the book', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+    const track = dune.audioTracks[0];
+    await srv.clearRequests();
+
+    const finished = await invoke(skill, audioPlayer('PlaybackFinished', {
+      token: createPlaybackToken(dune, 1, 'inst-finished'),
+      offsetInMilliseconds: track.duration * 1000,
+      playerActivity: 'PLAYING',
+    }, { userPlaySession: dune }));
+
+    const stream = assertWellFormedStream(playDirective(finished), 'track advance');
+    assert.strictEqual(playDirective(finished).playBehavior, 'REPLACE_ALL');
+    assert.strictEqual(parsePlaybackToken(stream.token).trackIndex, 2);
+    assert.strictEqual(stream.offsetInMilliseconds, 0);
+
+    const closes = (await srv.getRequests()).filter((r) => /\/close$/.test(r.url));
+    assert.deepStrictEqual(closes, [],
+      'the book has more tracks; finishing one must not close the session');
+  });
+
+  test('a finished last track still closes the book', async () => {
+    const skill = loadSkill();
+    const dune = recordedPlaySession('5eb0cd4a-cae7-4b40-8f7f-75616b757e63');
+    delete dune.libraryItem;
+    const lastIndex = dune.audioTracks[dune.audioTracks.length - 1].index;
+    await srv.clearRequests();
+
+    const finished = await invoke(skill, audioPlayer('PlaybackFinished', {
+      token: createPlaybackToken(dune, lastIndex, 'inst-last'),
+      offsetInMilliseconds: 1000,
+      playerActivity: 'PLAYING',
+    }, { userPlaySession: dune }));
+
+    assert.strictEqual(playDirective(finished), undefined,
+      'there is no track after the last one to advance to');
+    const closes = (await srv.getRequests()).filter((r) => /\/close$/.test(r.url));
+    assert.strictEqual(closes.length, 1, 'the end of the last track ends the book');
+  });
+
+  // abs-transcode-proxy returns 503 with Retry-After: 1 when all its transcoding
+  // workers are busy, and a reverse proxy in front of ABS can return a transient
+  // 502. Treating either as the end of playback abandons a listener over a
+  // condition that clears in a second.
+  test('a stream that failed with a server error is retried at the same position', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+    const startedAt = parsePlaybackToken(player.token);
+    await srv.clearRequests();
+
+    const failed = await invoke(skill, audioPlayer('PlaybackFailed', {
+      token: player.token,
+      offsetInMilliseconds: 0,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_SERVICE_UNAVAILABLE' },
+    }));
+
+    const stream = assertWellFormedStream(playDirective(failed), 'retry');
+    assert.strictEqual(playDirective(failed).playBehavior, 'REPLACE_ALL');
+    const retryToken = parsePlaybackToken(stream.token);
+    assert.strictEqual(retryToken.trackIndex, startedAt.trackIndex);
+    assert.notStrictEqual(stream.token, player.token, 'a retry is a new stream instance');
+
+    const closes = (await srv.getRequests()).filter((r) => /\/close$/.test(r.url));
+    assert.deepStrictEqual(closes, [], 'a retryable failure must not close the session');
+  });
+
+  test('a device error is not retried', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    const player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+
+    const failed = await invoke(skill, audioPlayer('PlaybackFailed', {
+      token: player.token,
+      offsetInMilliseconds: 0,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_INTERNAL_DEVICE_ERROR' },
+    }));
+    assert.strictEqual(playDirective(failed), undefined,
+      'a fault in the device itself will not be fixed by asking again');
+  });
+
+  test('retries give up rather than looping forever', async () => {
+    const skill = loadSkill();
+    const played = await invoke(skill, intent('PlayLastIntent', {}, {}, true));
+    let player = playerStateFrom(played);
+    await invoke(skill, audioPlayer('PlaybackStarted', player));
+
+    const unavailable = (token) => audioPlayer('PlaybackFailed', {
+      token,
+      offsetInMilliseconds: 0,
+      playerActivity: 'IDLE',
+      error: { type: 'MEDIA_ERROR_SERVICE_UNAVAILABLE' },
+    });
+
+    let token = player.token;
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      const res = await invoke(skill, unavailable(token));
+      const stream = assertWellFormedStream(playDirective(res), `retry ${attempt}`);
+      token = stream.token;
+    }
+
+    await srv.clearRequests();
+    const givenUp = await invoke(skill, unavailable(token));
+    assert.strictEqual(playDirective(givenUp), undefined,
+      'the third failure of the same stream must stop retrying');
+    const settled = (await srv.getRequests()).filter((r) =>
+      /\/(sync|close)$/.test(r.url) || r.url.startsWith('/api/me/progress/'));
+    assert.ok(settled.length > 0, 'giving up must still settle the position');
+  });
+
   test('every request was served from a fixture', async () => {
     const misses = await srv.getMisses();
     assert.deepStrictEqual(misses, [],
