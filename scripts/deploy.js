@@ -41,9 +41,10 @@ const write = (name, obj) => {
   fs.writeFileSync(p, JSON.stringify(obj, null, 2));
   return p;
 };
-
+const remoteSkillManifest = askJson('smapi', 'get-skill-manifest', '-s', skillId, '-g', 'development').manifest
+const isSelfHosted = !!remoteSkillManifest.apis?.custom?.endpoint?.uri?.match(/https?:/)
 function deployManifest() {
-  const live = askJson('smapi', 'get-skill-manifest', '-s', skillId, '-g', 'development').manifest;
+  const live = remoteSkillManifest;
   const repo = JSON.parse(fs.readFileSync(path.join(ROOT, 'skill-package', 'skill.json'), 'utf8')).manifest;
 
   const liveLocale = live.publishingInformation.locales['en-US'] || {};
@@ -119,7 +120,8 @@ function deployCode() {
 }
 
 console.log('deploying to %s', skillId);
-deployCode();
+if(!isSelfHosted)
+  deployCode();
 deployManifest();
 deployModel();
 fs.rmSync(tmp, { recursive: true, force: true });

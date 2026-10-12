@@ -103,6 +103,29 @@ skill. Use an invocation-qualified or two-turn custom command instead.
 Loop, shuffle, repeat, and start-over requests are recognized but are not
 currently implemented; the skill declines them without interrupting playback.
 
+## Self Hosting
+
+### Endpoint
+The endpoint must be setup using the alexa developer console. Your endpoint needs to be https with a certificate.
+The express server itself will validate that requests are coming from alexa services.
+
+### Serving as a service
+Its recommended to use a service, or a process manager to allow the app to restart on reboot or on error.
+Copy the repository to the server.  
+Run `npm i` in the base directory.  
+Ensure you have setup your config file [Installation](#installation)  
+Run `npm start` or run the `server.js` directly.
+
+### Serving with docker
+Copy the repository to the server, you do not need to install node modules
+
+Create a .env file next to the docker compose files
+```
+ABS_API_KEY=xxx
+SERVER_URL=http/https local server
+```
+Run `docker compose up -d --build`
+
 ## Development:
 
 Two different Node versions are in play, and it matters:

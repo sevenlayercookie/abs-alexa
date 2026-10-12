@@ -1976,7 +1976,7 @@ const ErrorHandler = {
  * payloads to the handlers above. Make sure any new handlers or interceptors you've
  * defined are included below. The order matters - they're processed top to bottom
  * */
-exports.handler = Alexa.SkillBuilders.custom()
+const skillBuilder = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
     RecentBooksIntentHandler,
@@ -2000,4 +2000,6 @@ exports.handler = Alexa.SkillBuilders.custom()
   .addErrorHandlers(
     ErrorHandler)
   .withCustomUserAgent('AlexaSkill')
-  .lambda();
+  
+exports.skillBuilder = skillBuilder;
+exports.handler = skillBuilder.lambda();

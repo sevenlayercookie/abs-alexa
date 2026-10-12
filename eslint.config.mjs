@@ -41,7 +41,7 @@ export default [
     //
     // Deliberately NOT applied to test/, which uses node:test (Node 18+) and
     // only ever runs on a developer machine or in CI.
-    files: ["lambda/**/*.js"],
+    files: ["lambda/**/*.js", "express/**/*.js"],
     plugins: { n },
     rules: {
       "n/no-unsupported-features/node-builtins": ["error", { version: ">=16.0.0" }],
