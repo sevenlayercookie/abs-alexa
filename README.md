@@ -246,8 +246,6 @@ is project configuration and should be committed.
 - This skill has only been tested in very simple library configurations so far and may have issues with complex library set ups
 
 ## To Do:
-- [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
-    - This is easy to achieve using Express.JS, but I have not yet included this in the repository.
 - [ ] Consider persistent storage only for future skill-owned preferences that
       cannot be reconstructed from the Alexa stream token and Audiobookshelf
 - [ ] Add other intents, such as:
