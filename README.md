@@ -104,6 +104,7 @@ Loop, shuffle, repeat, and start-over requests are recognized but are not
 currently implemented; the skill declines them without interrupting playback.
 
 ## Self Hosting
+Note: Any node version can be used for the self hosted setup.
 
 ### Endpoint
 The endpoint must be setup using the alexa developer console. Your endpoint needs to be https with a certificate.
@@ -125,6 +126,8 @@ Create a .env file next to the docker compose files
 ABS_API_KEY=xxx
 SERVER_URL=http/https local server
 ```
+See [Installation](#installation) for other config parameters  
+
 Run `docker compose up -d --build`
 
 ## Development:
