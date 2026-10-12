@@ -10,5 +10,5 @@ services:
       - CFAccessClientId=${CFAccessClientId}
       - CFAccessClientSecret=${CFAccessClientSecret}
     ports:
-      - 8080:8080
+      - 8431:8080
     restart: unless-stopped
