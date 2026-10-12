@@ -114,7 +114,8 @@ Its recommended to use a service, or a process manager to allow the app to resta
 Copy the repository to the server.  
 Run `npm i` in the base directory.  
 Ensure you have setup your config file [Installation](#installation)  
-Run `npm start` or run the `server.js` directly.
+Run `npm start` or run the `server.js` directly.  
+The port can be change with the env variable, defaults to `PORT=8431`
 
 ### Serving with docker
 Copy the repository to the server, you do not need to install node modules
