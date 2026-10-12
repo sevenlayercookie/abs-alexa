@@ -1,0 +1,11 @@
+# Ignore everything in the project
+**
+
+# Except
+!package.json
+!package-lock.json
+
+!express/
+!lambda/
+express/node_modules/
+lambda/node_modules/

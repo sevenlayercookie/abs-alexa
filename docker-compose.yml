@@ -2,6 +2,13 @@ services:
   abs-alexa:
     build: .
     container_name: abs-alexa
+    environment:
+      - ABS_API_KEY=${ABS_API_KEY}
+      - SERVER_URL=${SERVER_URL}
+      - USER_AGENT=${USER_AGENT}
+      - BACKGROUND_URL=${BACKGROUND_URL}
+      - CFAccessClientId=${CFAccessClientId}
+      - CFAccessClientSecret=${CFAccessClientSecret}
     ports:
       - 8080:8080
     restart: unless-stopped
