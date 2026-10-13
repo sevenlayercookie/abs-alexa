@@ -115,6 +115,7 @@ Its recommended to use a service, or a process manager to allow the app to resta
 Copy the repository to the server.  
 Run `npm i` in the base directory.  
 Ensure you have setup your config file [Installation](#installation)  
+It must also include PUBLIC_ENDPOINT which is the public endpoint alexa uses to connect to the container  
 Run `npm start` or run the `server.js` directly.  
 The port can be change with the env variable, defaults to `PORT=8431`
 
@@ -125,6 +126,7 @@ Create a .env file next to the docker compose files
 ```
 ABS_API_KEY=xxx
 SERVER_URL=http/https local server
+PUBLIC_ENDPOINT=the public endpoint alexa uses to connect to the container
 ```
 See [Installation](#installation) for other config parameters  
 

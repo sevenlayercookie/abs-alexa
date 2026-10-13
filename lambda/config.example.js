@@ -16,7 +16,6 @@ module.exports = {
 
     // Sent as the User-Agent on every Audiobookshelf request.
     USER_AGENT: 'AlexaSkill',
-
     // Optional. Background art for screen devices (Echo Show, Fire TV).
     // Leave unset to use the cover of the book currently playing.
     // BACKGROUND_URL: 'https://example.com/background.jpg',
@@ -24,4 +23,8 @@ module.exports = {
     // Optional. Only needed if your server sits behind Cloudflare Access.
     // CFAccessClientId: 'xxxxxxxxx.access',
     // CFAccessClientSecret: 'xxxxxxxx'
+
+    // Optional. Used when self hosting
+    // The public endpoint alexa uses to connect to the container
+    // PUBLIC_ENDPOINT: 'https://abs.domain.tld'
 };

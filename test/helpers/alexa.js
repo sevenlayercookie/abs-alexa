@@ -132,6 +132,7 @@ function loadSkill() {
     exports: {
       ABS_API_KEY: apiKey,
       SERVER_URL: serverUrl,
+      PUBLIC_ENDPOINT: process.env.PUBLIC_ENDPOINT,
       USER_AGENT: process.env.USER_AGENT || 'AlexaSkill',
       BACKGROUND_URL: process.env.BACKGROUND_URL,
       CFAccessClientId: process.env.CFAccessClientId,

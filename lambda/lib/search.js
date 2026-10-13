@@ -4,7 +4,7 @@
 
 const Fuse = require('fuse.js');
 const request = require('sync-request'); // getEntityData calls Amazon, not ABS
-const { getAllLibraries, getAllAudiobooks, searchFor } = require('./abs-client');
+const { getAudiobookLibraries, getAllAudiobooks, searchFor } = require('./abs-client');
 const { timers } = require('./timers');
 
 function getEntityData(entityUrl, accessToken, locale) {
@@ -80,15 +80,7 @@ function fuzzyStringMatch(string1, string2, includeScore = true, threshold = 0.6
 }
 
 function searchBookWithAbsAPI(bookTitle) {
-  const allLibraries = getAllLibraries();
-
-  // Filter libraries to only include those with mediaType 'book'
-  const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-
-  // Further filter libraries to include only those with audiobooksOnly settings
-  const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-
-  const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
+  const bookLibraryIDs = getAudiobookLibraries();
 
   let results = [];
   // Iterate over each library ID and perform the search

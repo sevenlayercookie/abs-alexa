@@ -12,7 +12,8 @@ try {
 const cfg = (key, fallback) =>
   process.env[key] !== undefined ? process.env[key] : (fileConfig[key] !== undefined ? fileConfig[key] : fallback);
 const ABS_API_KEY = cfg('ABS_API_KEY');
-const SERVER_URL = cfg('SERVER_URL');
+const SERVER_URL = cfg('SERVER_URL').replace(/\/$/, '');
+const PUBLIC_ENDPOINT = cfg('PUBLIC_ENDPOINT').replace(/\/$/, '');
 const USER_AGENT = cfg('USER_AGENT', 'AlexaSkill');
 const BACKGROUND_URL = cfg('BACKGROUND_URL');
 const CFAccessClientId = cfg('CFAccessClientId');
@@ -36,5 +37,5 @@ function resolveBackgroundUrl(coverUrl) {
   return BACKGROUND_URL || coverUrl;
 }
 
-module.exports = { ABS_API_KEY, SERVER_URL, USER_AGENT, BACKGROUND_URL,
+module.exports = { ABS_API_KEY, SERVER_URL, PUBLIC_ENDPOINT, USER_AGENT, BACKGROUND_URL,
   CFAccessClientId, CFAccessClientSecret, baseheaders, resolveBackgroundUrl };
