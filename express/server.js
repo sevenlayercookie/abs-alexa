@@ -27,10 +27,10 @@ app.use((req, res, next) => {
 // Start the server
 app.listen(
   PORT,
-  () => {
-    console.log(`Alexa Skill endpoint listening on port ${PORT}`);
-  },
-  (err) => {
+    (err) => {
+if(err)
     console.error(err);
+else
+      console.log(`Alexa Skill endpoint listening on port ${PORT}`);
   },
 );
