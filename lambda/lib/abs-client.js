@@ -3,7 +3,7 @@
 // arguments and return parsed responses.
 
 const request = require('sync-request');
-const { SERVER_URL, baseheaders } = require('./settings');
+const { PUBLIC_ENDPOINT, SERVER_URL, ABS_API_KEY, baseheaders } = require('./settings');
 
 function getRecentLibraryItems(limit = 3) {
   try {
@@ -188,7 +188,7 @@ function closeUserPlaySession(userPlaySession, currentBookTime, timeListened) {
 
 function getCoverUrl(libraryItemId) {
   // as of 11/28/24, retrieving cover does not require authentication
-  return SERVER_URL + `/api/items/${libraryItemId}/cover`
+  return (PUBLIC_ENDPOINT ?? SERVER_URL) + `/api/items/${libraryItemId}/cover` + "?token=" + ABS_API_KEY
 }
 
 function getLibraryFilterData(libraryID) {
@@ -213,12 +213,18 @@ function getAllLibraries() {
   }
 }
 
-function getAllAudiobooks() {
+function getAudiobookLibraries() {
   const allLibraries = getAllLibraries()
   const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
+  // audiobooksOnly hides ebooks, using as a preference if the user has designated certain libraries
   const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-  const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
+  const bookLibraryIDs = (audiobooksOnlyLibraries.length !== 0 ? audiobooksOnlyLibraries : bookLibraries).map(library => library.id);
+  return bookLibraryIDs
+}
+
+function getAllAudiobooks() {
   const allLibraryItems = [];
+  const bookLibraryIDs = getAudiobookLibraries();
 
 
   // Loop through each library and get the items
@@ -329,5 +335,5 @@ function searchFor(query, libraryID) {
 
 module.exports = { getRecentLibraryItems, getLastPlayedLibraryItem, getItemById, startUserPlaySession,
   getExistingUserPlaySession, updateMediaProgress, updateUserPlaySession,
-  closeUserPlaySession, getCoverUrl, getLibraryFilterData, getAllLibraries,
+  closeUserPlaySession, getCoverUrl, getLibraryFilterData, getAllLibraries, getAudiobookLibraries,
   getAllAudiobooks, getLibraryItems, getAuthor, buildLibrarySearchUrl, searchFor };

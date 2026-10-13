@@ -1,20 +1,18 @@
 'use strict';
 const Alexa = require('ask-sdk-core');
-const { ABS_API_KEY, SERVER_URL, baseheaders, resolveBackgroundUrl } = require('./lib/settings');
+const { ABS_API_KEY, PUBLIC_ENDPOINT, SERVER_URL, resolveBackgroundUrl } = require('./lib/settings');
 const { calculateCurrentTime, getCurrentTrackByBookTime, getCurrentTrackIndexByBookTime,
   getCurrentChapterByBookTime, getTrackAndOffsetFromBookTime, isoDurationToMilliseconds,
   sanitizeForSSML } = require('./lib/audio');
 const { timers, timestamps, clearTimers, resetTimestamps } = require('./lib/timers');
-const { getEntityData, fuzzyMatch, fuzzyStringMatch, searchBookWithAbsAPI, amazonCrossmatch,
+const { getEntityData, fuzzyMatch, fuzzyStringMatch, amazonCrossmatch,
   searchByTitleOnly } = require('./lib/search');
 const { getRecentLibraryItems, getLastPlayedLibraryItem, getItemById, startUserPlaySession, getExistingUserPlaySession,
   updateMediaProgress, updateUserPlaySession, closeUserPlaySession, getCoverUrl,
-  getLibraryFilterData, getAllLibraries, getAllAudiobooks, getLibraryItems, getAuthor,
-  searchFor } = require('./lib/abs-client');
+  getLibraryFilterData, getAudiobookLibraries, getAuthor } = require('./lib/abs-client');
 const { createPlaybackToken, createPlaybackInstanceToken,
   parsePlaybackToken } = require('./lib/playback-token');
 const { formatSpokenList } = require('./lib/speech');
-//const { SsmlUtils } = require('ask-sdk-core');
 
 let localSessionAttributes = {
   playbackOwnerKey: null,
@@ -147,7 +145,7 @@ function recoverPlaybackState(handlerInput, { allowSessionReplacement = true } =
   attributes.streamToken = player.rawToken && player.token
     ? player.rawToken
     : attributes.streamToken || createPlaybackToken(userPlaySession, trackIndex);
-  attributes.playUrl = SERVER_URL + currentTrack.contentUrl + "?token=" + ABS_API_KEY;
+  attributes.playUrl = (PUBLIC_ENDPOINT ?? SERVER_URL) + currentTrack.contentUrl + "?token=" + ABS_API_KEY;
   if (typeof attributes.nextStreamEnqueued !== 'boolean') attributes.nextStreamEnqueued = false;
   if (player.offsetInMilliseconds !== null) {
     attributes.offsetInMilliseconds = player.offsetInMilliseconds;
@@ -533,10 +531,10 @@ const PlayAudioIntentHandler = {
       sessionAttributes.nextStreamEnqueued = false
       const coverUrl = sessionAttributes.coverUrl = getCoverUrl(userPlaySession.libraryItemId)
 
-      const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
+      const chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession)?.title
       const author = userPlaySession.displayAuthor
       const bookTitle = userPlaySession.displayTitle
-      const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+      const playUrl = sessionAttributes.playUrl = (PUBLIC_ENDPOINT ?? SERVER_URL) + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
       // const playUrl = SERVER_URL + userPlaySession.audioTracks[0].contentUrl + "?token=" + ABS_API_KEY
       preparePlaybackTransition(
         sessionAttributes,
@@ -551,7 +549,7 @@ const PlayAudioIntentHandler = {
       console.log("TIMER: Total Intent Time (PlayAudioIntent): " + totalIntentTime + " ms");
 
       const metadata = {
-        title: chapterTitle,
+        title: chapterTitle || bookTitle,
         subtitle: bookTitle,
         art: {
           sources: [
@@ -789,10 +787,7 @@ const PlayBookIntentHandler = {
       if (bookTitle && author) { // if I'm given both author and book
 
         // START BY SEARCHING FOR THE AUTHOR FIRST, THEN MATCHING TITLES TO THAT AUTHOR
-        const allLibraries = getAllLibraries()
-        const bookLibraries = allLibraries.filter(library => library.mediaType === 'book');
-        const audiobooksOnlyLibraries = bookLibraries.filter(library => library.settings.audiobooksOnly);
-        const bookLibraryIDs = audiobooksOnlyLibraries.map(library => library.id);
+        const bookLibraryIDs = getAudiobookLibraries()
 
         const filterdata = getLibraryFilterData(bookLibraryIDs[0]) // find all authors in library
 
@@ -934,7 +929,7 @@ const PlayBookIntentHandler = {
 
     sessionAttributes.nextStreamEnqueued = false
 
-    const playUrl = sessionAttributes.playUrl = SERVER_URL + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
+    const playUrl = sessionAttributes.playUrl = (PUBLIC_ENDPOINT ?? SERVER_URL) + userPlaySession.audioTracks[currentTrackIndex - 1].contentUrl + "?token=" + ABS_API_KEY
 
     const coverUrl = getCoverUrl(userPlaySession.libraryItemId)
     preparePlaybackTransition(
@@ -948,14 +943,14 @@ const PlayBookIntentHandler = {
     let speakOutput = 'Playing ' + userPlaySession.displayTitle + ' by ' + userPlaySession.displayAuthor;
     console.log(`Playing Audiobookshelf item ${userPlaySession.libraryItemId}, track ${currentTrackIndex}`)
 
-    let chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession).title
+    let chapterTitle = getCurrentChapterByBookTime(currentTime, userPlaySession)?.title
 
     // chapterTitle = chapterTitle // remove any invalid characters
 
     const subtitle = userPlaySession.displayTitle
 
     const metadata = {
-      title: chapterTitle,
+      title: chapterTitle || userPlaySession.displayTitle,
       subtitle: subtitle,
       art: {
         sources: [
@@ -1487,9 +1482,9 @@ const AudioPlayerEventHandler = {
             const nextTrackIndex = amazonToken + 1;
             const nextAudioTrack = userPlaySession.audioTracks.find((track) => track.index == nextTrackIndex);
             if (nextAudioTrack) {
-              const nextUrl = SERVER_URL + nextAudioTrack.contentUrl + "?token=" + ABS_API_KEY;
+              const nextUrl = (PUBLIC_ENDPOINT ?? SERVER_URL) + nextAudioTrack.contentUrl + "?token=" + ABS_API_KEY;
               const nextToken = createPlaybackInstanceToken(userPlaySession, nextTrackIndex);
-              const currentChapterID = getCurrentChapterByBookTime(currentBookTime, userPlaySession).id;
+              const currentChapterID = getCurrentChapterByBookTime(currentBookTime, userPlaySession)?.id;
 
               const coverUrl = getCoverUrl(userPlaySession.libraryItemId);
               // The final chapter has no successor; fall back to the book title rather
@@ -1622,7 +1617,7 @@ function applyBookTimeToAttributes(attributes, userPlaySession, bookTime) {
     amazonToken: amazonToken,
     streamToken: createPlaybackInstanceToken(userPlaySession, amazonToken),
     offsetInMilliseconds: result.goalOffset,
-    playUrl: SERVER_URL + currentTrack.contentUrl + "?token=" + ABS_API_KEY,
+    playUrl: (PUBLIC_ENDPOINT ?? SERVER_URL) + currentTrack.contentUrl + "?token=" + ABS_API_KEY,
     nextStreamEnqueued: false
   }
 
@@ -1976,7 +1971,7 @@ const ErrorHandler = {
  * payloads to the handlers above. Make sure any new handlers or interceptors you've
  * defined are included below. The order matters - they're processed top to bottom
  * */
-exports.handler = Alexa.SkillBuilders.custom()
+const skillBuilder = Alexa.SkillBuilders.custom()
   .addRequestHandlers(
     LaunchRequestHandler,
     RecentBooksIntentHandler,
@@ -2000,4 +1995,6 @@ exports.handler = Alexa.SkillBuilders.custom()
   .addErrorHandlers(
     ErrorHandler)
   .withCustomUserAgent('AlexaSkill')
-  .lambda();
+  
+exports.skillBuilder = skillBuilder;
+exports.handler = skillBuilder.lambda();

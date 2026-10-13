@@ -1,0 +1,19 @@
+{
+  "name": "abs-alexa-express",
+  "version": "1.2.0",
+  "description": "Alexa skill for controlling a self-hosted Audiobookshelf server",
+  "main": "server.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "ask-sdk-express-adapter": "^2.14.0",
+    "express": "^5.3.0",
+    "http-proxy-middleware": "^4.2.0"
+  }
+}

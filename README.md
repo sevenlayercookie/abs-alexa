@@ -103,6 +103,35 @@ skill. Use an invocation-qualified or two-turn custom command instead.
 Loop, shuffle, repeat, and start-over requests are recognized but are not
 currently implemented; the skill declines them without interrupting playback.
 
+## Self Hosting
+Note: Any node version can be used for the self hosted setup.
+
+### Endpoint
+The endpoint must be setup using the alexa developer console. Your endpoint needs to be https with a certificate.
+The express server itself will validate that requests are coming from alexa services.
+
+### Serving as a service
+Its recommended to use a service, or a process manager to allow the app to restart on reboot or on error.
+Copy the repository to the server.  
+Run `npm i` in the base directory.  
+Ensure you have setup your config file [Installation](#installation)  
+It must also include PUBLIC_ENDPOINT which is the public endpoint alexa uses to connect to the container  
+Run `npm start` or run the `server.js` directly.  
+The port can be change with the env variable, defaults to `PORT=8431`
+
+### Serving with docker
+Copy the repository to the server, you do not need to install node modules
+
+Create a .env file next to the docker compose files
+```
+ABS_API_KEY=xxx
+SERVER_URL=http/https local server
+PUBLIC_ENDPOINT=the public endpoint alexa uses to connect to the container
+```
+See [Installation](#installation) for other config parameters  
+
+Run `docker compose up -d --build`
+
 ## Development:
 
 Two different Node versions are in play, and it matters:
@@ -222,8 +251,6 @@ is project configuration and should be committed.
 - This skill has only been tested in very simple library configurations so far and may have issues with complex library set ups
 
 ## To Do:
-- [ ] Implement self-hosting (currently, the skill only runs using AWS Lambda function)
-    - This is easy to achieve using Express.JS, but I have not yet included this in the repository.
 - [ ] Consider persistent storage only for future skill-owned preferences that
       cannot be reconstructed from the Alexa stream token and Audiobookshelf
 - [ ] Add other intents, such as:
