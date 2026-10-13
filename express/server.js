@@ -25,12 +25,7 @@ app.use((req, res, next) => {
 });
 
 // Start the server
-app.listen(
-  PORT,
-    (err) => {
-if(err)
-    console.error(err);
-else
-      console.log(`Alexa Skill endpoint listening on port ${PORT}`);
-  },
-);
+app.listen(PORT, (err) => {
+  if (err) console.error(err);
+  else console.log(`Alexa Skill endpoint listening on port ${PORT}`);
+});
