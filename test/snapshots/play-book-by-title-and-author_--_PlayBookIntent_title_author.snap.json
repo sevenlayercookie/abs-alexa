@@ -21,7 +21,7 @@
             "art": {
               "sources": [
                 {
-                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover?token=<token>",
                   "widthPixels": 512,
                   "heightPixels": 512
                 }
@@ -30,7 +30,7 @@
             "backgroundImage": {
               "sources": [
                 {
-                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover",
+                  "url": "http://127.0.0.1:<port>/api/items/10eb5463-cfce-4d84-9680-a9b36add5bfb/cover?token=<token>",
                   "widthPixels": 1600,
                   "heightPixels": 900
                 }
