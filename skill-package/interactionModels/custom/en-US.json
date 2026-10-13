@@ -102,6 +102,12 @@
           "slots": [],
           "name": "PlayLastIntent",
           "samples": [
+            "continue my book",
+            "open my book",
+            "read my book",
+            "play the last book",
+            "play my last book",
+            "play my current book",
             "play last book",
             "play last playing book",
             "play last playing audiobook"
@@ -182,7 +188,11 @@
           ],
           "name": "PlayBookIntent",
           "samples": [
-            "play {title} by {author}"
+            "to play {title} by {author}",
+            "play {title} by {author}",
+            "to start {title} by {author}",
+            "begin {title} by {author}",
+            "to begin {title} by {author}"
           ]
         },
         {
